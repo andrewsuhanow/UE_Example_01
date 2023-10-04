@@ -1,0 +1,18 @@
+# Visual Studio 2015 user specific files
+
+Copy.gitignore
+
+.vs/
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+Script/
+##HELPER/
+
+Content/
+# Content/Core/Res/
+
+
+
+

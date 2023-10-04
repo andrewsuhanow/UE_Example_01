@@ -1,0 +1,21 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{78F4376B-43CC-BCCA-C763-78BD7D7B5AB4}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "OOO",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"AIModule",
+				"CoreUObject",
+				"UMG",
+				"NavigationSystem",
+				"GameplayAbilities"
+			]
+		}
+	]
+}
