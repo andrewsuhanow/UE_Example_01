@@ -9,7 +9,7 @@ AUnit::AUnit()
 	PrimaryActorTick.bCanEverTick = true;
 
 	// **  AI Controller 
-	static ConstructorHelpers::FObjectFinder<UBlueprint> AI_Res(TEXT("/Game/Base/Controller/Base/UnitAi_BP.UnitAi_BP")); 
+	static ConstructorHelpers::FObjectFinder<UBlueprint> AI_Res(TEXT("/Game/Core/Controller/Base/UnitAi_BP.UnitAi_BP")); 
 	if (AI_Res.Object) AIController_Class = (UClass*)AI_Res.Object->GeneratedClass;
 	if (AIController_Class)	AIControllerClass = AIController_Class;
 }
