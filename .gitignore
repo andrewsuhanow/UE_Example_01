@@ -8,10 +8,12 @@ DerivedDataCache/
 Intermediate/
 Saved/
 Script/
-##HELPER/
+TEST_HELPER/
 
-Content/
-# Content/Core/Res/
+Content/Test
+Content/Game
+Content/Developers
+Content/Collections
 
 
 

@@ -3,15 +3,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "TopSpectator.generated.h"
+#include "Spectator.generated.h"
 
 UCLASS()
-class OOO_API ATopSpectator : public APawn
+class OOO_API ASpectator : public APawn
 {
 	GENERATED_BODY()
 
 public:
-	ATopSpectator();
+	ASpectator();
 
 protected:
 	virtual void BeginPlay() override;

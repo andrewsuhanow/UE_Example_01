@@ -11,5 +11,16 @@ UCLASS()
 class OOO_API AUnitAI : public AAIController
 {
 	GENERATED_BODY()
+
+public:
+
+	AUnitAI();
+
 	
+	UFUNCTION()		void Init();	// ** Start from "UnitOwner"
+
+
+protected:
+
+	class AUnit* UnitOwner;
 };

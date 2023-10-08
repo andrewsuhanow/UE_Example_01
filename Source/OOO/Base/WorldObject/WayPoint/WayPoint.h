@@ -14,42 +14,24 @@ public:
 	AWayPoint();
 
 protected:
+
 	virtual void BeginPlay() override;
 
-	//virtual void PostInitializeComponents() override;
 
 public:
 
-	
 	UPROPERTY()
 		USceneComponent* Root;
 
-	// ** Helper Mesh
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AAA_SetBP")
-		UStaticMeshComponent* HelperMesh = nullptr;
+	// ** Mesh
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		UStaticMeshComponent* Mesh = nullptr;
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AAA_SetBP")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		FName WayPointName = FName("none");									// ** TAG
 
-//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AAA")
-//		float CollisionWidth = 150.f;
-//	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AAA")
-//		float CollisionHeight = 150.f;
-		
-public:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AAA")
-		TArray<AActor*> SpectatorUnits;
-	UFUNCTION(Blueprintcallable)
-		void AddSpectatorUnit(AActor* _NewSpectatorUnit);
-	UFUNCTION(Blueprintcallable)
-		void RemoveSpectatorUnit(AActor* _SpectatorUnit);
-	UFUNCTION(Blueprintcallable)
-		void RecheckSpectatorUnit();
-
-
-//public:	
-//	virtual void Tick(float DeltaTime) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		float CollisionWidth = 150.f;
 
 };

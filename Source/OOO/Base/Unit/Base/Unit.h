@@ -22,6 +22,18 @@ protected:
 
 	virtual void BeginPlay() override;
 
+public:
+
+	// ** "Game-Delay" at the BeginPlay() 
+	UFUNCTION()		void Start();
+	UPROPERTY()		FTimerHandle TH_Start;
+
+	// **  AI Controller 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Set_Default_Controller")
+		TSubclassOf<class AUnitAI> AIController_Class;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		class AUnitAI* AI;
+
 public:	
 
 	virtual void Tick(float DeltaTime) override;
