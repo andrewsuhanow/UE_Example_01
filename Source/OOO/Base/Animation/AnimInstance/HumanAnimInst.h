@@ -3,6 +3,9 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
+
+#include "../../Unit/Enum/UnitPose.h"
+
 #include "HumanAnimInst.generated.h"
 
 
@@ -32,8 +35,11 @@ protected:
 
 public:
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Movement")				
-		float MoveSpeed = 0;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Movement")				
+	//---------------------	float UnitMoveSpeed = 0;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Movement")
+		float VelocitySpeed = 0;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Movement")
 		float Direction = 0;
 
@@ -41,13 +47,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Movement")
 		float RotateSpeedSide = 0;
 
-	// ** Rotate speed (Set for Creature in Editor)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Base_Param")
-		float SlowRotateSpeed = 150.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Base_Param")
-		float MediumRotateSpeed = 300.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Base_Param")
-		float FastRotateSpeed = 600.f;
+
 
 	// ** TOP rotate
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Movement")
@@ -67,11 +67,13 @@ public:
 		float MontageTimePause = 0.f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
 		bool IsPlayTOP = true;
-	// ** DELEGATE_Get( Get/Set, CurrentMontage, IsPlayTOP, MontageStartTime, MontageTimePause, GET_RotateSpeed, GET_MoveSpeed)
+	// ** DELEGATE_Get( Get/Set, CurrentMontage, IsPlayTOP, MontageStartTime, MontageTimePause, PoseLocomotion, GET_RotateSpeed, GET_MoveSpeed)
 
+	//UFUNCTION(BlueprintCallable)
+	///////////////	void GetAnimMontageParam(struct FAnimMontageParam AnimMontageParam);
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_State")												
-	//+++++++++++++++++++++++++	EUnitPose PoseLocomotion = EUnitPose::Stand;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_State")												
+		EUnitPose PoseLocomotion = EUnitPose::Stand;
 
 		// **   Idle Relax or Idle ready 
 	//UPROPERTY()

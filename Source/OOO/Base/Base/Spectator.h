@@ -3,6 +3,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+
+#include "../Controller/Task/Struct/TaskData.h"		// ** Unit->SetUnitTask()
+
 #include "Spectator.generated.h"
 
 UCLASS()

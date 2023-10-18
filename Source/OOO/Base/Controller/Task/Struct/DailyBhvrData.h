@@ -1,9 +1,9 @@
 
 
-#include "DailyBhvrTask.generated.h"
+#include "DailyBhvrData.generated.h"
 
 USTRUCT(BlueprintType) // , Blueprintable
-struct FDailyBhvrTask
+struct FDailyBhvrData
 {
 	// ** GENERATED_BODY()
 	GENERATED_USTRUCT_BODY()

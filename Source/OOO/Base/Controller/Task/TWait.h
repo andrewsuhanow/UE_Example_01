@@ -5,10 +5,10 @@
 
 #include "Base/Task.h"
 
-#include "TMove.generated.h"
+#include "TWait.generated.h"
 
 UCLASS()
-class OOO_API UTMove : public UTask
+class OOO_API UTWait : public UTask
 {
 	GENERATED_BODY()
 

@@ -1,6 +1,6 @@
 
 
-//#include "../AW_HelperActor/WayPoint.h"
+// #include "../WorldObject/WayPoint/WayPoint.h"
 #include "WayPoint.h"
 
 #include "Components/CapsuleComponent.h"
