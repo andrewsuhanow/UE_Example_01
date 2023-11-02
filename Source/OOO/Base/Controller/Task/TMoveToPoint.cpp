@@ -14,7 +14,8 @@ UTMoveToPoint::UTMoveToPoint()
 
 void UTMoveToPoint::StartTask(AUnitAI* _OwnerAI)
 {
-	if (FVector::Distance(_OwnerAI->GetCurrSelfLocation(), _OwnerAI->GetCurrTargetLocation()) > 120.f)
+	StopDistance = _OwnerAI->GetUnitStopDistance();
+	if (StopDistance < FVector::Distance(_OwnerAI->GetCurrSelfLocation(), _OwnerAI->GetCurrTargetLocation()))
 	{
 
 		switch (TaskType)
@@ -51,7 +52,7 @@ void UTMoveToPoint::StartTask(AUnitAI* _OwnerAI)
 void UTMoveToPoint::ContinueTask(AUnitAI* _OwnerAI)
 {
 	// **
-	if (FVector::Distance(_OwnerAI->GetCurrSelfLocation(), _OwnerAI->GetCurrTargetLocation()) > 120.f)
+	if (StopDistance < FVector::Distance(_OwnerAI->GetCurrSelfLocation(), _OwnerAI->GetCurrTargetLocation()))
 	{
 		TaskPerformance(_OwnerAI);
 	}
@@ -85,7 +86,7 @@ void UTMoveToPoint::MoveTick()
 	//if (! TURN_BASE)
 	{
 		float dist = FVector::Distance(OwnerAI->GetCurrSelfLocation(), OwnerAI->GetCurrTargetLocation());
-		if (dist < 120.f)
+		if (StopDistance > dist)
 		{
 			GetWorld()->GetTimerManager().ClearTimer(TH_Move);
 			TaskComplit(OwnerAI);
@@ -107,36 +108,23 @@ void UTMoveToPoint::TaskComplit(AUnitAI* _OwnerAI)
 {
 
 	_OwnerAI->UnitStopMove();
-	//++++++++++++ GetCurrentPoseSpeed		// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	_OwnerAI->SetUnitMoveSpeed(250);		// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	///++++++++++++ GetCurrentPoseSpeed		/// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	_OwnerAI->SetUnitMoveSpeed(250);		/// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-
-	if (FinishChildTask(_OwnerAI))
-	{
-		return;
-	}
-	else
-	{
-		if(!FinishGeneralTask(_OwnerAI))
-			FinishDominantAITask(_OwnerAI);
-	}
-	_OwnerAI->UpdateLogic();
+	Super::TaskComplit(_OwnerAI);
 }
 
 
 void UTMoveToPoint::BreakTask(AUnitAI* _OwnerAI)
 {
-	_OwnerAI->UnitStopMove();
-	//++++++++++++ GetCurrentPoseSpeed		// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-	_OwnerAI->SetUnitMoveSpeed(250);		// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
+	_OwnerAI->UnitStopMove();
+	///++++++++++++ GetCurrentPoseSpeed		/// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	_OwnerAI->SetUnitMoveSpeed(250);		/// @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 	GetWorld()->GetTimerManager().ClearTimer(TH_Move);
 
-	_OwnerAI->CurrTaskDTBuffer.Reset();
-	_OwnerAI->CurrTaskRef = nullptr;
-
-	_OwnerAI->UpdateLogic();
+	Super::BreakTask(_OwnerAI);
 }
 
 

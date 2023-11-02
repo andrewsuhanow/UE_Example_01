@@ -1,9 +1,8 @@
 
-//#include "Base/Unit/Base/Unit.h"
+// #include "Base/Unit/Base/Unit.h"
 #include "Unit.h"
 
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Components/CapsuleComponent.h"
+
 
 #include "../../Controller/UnitAI.h"
 
@@ -11,6 +10,28 @@
 
 #include "../../WorldObject/WayPoint/WayPoint.h"
 
+#include "../../Controller/Task/Base/DailyBhvrQueue.h"		// ** 7777777777777777777
+
+#include "../../Fraction/FractionSystem.h"
+
+#include "../../Inventory/InventoryComponent.h"
+
+#include "../../Ability/AbilityComponent.h"
+
+#include "../../Item/WorldItem.h"
+// --------------------------------------------
+
+//#include "../../Base/BaseGameMode.h"
+//#include "../../Base/BaseGameState.h"
+
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
+
+#include "Perception/AIPerceptionComponent.h" 
+#include "Perception/AISenseConfig_Sight.h"
+#include "Perception/AISenseConfig_Hearing.h"
+#include "Perception/AISenseConfig_Damage.h"
+#include "Perception/AISense_Damage.h"			// ** FAIDamageEvent
 // --------------------------------------------
 
 #include "Kismet/GameplayStatics.h"   // ** GetAllActorsOfClass()
@@ -21,6 +42,48 @@ AUnit::AUnit()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+
+
+	// **  ************************     PERCEPTION     *************************
+
+	Perception = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AI Perception"));
+	SightSense = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightSense"));
+	HearingSense = CreateDefaultSubobject<UAISenseConfig_Hearing>(TEXT("HearSense"));
+	DamageSense = CreateDefaultSubobject<UAISenseConfig_Damage>(TEXT("gamagwSense"));
+
+	Perception->ConfigureSense(*HearingSense);
+	Perception->ConfigureSense(*DamageSense);
+	Perception->ConfigureSense(*SightSense);
+
+	Perception->SetDominantSense(SightSense->GetSenseImplementation());		// ** Priority Sense
+
+	Perception->OnTargetPerceptionUpdated.AddDynamic(this, &ThisClass::TargetPerceptionUpdated);
+
+	SightSense->SightRadius = 2500;						// ** View 
+	SightSense->LoseSightRadius = 3000;					// ** view 
+	SightSense->PeripheralVisionAngleDegrees = 70; 		// ** Angle
+	SightSense->SetMaxAge(15.f);
+	// ** SightSense ->AutoSuccessRangeFromLastSeenLocation = 200;
+	SightSense->DetectionByAffiliation.bDetectEnemies = true;
+	SightSense->DetectionByAffiliation.bDetectFriendlies = true;
+	SightSense->DetectionByAffiliation.bDetectNeutrals = true;
+
+	HearingSense->HearingRange = 3300.f;	// ** Hear 
+	HearingSense->SetMaxAge(15.f);
+	HearingSense->DetectionByAffiliation.bDetectEnemies = true;
+	HearingSense->DetectionByAffiliation.bDetectNeutrals = true;
+	HearingSense->DetectionByAffiliation.bDetectFriendlies = true;
+
+	DamageSense->SetMaxAge(15.f);
+
+
+
+	// **  Inventory   
+	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+
+
+	// **  Ability   
+	Ability = CreateDefaultSubobject<UAbilityComponent>(TEXT("Ability"));
 
 }
 
@@ -52,6 +115,7 @@ void AUnit::PreInitializeComponents()
 		if (AnimBp_BpClass)
 			GetMesh()->SetAnimInstanceClass(AnimBp_BpClass->GetAnimBlueprintGeneratedClass());
 	}
+
 }	
 
 void AUnit::BeginPlay()
@@ -61,35 +125,43 @@ void AUnit::BeginPlay()
 	// ** Collision
 	//++++++++++++++++ GetCapsuleComponent()->GetScaledCapsuleSize(CapsuleRadius, CapsuleHalfHaight);
 
-	// ** "Game-Delay" 
-	GetWorld()->GetTimerManager().SetTimer(TH_Start, this, &ThisClass::Start, 1.f, false);
 }
 
 
-void AUnit::Start()
+bool AUnit::StartGame(bool finalInit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ERROR:_______________AUnitAI::Start()_______________Init Continue"));
 
+	bool isAllComponentInited = false;
 
 
+	// ** Init AI
+	if (AI)
+		isAllComponentInited = true;
+	else
+		AI = Cast<AUnitAI>(GetController());
 	if (!AI)
 	{
-		AI = Cast<AUnitAI>(GetController());
-		if (!AI)
-		{
-			GetWorld()->GetTimerManager().SetTimer(TH_Start, this, &ThisClass::Start, 1.f, false);
-			return;
-		}
-		else
-		{
-			AI->Init();
-		}
+		isAllComponentInited = false;
+		return false;
+	}
+	if (finalInit)
+	{
+		AI->Init(true);
+		FinishAnimationDELEGATE.BindUObject(AI, &AUnitAI::OnFinishAnimation);
 	}
 
 
-	if (!AnimInstance)
+	// ** Init AnimInstance
+	if (AnimInstance)
+		isAllComponentInited = true;
+	else
+		AnimInstance = Cast<UHumanAnimInst>(GetMesh()->GetAnimInstance());
+	if(!AnimInstance)
 	{
-		AnimInstance = Cast<UHumanAnimInst>(GetMesh()->GetAnimInstance());	}
+		isAllComponentInited = false;
+		return false;
+	}
 
 
 
@@ -98,7 +170,7 @@ void AUnit::Start()
 	// +++  ** Bind to delegate for End-Animation-EVENT   (ABaseUnit::    FOnMontageEnded OnAnimationFinish;)
 	// +++ FinishAnimationDELEGATE.BindUObject(AIController, &AUnitAI::OnAnimationFinish);
 
-	return;
+	return  isAllComponentInited;
 }
 
 
@@ -113,6 +185,80 @@ void AUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
+
+
+
+// **  ************************************************************************
+// **  ************************     AI_Controller     ************************* 
+// **  ************************************************************************
+
+
+void AUnit::SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData)
+{
+	AI->SetTask(_bAddMoreOne, _TaskType, _TaskData);
+}
+
+
+
+// **  ************************************************************************
+// **  ************************     PERCEPTION     ************************* 
+// **  ************************************************************************
+
+void AUnit::TargetPerceptionUpdated(AActor* _ActorActivator, FAIStimulus _Stimulus)
+{
+
+	if (_Stimulus.Type.Name == FName("Default__AISense_Sight"))
+	{
+		AI->UpdateLogic();
+	}
+	/*
+	else if (_Stimulus.Type.Name == FName("Default__AISense_Damage"))
+	{
+		// ** UE_LOG(LogTemp, Error, TEXT("---Unit DAMAGED---"));
+
+		// +++++++++  SetTask()   // ** PlayAnimation
+
+	}
+	*/
+	else if (_Stimulus.Type.Name == FName("Default__AISense_Hearing"))
+	{
+		// ** UE_LOG(LogTemp, Error, TEXT("---Unit REMEMBERING (Hearing)---"));
+		AI->UpdateLogic();
+	}
+}
+
+/*
+void AUnit::NoticeSelfDamageAsPerception(float _DamageAmount, struct FDamageEvent const& _DamageEvent, AController* _Instigator, AActor* _ActorCauser)
+{
+
+	UAIPerceptionSystem* PerceptionSystem = UAIPerceptionSystem::GetCurrent(GetPawn());
+	if (PerceptionSystem)
+	{
+		// ** #include "Perception/AISense_Damage.h"
+		FAIDamageEvent Event(GetPawn(), _ActorCauser, _DamageAmount, _ActorCauser->GetActorLocation(), GetPawn()->GetActorLocation());
+		PerceptionSystem->OnEvent(Event);
+	}
+}
+*/
+
+
+
+// **  ************************************************************************
+// **  ************************     AnimInstance     ************************ 
+// **  ************************************************************************
+
+void AUnit::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime)
+{
+	AnimInstance->CurrentMontage = _AnimMontage;
+	AnimInstance->IsPlayTOP = _isPlayTOP;
+	AnimInstance->MontageStartTime = _fromTime;
+
+	AnimInstance->Montage_Play(_AnimMontage, 1.f, EMontagePlayReturnType::MontageLength, _fromTime);
+	AnimInstance->Montage_SetEndDelegate(FinishAnimationDELEGATE, _AnimMontage);
+}
+
+
+
 
 
 // **  ************************************************************************
@@ -149,18 +295,30 @@ void AUnit::SetRotateSpeed(uint8 _RotSpeedIndex)
 
 
 
+
+
 // **  ************************************************************************
-// **  ************************     XXXX001     ************************ 
+// **  ***************************     Ability     **************************** 
 // **  ************************************************************************
 
 
-void AUnit::SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData)
+
+void AUnit::AddAbility(EAbilityType _Ability)
 {
-	AI->SetTask(_bAddMoreOne, _TaskType, _TaskData);
+	Ability->AddAbility(_Ability);
 }
 
 
+// **  ************************************************************************
+// **  **************************     Inventory     *************************** 
+// **  ************************************************************************
 
+
+
+bool AUnit::TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex, TSubclassOf<AWorldItem> WorldItem) 
+{
+	return Inventory->TryAddItemToInventory(ItemDT, ToSlotIndex, WorldItem);
+}
 
 
 

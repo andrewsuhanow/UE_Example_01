@@ -181,17 +181,7 @@ void UTRotateToPointNormal::TaskComplit(AUnitAI* _OwnerAI)
 
 	_OwnerAI->SetUnitRotateSpeed(0);
 
-
-	if (FinishChildTask(_OwnerAI))
-	{
-		return;
-	}
-	else
-	{
-		if (!FinishGeneralTask(_OwnerAI))
-			FinishDominantAITask(_OwnerAI);
-	}
-	_OwnerAI->UpdateLogic();
+	Super::TaskComplit(_OwnerAI);
 }
 
 
@@ -200,13 +190,9 @@ void UTRotateToPointNormal::BreakTask(AUnitAI* _OwnerAI)
 
 	_OwnerAI->SetUnitRotateSpeed(0);
 
-
 	GetWorld()->GetTimerManager().ClearTimer(TH_Rotate);
 
-	_OwnerAI->CurrTaskDTBuffer.Reset();
-	_OwnerAI->CurrTaskRef = nullptr;
-
-	_OwnerAI->UpdateLogic();
+	Super::BreakTask(_OwnerAI);
 }
 
 

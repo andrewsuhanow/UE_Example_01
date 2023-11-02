@@ -7,8 +7,10 @@
 UENUM(BlueprintType)
 enum class ETaskInstigator : uint8
 {
-	General	= 0,	// ** Player or LevelParty
-	AI				= 1,
-	Dominant	= 2,	// ** means: Hit, OnBlock, OnDodge, ...
+	none		= 0,
+	General		= 1,	// ** Player or LevelParty
+	AI			= 2,
+	Dominant	= 3,	// ** means: Hit, OnBlock, OnDodge, ...
+	OtherTask	= 4,
 	MAX
 };

@@ -5,7 +5,20 @@
 #include "../Unit/Base/Unit.h"
 
 #include "Task/Base/Task.h"
-#include "../Controller/Task/Struct/TaskData.h"
+#include "Task/Struct/TaskData.h"
+#include "Task/Base/DailyBhvrQueue.h"
+
+//-------------------------
+
+#include "../Base/BaseGameMode.h"
+#include "../Base/BaseGameState.h"
+#include "../HUD/BaseHUD.h"
+
+//-------------------------
+
+#include "Kismet/GameplayStatics.h"		// ** GetAuthGameMode()
+
+
 
 /*
 #include "Task/FinishMove.h"
@@ -48,7 +61,6 @@ AUnitAI::AUnitAI()
 
 	//-----MainTaskDT.TaskStatus = ETaskStatus::MainTask;
 	//-----PartTaskDT.TaskStatus = ETaskStatus::PartTask;
-
 }
 
 
@@ -65,17 +77,59 @@ void AUnitAI::BeginPlay()
 			ActionTaskssObj.Add(TaskTmp);
 		}
 	}
+	for (int32 i = 0; i < ActionTaskssObj.Num(); ++i)
+	{
+		if (ActionTaskssObj[i]->TaskType == ETaskType::DailyBehavior)
+		{
+			DailyBhvrTaskIndex = i;
+			break;
+		}
+	}
 }
 
 
-void AUnitAI::Init()
+void AUnitAI::Init(bool isStart)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ERROR:_______________AUnit::Start()_______________Init Continue"));
-
 
 	UnitOwner = Cast<AUnit>(GetPawn());
 	if (!UnitOwner)
-		return;
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnitAI::Init():      'UnitOwner' not Get"), *GetName());
+
+
+	GameState = Cast<ABaseGameState>(GetWorld()->GetGameState());
+	if (!GameState)
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnitAI::Init():      'GameState' not Get"), *GetName());
+
+	GameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+	if (!GameMode)
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnitAI::Init():      'GameMode' not Get"), *GetName());
+
+
+	HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	if (!HUD)
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnitAI::Init():      'HUD' not Get"), *GetName());
+
+
+
+	if (isStart)
+	{
+		// ** DailyBhvr default-Queue Init()
+		if (UnitOwner->DailyBhvrQueueClass)
+		{
+			UDailyBhvrQueue* DailyBhvrQueueCDO = UnitOwner->DailyBhvrQueueClass->GetDefaultObject<UDailyBhvrQueue>();
+			int32 QueueNum = DailyBhvrQueueCDO->DailyBhvrTaskDT.Num();
+			if (QueueNum > 0)
+			{
+				for (int32 i = 0; i < QueueNum; ++i)
+				{
+					DailyBhvrTaskDT.Add(DailyBhvrQueueCDO->DailyBhvrTaskDT[i]);
+				}
+			}
+		}
+	}
+
+
+	UpdateLogic();
 
 	return;
 }
@@ -103,6 +157,19 @@ void AUnitAI::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult
 		UpdateLogic();
 }
 */
+
+
+void AUnitAI::OnFinishAnimation(UAnimMontage* FinishedAnimMontage, bool _bInterrupted)
+{
+	// ....
+	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnFinishAnimation():         %s"), *GetName());
+}
+
+void AUnitAI::OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
+{
+	// ....
+	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnChangeTurnBaseGameState():         %s"), *GetName());
+}
 
 
 
@@ -187,18 +254,32 @@ void AUnitAI::Rotate()
 
 
 // **  ************************************************************************
+// **  **********************       Global_Operation      **********************
+// **  ************************************************************************
+
+
+int32 AUnitAI::GetGameHour()
+{
+	return GameMode->GetGameHour();
+}
+
+void AUnitAI::OnNewGameHour(int32 iHour)
+{
+	UpdateLogic();
+}
+
+// **  ************************************************************************
 // **  **********************       Misc_Operation      **********************
 // **  ************************************************************************
 
 
 void AUnitAI::SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData,
-	ETaskInstigator _TaskInstigator, ETaskPriority _TaskPriority)
+					ETaskInstigator _TaskInstigator, ETaskPriority _TaskPriority)
 {
 	// ** Complete "_TaskData"
 
 	_TaskData.TaskInstigator = _TaskInstigator;
 	_TaskData.TaskPriority = _TaskPriority;
-	_TaskData.TaskStage = 0;
 
 	for (int32 i = 0; i < ActionTaskssObj.Num(); ++i)
 	{
@@ -248,6 +329,15 @@ void AUnitAI::SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskDat
 
 		}
 	}
+	else
+	if (_TaskInstigator == ETaskInstigator::OtherTask)
+	{
+		CurrTaskDTBuffer.Add(_TaskData);
+		CurrTaskRef = _TaskData.TaskRef;
+		CurrTaskRef->StartTask(this);
+	}
+
+	
 }
 
 
@@ -255,7 +345,7 @@ void AUnitAI::UpdateLogic()
 {
 	// ** if Unit "Fall-Down" now or other Hi-PriorityLogic
 
-	if (CurrTaskDTBuffer.Num() > 3)
+	if (CurrTaskDTBuffer.Num() > 0)
 		if(CurrTaskDTBuffer.Last().TaskPriority == ETaskPriority::Great)
 			return;
 
@@ -341,6 +431,20 @@ void AUnitAI::UpdateLogic()
 		UpdateLogic();
 		return;
 	}
+	else
+	{
+		if (DailyBhvrTaskIndex == -1 || DailyBhvrTaskDT.Num() == 0)
+			return;
+
+		if (CurrTaskRef)
+			CurrTaskRef->BreakTask(this);
+		else
+		{
+			CurrTaskDTBuffer;							 // ** TEST_TEST
+			CurrTaskRef = ActionTaskssObj[DailyBhvrTaskIndex];
+			CurrTaskRef->ContinueTask(this);
+		}
+	}
 }
 
 
@@ -390,6 +494,34 @@ void AUnitAI::UnitStopMove()
 	UnitOwner->StopMove();
 }
 
+
+float AUnitAI::GetUnitStopDistance()
+{
+	return UnitOwner->StopDistance;
+}
+
+
+bool AUnitAI::IsUnitInGroup()
+{
+	return UnitOwner->IsUnitInGroup;
+}
+
+bool AUnitAI::IsUnitSelected()
+{
+	return UnitOwner->IsUnitSelected;
+}
+
+
+FName AUnitAI::GetUnitGameName()
+{
+	return UnitOwner->GameName;
+}
+
+
+void AUnitAI::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime)
+{
+	return UnitOwner->PlayAnimate(_AnimMontage, _isPlayTOP, _fromTime);
+}
 
 // **  ************************************************************************
 // **  **********************       Target_Operation      **********************

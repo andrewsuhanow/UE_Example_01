@@ -3,12 +3,24 @@
 #include "DefaultPawnDEBUG.h"
 
 
+#include "../Base/Base/BaseGameState.h"
+#include "../Base/Base/BaseGameMode.h"
+
+#include "../Base/Base/Enum/TurnBaseGameState.h"
+
+#include "../Base/HUD/BaseHUD.h"
 
 #include "../Base/Unit/Base/Unit.h"
 #include "../Base/Controller/UnitAI.h"
+#include "../Base/Controller/Task/TDailyTask.h"
+#include "../Base/Controller/Task/Struct/DailyBhvrData.h"
+#include "../Base/Controller/Task/Enum/DailyBhvrPointPos.h"
 #include "../Base/WorldObject/WayPoint/WayPoint.h"
 
 #include "../Base/Controller/Task/Base/Task.h"
+
+
+#include "../Base/Item/WorldItem.h"
 
 //---------------------------------------------
 
@@ -49,6 +61,9 @@ void AAAADefaultPawnDEBUG::SelectUnit_Performance(FName _SelectUnitName)
 		if (unit->GameName == _SelectUnitName)
 		{
 			SelectTestUnit = unit;
+			
+			SelectTestUnit->IsUnitSelected = true;
+
 			return;
 		}
 	}
@@ -154,6 +169,136 @@ void AAAADefaultPawnDEBUG::RotateToPoint_Performance(FName _Point_RotateTo, bool
 
 
 
+//---------------------------------------------------------
+
+
+void AAAADefaultPawnDEBUG::AddHour_To_GameTime()
+{
+	ABaseGameMode *gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+	if (gameMode)
+	{
+		gameMode->AddTime(TimeCountToAdd);
+		GameTimePresent = gameMode->GetGameHour();
+
+		if (SelectTestUnit)
+		{
+			SelectTestUnit->AI->OnNewGameHour(GameTimePresent);
+			/*int32 dailyTaskIndex;
+			for (int32 i = 0; i < SelectTestUnit->AI->ActionTaskssObj.Num(); ++i)
+			{
+				if (SelectTestUnit->AI->ActionTaskssObj[i]->TaskType == ETaskType::DailyBehavior)
+				{
+					//dailyTaskIndex = i;
+					break;
+				}
+			}*/
+
+
+			//if(SelectTestUnit->AI->DailyBhvrTaskDT.Num() == 0)
+			//	InitDailyBehaviorDT();
+
+
+			//Cast<UTDailyTask>(SelectTestUnit->AI->ActionTaskssObj[dailyTaskIndex])->CheckCorrectingTaskData(SelectTestUnit->AI);
+			//SelectTestUnit->AI->UpdateLogic();
+		}
+
+	}
+}
+
+void AAAADefaultPawnDEBUG::InitDailyBehaviorDT()
+{
+	TArray<AActor*> AllWayPointActors;
+	TArray<AWayPoint*> AllWayPoint;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWayPoint::StaticClass(), AllWayPointActors);
+	for (int32 i = 0; i < AllWayPointActors.Num(); i++)
+	{
+		AWayPoint* wayPoint = Cast<AWayPoint>(AllWayPointActors[i]);
+		if (wayPoint)
+		{
+			if (wayPoint->WayPointName != FName("none"))
+			{
+				AllWayPoint.Add(wayPoint);
+			}
+		}
+	}
+	for (int32 i = 0; i < AllWayPoint.Num(); i++)
+	{
+		FDailyBhvrData newDlTaskDT;
+		//newDlTaskDT.PointActor = AllWayPoint[i];
+		newDlTaskDT.WayPointTag = AllWayPoint[i]->WayPointName;
+		newDlTaskDT.StartTime = i;
+		newDlTaskDT.EndTime = i+3;
+		newDlTaskDT.DailyBhvrPointPos = EDailyBhvrPointPos::on_point_rotata_forward;
+		newDlTaskDT.Shifting = 0;
+		newDlTaskDT.DurationTypeAndTime = 3;
+		SelectTestUnit->AI->DailyBhvrTaskDT.Add(newDlTaskDT);
+	}
+
+
+}
+
+
+
+
+
+//---------------------------------------------------------  Inventor
+
+
+void AAAADefaultPawnDEBUG::OpenMainInvertory()
+{
+
+	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+	if (SelectTestUnit && hud && gameMode)
+	{
+		hud->ShowInventory(SelectTestUnit, gameMode);
+	}
+}
+
+
+
+
+void AAAADefaultPawnDEBUG::AddItemToInventory()
+{
+	if (SelectTestUnit)
+	{
+		for (int32 i = 0; i < AddStartItems.Num(); ++i)
+		{
+			SelectTestUnit->TryAddItemToInventory(nullptr, AddToSlotIndex, AddStartItems[i]);
+			//AWorldItem* CDO = Cast<AWorldItem>(AddStartItems[i].Get());
+			//SelectTestUnit->TryAddItemToInventory(&CDO->ItemDT, AddToSlotIndex, InventorWorldItem);
+			
+		}
+
+		if (InventorWorldItem)
+		{
+			
+		}
+	}
+}
+
+
+
+//---------------------------------------------------------  Ability
+
+
+
+
+void AAAADefaultPawnDEBUG::AddAbility()
+{
+	for (int32 i = 0; i < Ability.Num(); ++i)
+	{
+		if (SelectTestUnit)
+		{
+			SelectTestUnit->AddAbility(Ability[i]);
+		}
+	}
+}
+
+
+
+
 // *************************************************************************************************
 // *************************************************************************************************
 // *************************************************************************************************
@@ -162,7 +307,7 @@ void AAAADefaultPawnDEBUG::RotateToPoint_Performance(FName _Point_RotateTo, bool
 
 AAAADefaultPawnDEBUG::AAAADefaultPawnDEBUG()
 {
-
+	
 }
 
 
@@ -176,17 +321,47 @@ void AAAADefaultPawnDEBUG::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 	PlayerInputComponent->BindAction("LeftShift", IE_Pressed, this, &AAAADefaultPawnDEBUG::Shift_Left_Press);
 	PlayerInputComponent->BindAction("LeftShift", IE_Released, this, &AAAADefaultPawnDEBUG::Shift_Left_Release);
 
-
+	// ** Key SpaceBar
+	FInputActionKeyMapping SpaceBar("SpaceBar", EKeys::SpaceBar, false);
+	GetWorld()->GetFirstPlayerController()->PlayerInput->AddActionMapping(SpaceBar);
+	PlayerInputComponent->BindAction("SpaceBar", IE_Pressed, this, &AAAADefaultPawnDEBUG::SpaceBar_Press);
+	PlayerInputComponent->BindAction("SpaceBar", IE_Released, this, &AAAADefaultPawnDEBUG::SpaceBar_Release);
 }
 
 void AAAADefaultPawnDEBUG::Shift_Left_Press()
 {
-	UE_LOG(LogTemp, Warning, TEXT("1111(%s)"), *GetName());
+	// UE_LOG(LogTemp, Warning, TEXT("1111(%s)"), *GetName());
 }
 void AAAADefaultPawnDEBUG::Shift_Left_Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("222222(%s)"), *GetName());
+	
 }
+
+void AAAADefaultPawnDEBUG::SpaceBar_Press()
+{
+	ABaseGameState* GmState = Cast<ABaseGameState>(GetWorld()->GetGameState());
+	if (GmState)
+	{
+		if (GmState->TurnBaseGameState == ETurnBaseGameState::RealTime)
+		{
+			GmState->SetNewTurnBaseGameState(ETurnBaseGameState::Pause);
+			UE_LOG(LogTemp, Warning, TEXT("Stop Game"));
+		}
+		else
+		{
+			GmState->SetNewTurnBaseGameState(ETurnBaseGameState::RealTime);
+			UE_LOG(LogTemp, Warning, TEXT("Resume Game"));
+		}
+	}
+}
+
+
+void AAAADefaultPawnDEBUG::SpaceBar_Release()
+{
+
+}
+
+
 
 
 
@@ -212,10 +387,10 @@ void AAAADefaultPawnDEBUG::Tick(float DeltaTime)
 			}
 		}*/
 
-		if (SelectTestUnit->AI->CurrTaskRef && SelectTestUnit->AI->CurrTaskDTBuffer.Last().TaskRef)
+		if (SelectTestUnit->AI->CurrTaskRef)
 		{
 			FString str;
-			str = FString::Printf(TEXT("Curr Task: %s"), *(SelectTestUnit->AI->CurrTaskDTBuffer.Last().TaskRef->GetName()));
+			str = FString::Printf(TEXT("Curr Task: %s"), *(SelectTestUnit->AI->CurrTaskRef->GetName()));
 			GEngine->AddOnScreenDebugMessage(	// ** #include "Engine/GameEngine.h"
 				1,								// ** string
 				DeltaTime * 3.f,				// ** Time

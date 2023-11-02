@@ -3,11 +3,11 @@
 
 #include "CoreMinimal.h"
 #include "AmunitionItem.h"
-#include "WeaponItem.generated.h"
+#include "WeaponWorldItem.generated.h"
 
 
 UCLASS()
-class OOO_API AWeaponItem : public AAmunitionItem
+class OOO_API AWeaponWorldItem : public AAmunitionItem
 {
 	GENERATED_BODY()
 	

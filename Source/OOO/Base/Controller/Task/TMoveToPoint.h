@@ -18,6 +18,10 @@ public:
 
 public:
 
+	float StopDistance = 0;
+
+public:
+
 	UPROPERTY()			AUnitAI* OwnerAI;
 
 	virtual void StartTask(class AUnitAI* _OwnerAI) override;

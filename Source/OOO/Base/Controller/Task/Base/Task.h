@@ -42,17 +42,11 @@ public:
 		virtual void TaskPerformance(class AUnitAI* _OvnerAI) {};
 
 	UFUNCTION()
-		virtual void TaskComplit(class AUnitAI* _OvnerAI) {};
+		virtual void TaskComplit(class AUnitAI* _OvnerAI);
 
 	UFUNCTION()
-		virtual void BreakTask(class AUnitAI* _OwnerAI) {};
+		virtual void BreakTask(class AUnitAI* _OwnerAI);
 
-	UFUNCTION()
-		virtual bool FinishChildTask(class AUnitAI* _OwnerAI);
-	UFUNCTION()
-		virtual bool FinishGeneralTask(class AUnitAI* _OwnerAI);
-	UFUNCTION()
-		virtual bool FinishDominantAITask(class AUnitAI* _OwnerAI);
 };
 
 

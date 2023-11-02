@@ -6,55 +6,94 @@
 #include "../../UnitAI.h"
 
 
-bool UTask::FinishChildTask(class AUnitAI* _OwnerAI)
+void UTask::TaskComplit(class AUnitAI* _OwnerAI)
 {
-	if (_OwnerAI->CurrTaskDTBuffer.Last().TaskStatus == ETaskStatus::ChildTask)
+	int32 buferTaskNum = _OwnerAI->CurrTaskDTBuffer.Num();
+
+	if (buferTaskNum >= 1)
 	{
-		// ** Continue ParentTask if it exist
-		int32 PerformanceTaskNum = _OwnerAI->CurrTaskDTBuffer.Num();
-		if (PerformanceTaskNum > 1)
+
+		// ** finish child-Task (if has) 
+		if (buferTaskNum >= 2)
 		{
-			_OwnerAI->CurrTaskDTBuffer.RemoveAt(PerformanceTaskNum - 1);
-			_OwnerAI->CurrTaskRef = _OwnerAI->CurrTaskDTBuffer[PerformanceTaskNum - 2].TaskRef;
-			_OwnerAI->CurrTaskRef->ContinueTask(_OwnerAI);
+			/// ** DEBUG for Select Unit
+			if (_OwnerAI->IsUnitSelected() && !_OwnerAI->IsUnitInGroup())
+				UE_LOG(LogTemp, Warning, TEXT(">>>>>>> Unit: %s >>>>>>>     SubTask complit"), *_OwnerAI->GetUnitGameName().ToString());
+			/// ** ---------------------
+
+			_OwnerAI->CurrTaskDTBuffer.RemoveAt(buferTaskNum - 1);
+			_OwnerAI->CurrTaskRef = _OwnerAI->CurrTaskDTBuffer.Last().TaskRef;
+			_OwnerAI->CurrTaskRef->TaskComplit(_OwnerAI);
 		}
+
+		// ** finish General-Task (if its)
+		else
+		if (_OwnerAI->CurrTaskDTBuffer.Last().TaskStatus == ETaskStatus::GeneralComand)
+		{
+			/// ** DEBUG for Select Unit
+			if (_OwnerAI->IsUnitSelected() && !_OwnerAI->IsUnitInGroup())
+				UE_LOG(LogTemp, Warning, TEXT(">>>>>>> Unit: %s >>>>>>>     Task complit"), *_OwnerAI->GetUnitGameName().ToString());
+			/// ** ---------------------
+			
+			if (_OwnerAI->StoreQueueTaskDT.Num() > 0)
+				_OwnerAI->StoreQueueTaskDT.RemoveAt(0);	
+			_OwnerAI->CurrTaskDTBuffer.Reset();
+			_OwnerAI->CurrTaskRef = nullptr;
+			_OwnerAI->UpdateLogic();
+
+			/// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Hide HUD icon
+			/// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Hide HUD icon
+			/// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Hide HUD icon
+			/// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Hide HUD icon
+			/// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Hide HUD icon
+		}
+
+		// ** finish Other-Task (AIComand, DominantComand, DailyTask)
 		else
 		{
-			// @@@@@@@@@@@@@@@@@@@@@@  ERROR   Stop All Unit TASKs
+			/// ** DEBUG for Select Unit
+			if (_OwnerAI->IsUnitSelected() && !_OwnerAI->IsUnitInGroup())
+				UE_LOG(LogTemp, Warning, TEXT(">>>>>>> Unit: %s >>>>>>>     Task complit"), *_OwnerAI->GetUnitGameName().ToString());
+			/// ** ---------------------
+
+			_OwnerAI->CurrTaskDTBuffer.Reset();
+			_OwnerAI->CurrTaskRef = nullptr;
+			_OwnerAI->UpdateLogic();		
 		}
-		return true;
+
+		return;
 	}
-	else
-		return false;
 }
 
-bool UTask::FinishGeneralTask(class AUnitAI* _OwnerAI)
+
+
+void UTask::BreakTask(class AUnitAI* _OwnerAI)
 {
-	if (_OwnerAI->CurrTaskDTBuffer.Last().TaskStatus == ETaskStatus::GeneralComand)
+	int32 buferTaskNum = _OwnerAI->CurrTaskDTBuffer.Num();
+	if (buferTaskNum >= 2)
 	{
-		// ** Delete stored TaskElement from Queue
-		if (_OwnerAI->StoreQueueTaskDT.Num() > 0)
-			_OwnerAI->StoreQueueTaskDT.RemoveAt(0);
+		/// ** DEBUG for Select Unit
+		if (_OwnerAI->IsUnitSelected() && !_OwnerAI->IsUnitInGroup())
+			UE_LOG(LogTemp, Warning, TEXT(">>>>>>> Unit: %s >>>>>>>    Break Sub-Task"), *_OwnerAI->GetUnitGameName().ToString());
+		/// ** ---------------------
+
+		_OwnerAI->CurrTaskDTBuffer.RemoveAt(buferTaskNum - 1);
+		_OwnerAI->CurrTaskRef = _OwnerAI->CurrTaskDTBuffer.Last().TaskRef;
+		_OwnerAI->CurrTaskRef->BreakTask(_OwnerAI);
+		return;
+	}
+	else
+	{
+		/// ** DEBUG for Select Unit
+		if (_OwnerAI->IsUnitSelected() && !_OwnerAI->IsUnitInGroup())
+			UE_LOG(LogTemp, Warning, TEXT(">>>>>>> Unit: %s >>>>>>>    Break Task"), *_OwnerAI->GetUnitGameName().ToString());
+		/// ** ---------------------
+
 		_OwnerAI->CurrTaskDTBuffer.Reset();
 		_OwnerAI->CurrTaskRef = nullptr;
 
-		return true;
-
-		// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  Hide HUD icon
+		_OwnerAI->UpdateLogic();
 	}
-	else
-		return false;
 }
 
-bool UTask::FinishDominantAITask(class AUnitAI* _OwnerAI)
-{
-	if (_OwnerAI->CurrTaskDTBuffer.Last().TaskStatus == ETaskStatus::AIComand ||
-		_OwnerAI->CurrTaskDTBuffer.Last().TaskStatus == ETaskStatus::DominantComand)
-	{
-		_OwnerAI->CurrTaskDTBuffer.Reset();
-		_OwnerAI->CurrTaskRef = nullptr;
 
-		return true;
-	}
-	return false;
-}

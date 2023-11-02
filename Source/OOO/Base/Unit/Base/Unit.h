@@ -6,10 +6,19 @@
 
 #include "../Enum/UnitPose.h"
 
-#include "../../Fraction/FractionSystem.h"
+#include "../../Item/Struct/ItemDT.h"
+#include "../Struct/FastPanelSlot.h"
 
 #include "../../Controller/Task/Struct/TaskData.h"		// ** SetUnitTask()  ->  AI
 #include "../../Controller/Task/Enum/TaskType.h"		// ** SetUnitTask()  ->  AI
+
+#include "../../Base/Enum/TurnBaseGameState.h"
+
+#include "../../Animation/Enum/AnimationKey.h"
+
+// --------------------------------------
+
+#include "Perception/AIPerceptionTypes.h"
 
 #include "Unit.generated.h"
 
@@ -34,8 +43,10 @@ public:
 
 // **  ************************   "Game-Delay" at the BeginPlay()  ************************  
 
-	UFUNCTION()		void Start();
-	UPROPERTY()		FTimerHandle TH_Start;
+	UFUNCTION()		bool StartGame(bool finalInit = false);
+
+
+
 
 
 
@@ -47,6 +58,67 @@ public:
 		TSubclassOf<class AUnitAI> AIController_Class;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
 		class AUnitAI* AI;
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData);
+
+	/*
+			AddComand()			// ** FROM HUD,	FROM GameMod/
+			{
+				AI->NewComand()
+			}
+			ChangeWeapon()		// ** From AI
+			{
+				HUD_Redraw_if;
+				WeaponComp;
+			}
+			ChangePose()		// ** From AI
+			{
+				HUD_Redraw_if;
+				WeaponComp;
+			}
+	*/
+
+
+	// **************************************     PERCEPTION  (Undate reaction)     *******************************************
+
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AAA")
+		class UAIPerceptionComponent* Perception;
+	UPROPERTY()
+		class UAISenseConfig_Sight* SightSense;
+	UPROPERTY()
+		class UAISenseConfig_Hearing* HearingSense;
+	UPROPERTY()
+		class UAISenseConfig_Damage* DamageSense;	// ** Damage reaction
+
+public:
+
+	UFUNCTION(Blueprintcallable)
+		void TargetPerceptionUpdated(AActor* _ActorActivator, FAIStimulus _Stimulus);
+
+	// ** Notice any Damage like "Sense EVENT"
+	//------UFUNCTION(Blueprintcallable)
+	//------	void NoticeSelfDamageAsPerception(float _DamageAmount, struct FDamageEvent const& _DamageEvent, AController* _Instigator, AActor* _ActorCauser);
+
+	// ** 
+	// ** UFUNCTION(Blueprintcallable)
+	// ** TakeDamage()   (AAA::Unit EXAMPLE)
+	// +++ float TakeSpecialDamage(float _DamageHP, 
+	// +++							float DamageArmor, 
+	// +++							float DamagePArmor, 
+	// +++							float DamageStamina, 
+	// +++							FVec HitPoint,
+	// +++							FVec ImpulsDir,
+	// +++							EImpulsPower ImpulsPower,
+	// +++							FVec WaponlineDir, 
+	// +++							EEffectType EffectType,		// ** Blood, Flash, Explosion
+	// +++							AActor* Agressor
+	// +++	);
 
 
 public:
@@ -60,13 +132,13 @@ public:
 
 	FOnMontageEnded FinishAnimationDELEGATE;
 
-/*++++++++++++++++++
+public:
+
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime = 0.f);
-		{
-			//GetMesh()->GetAnimInstance()
-			AnimInstance->Montage_Play(_AnimMontage, 1.f, EMontagePlayReturnType::MontageLength, _fromTime);			
-		}
+
+/*++++++++++++++++++
+
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void BreakAnimate(); 
 		{
@@ -100,13 +172,61 @@ public:
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Unit_Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		FName GameName = FName("none");
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Unit_Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		FName GameId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Unit_Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		bool IsUnitInGroup = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		bool IsUnitSelected = false;
+
+	// ** Gape betwean target-point for stoping     (FIX)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		float StopDistance = 120.f;
+
+	// ** Daily-behavior Default class (Queue stored) (for "AI::DailyBhvrTaskDT")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		TSubclassOf<class UDailyBhvrQueue> DailyBhvrQueueClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Animation")
+		TMap<EAnimationKey, UAnimMontage*> UnitAnimation;
+
+	// ---------------   Inventor   ---------------
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		bool IsInventorSizeFixed = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		int32 MainInvCollCountBOUND = 0;		// ** (Const) Horizontal
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		int32 MainInvRowCountBOUND = 0;		// ** (Const) Vertical
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		int32 FullRowCount = 0;						// ** (Can be Add Using Scroll)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		float MainInventorSlotSize = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		int32 GlobalInventorHeight = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
+		float GlobalInventorSlotSize = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		float FastPanelSlotSize = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		float PerkPanelSlotSize = 0; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")
+		UTexture2D* MainInvertorySlotTexture = nullptr;
+	// ---------------   Inventor!!!   ---------------
+	
+public:
+
+// **  ************************   Getters  ************************
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Animation")
+		UAnimMontage* GetUnitAnimation(EAnimationKey AnimKey) { return nullptr; };
 
 public:
 
@@ -118,6 +238,41 @@ public:
 
 	UFUNCTION(Blueprintcallable, Category = "OOO_Fraction")
 		FORCEINLINE int32 GetFraction() { return Fraction; };
+
+
+
+
+
+
+// **  ************************   Ability   ************************
+
+public:
+
+	class UAbilityComponent* Ability;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
+		void AddAbility(EAbilityType _Ability);
+
+
+
+// **  ************************   Inventory   ************************
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!_Inventory")
+		class UInventoryComponent* Inventory;
+
+	// ** IndexInContainer  (KEY in Map : FastPanelItem)
+	// ** AbilityType
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
+		TArray<FFastPanelSlot> FastPanelSlots;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
+		TMap<int32, FItemDT> FastPanelItem;
+
+
+	///UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		bool TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex = -1, TSubclassOf<class AWorldItem> WorldItem = nullptr) ;
+
 
 
 // **  ************************   Pose-Locomotion  ************************ 
@@ -171,13 +326,21 @@ public:
 public:
 
 // ** *********************     Amunition    ************************
-// ** *********************     Weapon_Component    ************************
-// ** *********************     Armour Component    *************************
 
+
+	// ** SLOTS of Equiped Items
+//	UPROPERTY(BlueprintReadOnly, Category = "AAA_Inventory")											// @@@@@@@@@@@@@@@@@@@@@@@@@@ Is this Need
+//		TArray<class AAmunition*> Amunition;
+
+
+public:
+
+// ** *********************     Weapon_Component    ************************
+
+//OPERTY(EditAnywhere, BlueprintReadOnly, Category = "AAA_Weapon")
+//		class UWeaponComp* WeaponComponent;
 /*++++++++++++++++++++++++++
-			// ** SLOTS of Equiped Items (need separd on "Weapon" and  "Armor")
-	UPROPERTY(BlueprintReadOnly, Category = "AAA_Inventory")											// @@@@@@@@@@@@@@@@@@@@@@@@@@ Is this Need
-		TArray<class AAmunition*> Amunition;
+
 
 	// ** Equip-Item  (Put item from Inventory to EQUIP-slot)
 	UFUNCTION(BlueprintCallable, Category = "AAA")
@@ -185,8 +348,12 @@ public:
 	// ** Equip-Item  (Put item from Inventory to EQUIP-slot)
 	UFUNCTION(BlueprintCallable, Category = "AAA")
 		int32 EquipAmunition(const FItemData& itemToEquip, int32 _LastWSlot_Index = -1);
-
 */
+
+// ** *********************     Armour Component    *************************
+
+
+
 
 
 // **  ************************   Select Unit  ************************ 
@@ -202,28 +369,7 @@ public:
 
 
 
-// **  ************************  XXXX001  ************************ 
-public:
 
-	UFUNCTION(BlueprintCallable, Category = "OOO") 		
-		void SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData);
-
-/*
-		AddComand()			// ** FROM HUD,	FROM GameMod/
-		{
-			AI->NewComand()
-		}
-		ChangeWeapon()		// ** From AI
-		{
-			HUD_Redraw_if;
-			WeaponComp;
-		}
-		ChangePose()		// ** From AI
-		{
-			HUD_Redraw_if;
-			WeaponComp;
-		}
-*/
 
 
 

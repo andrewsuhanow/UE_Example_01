@@ -2,12 +2,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "../Item/Item.h"
+#include "../Item/WorldItem.h"
 #include "AmunitionItem.generated.h"
 
 
 UCLASS()
-class OOO_API AAmunitionItem : public AItem
+class OOO_API AAmunitionItem : public AWorldItem
 {
 	GENERATED_BODY()
 	

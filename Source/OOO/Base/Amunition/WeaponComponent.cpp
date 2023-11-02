@@ -1,12 +1,15 @@
 
 
-//#include "../Amunition/WeaponComponent.h"
+//#include "Base/Amunition/WeaponComponent.h"
 #include "WeaponComponent.h"
+
+#include "WeaponWorldItem.h"
+
+#include "../Unit/Base/Unit.h"
 
 UWeaponComponent::UWeaponComponent()
 {
 		PrimaryComponentTick.bCanEverTick = true;
-
 }
 
 
@@ -23,4 +26,10 @@ void UWeaponComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 }
+
+
+
+
+
+
 

@@ -16,8 +16,13 @@ enum class ETaskType : uint8
 	RotateToPointNormal,
 	RotateToPointSlow,
 	RotateAngle,
+
+	Wait,
+
 	XXXXX1,
 	XXXXX2,
+
+	DailyBehavior,
 
 	MAX
 };

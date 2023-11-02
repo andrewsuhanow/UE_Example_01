@@ -15,7 +15,7 @@
 #include "Enum/UnitPositionLogik.h"
 //#include "Enum/TaskInstigator.h"
 
-
+#include "../Base/Enum/TurnBaseGameState.h"
 
 
 
@@ -42,53 +42,59 @@ protected:
 
 public:
 
-	UFUNCTION()		void Init();	// ** Start from "UnitOwner"
+	UFUNCTION()		void Init(bool isStart = false);	// ** Start from "UnitOwner"
 
 
 public:
 
 	UPROPERTY()		class AUnit* UnitOwner;
+	UPROPERTY()		class ABaseGameMode* GameMode;
+	UPROPERTY()		class ABaseGameState* GameState;
+	UPROPERTY()		class ABaseHUD* HUD;
 
 
 public:
+	
+	// ** Daily-behavior Default Queue (init from Unit::DailyBhvrQueueClass)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")		
+		TArray<FDailyBhvrData> DailyBhvrTaskDT;
+	UPROPERTY()		int32 DailyBhvrTaskIndex = -1;			// ** Index in TaskObj
 
-	UPROPERTY()		TArray<FDailyBhvrData> DailyBhvrTaskDT;
-	UPROPERTY()		class UTask* DailyBhvrTaskRef;
 
-	UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array 
+	UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array (Task queue for screen draw)
 
 	UPROPERTY()		FTaskData StoreGeneralTaskDT;			// ** Stored General	TaskDT 
 	UPROPERTY()		FTaskData StoreAITaskDT;				// ** Stored AI			TaskDT 
 	UPROPERTY()		FTaskData StoreDominantTaskDT;			// ** Stored Dominant	TaskDT 		
 
-	//UPROPERTY()		FTaskData MainTaskDT;					// ** Using Parrent Task		
-	//UPROPERTY()		FTaskData PartTaskDT;					// ** Using Child Task
+	//UPROPERTY()		FTaskData MainTaskDT;				// ** Using Parrent Task		
+	//UPROPERTY()		FTaskData PartTaskDT;				// ** Using Child Task
 
-	//UPROPERTY()		FTaskData CurrTaskDT;					// ** Current Task
-	UPROPERTY()		TArray<FTaskData> CurrTaskDTBuffer;
+	//UPROPERTY()		FTaskData CurrTaskDT;				// ** Current Task
+	UPROPERTY()		TArray<FTaskData> CurrTaskDTBuffer;		// ** for sub-Task Queue
 	UPROPERTY()		class UTask* CurrTaskRef;
 
-	UPROPERTY(VisibleAnywhere, Category = "OOO")		
+	UPROPERTY(VisibleAnywhere, Category = "OOO")
 		TArray<UTask*> ActionTaskssObj;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		TArray<TSubclassOf<UTask>> AvailableTaskType;
-	
 
-// ** DELEGATE_TO_HUD	(SET)
-		// ** Pose
-		// ** CurrAttack (selected)
-		// ** CurrWeapon
-		// ** CurrTask
-		// ** CurrLogicBehavior
-		// ** unitParam (health, mana)
-		// ** DailyBehavior	(Create DB panel)
-// +++ EAI_BehaviorMovable
-// +++ EAI_BehaviorRecaction
+
+	// ** DELEGATE_TO_HUD	(SET)
+			// ** Pose
+			// ** CurrAttack (selected)
+			// ** CurrWeapon
+			// ** CurrTask
+			// ** CurrLogicBehavior
+			// ** unitParam (health, mana)
+			// ** DailyBehavior	(Create DB panel)
+	// +++ EAI_BehaviorMovable
+	// +++ EAI_BehaviorRecaction
 
 
 public:
 
-// **  ************************   Unit AI Paramter  ************************
+	// **  ************************   Unit AI Paramter  ************************
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_UnitAi_Parameter")
 		float DefenceZone = 500;
@@ -96,29 +102,33 @@ public:
 		bool IsCanAttack = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_UnitAi_Parameter")
 		// ** AI,  Player,  PlayerOnly,  DailyBehavior
-		EUnitBehaviorLogic BhvrLogic;		
+		EUnitBehaviorLogic BhvrLogic;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_UnitAi_Parameter")
 		// ** PointOnly,  PointRadius,  ShaseTarget,  ShaseTargetWithReturn
 		EUnitPositionLogik PosLogik;
 
 public:
 
-// **  ************************   EVENT  ************************
+	// **  ************************   EVENT  ************************
 
-	//--------------virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
-/*	UFUNCTION()		void OnStopRotate()
-	UFUNCTION()		void OnStopWaiting()
-	UFUNCTION()		void OnFinishAnim()
-	UFUNCTION()		void OnBreakAnim()
-	UFUNCTION()		void OnAnimNotify()
-	UFUNCTION()		void OnX()
-	UFUNCTION()		void OnX()
-	UFUNCTION()		void OnX()
-	UFUNCTION()		void OnX()
-	UFUNCTION()		void OnTaskFinish()
-	UFUNCTION()		void OnTaskInterupt()
-*/
+		//--------------virtual void OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult& Result) override;
+	/*	UFUNCTION()		void OnStopRotate()
+		UFUNCTION()		void OnStopWaiting()
+		
+		UFUNCTION()		void OnBreakAnim()
+		UFUNCTION()		void OnAnimNotify()
+		UFUNCTION()		void OnX()
+		UFUNCTION()		void OnX()
+		UFUNCTION()		void OnX()
+		UFUNCTION()		void OnX()
+		UFUNCTION()		void OnTaskFinish()
+		UFUNCTION()		void OnTaskInterupt()
+	*/		
 
+	UFUNCTION()		void OnFinishAnimation(UAnimMontage* FinishedAnimMontage, bool _bInterrupted);
+
+	// ** EVENT:    "CHange GameState"    (RealTime,  Pause,  TurnBase,)
+	UFUNCTION()		void OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState);
 
 
 public:
@@ -133,6 +143,17 @@ public:
 	UFUNCTION()		void Wait();
 */
 
+
+
+public:
+
+// **  ************************   Global_Operation  ************************
+
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_GameTime")
+		int32 GetGameHour();
+	UFUNCTION(Blueprintcallable, Category = "OOO_GameTime")
+		void OnNewGameHour(int32 iHour);
 
 public:
 
@@ -159,6 +180,15 @@ public:
 	UFUNCTION()		void	SetUnitRotateSpeed(uint8 _RotSpeedIndex);	// ** 0, 1, 2, 3
 	UFUNCTION()		void	SetUnitMoveSpeed(float _Speed);
 	UFUNCTION()		void	UnitStopMove();
+
+	UFUNCTION()		float	GetUnitStopDistance();
+
+	UFUNCTION()		bool	IsUnitInGroup();
+	UFUNCTION()		bool	IsUnitSelected();
+
+	UFUNCTION()		FName	GetUnitGameName();
+
+	UFUNCTION()		void	PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime = 0.f);
 
 public:
 

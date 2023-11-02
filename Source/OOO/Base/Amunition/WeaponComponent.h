@@ -3,6 +3,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
+
 #include "WeaponComponent.generated.h"
 
 
@@ -11,14 +13,37 @@ class OOO_API UWeaponComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
-	UWeaponComponent();
-
 protected:
+
 	virtual void BeginPlay() override;
 
-public:	
+public:
+
+	UWeaponComponent();
+
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+public:	
+
+	UPROPERTY(BlueprintReadOnly, Category = "OOO")
+		class AUnit* UnitOwner;
+
+public:	
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
+		TArray<class AWeaponWorldItem*> EquipSlot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		int32 SelectedWeapon;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		bool IsWeaponActive = false;
+
+
+	//UFUNCTION(BlueprintCallable)
+	//	void InitWeapons(AUnit* _Owner);
+
 
 		
 };

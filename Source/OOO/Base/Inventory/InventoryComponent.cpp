@@ -1,7 +1,11 @@
 
 
-//#include "../Inventory/InventoryComponent.h"
+
+// #include "Base/Inventory/InventoryComponent.h"
 #include "InventoryComponent.h"
+
+#include "../Item/WorldItem.h"
+#include "../Item/Struct/ItemDT.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -24,3 +28,26 @@ void UInventoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 
 }
 
+
+
+bool UInventoryComponent::TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex, TSubclassOf<AWorldItem> WorldItem) 
+{
+	if (WorldItem)
+	{
+		auto* ItemCDO = Cast<AWorldItem>(WorldItem->GetDefaultObject());
+		if (ItemCDO)
+		{
+			FItemDT newItem(ItemCDO->ItemDT);
+			MainInventoryItem.Add(MainInventoryItem.Num() - 1, newItem);
+			//TArray<FMainInventorSlot> MainInventorySlot;
+			//TMap<int32, FItemDT> MainInventoryItem;
+			return true;
+		}
+	}
+	else if(ItemDT)
+	{
+		FItemDT newItem(*ItemDT);
+		MainInventoryItem.Add(MainInventoryItem.Num() - 1, newItem);
+	}
+	return false;
+}

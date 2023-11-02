@@ -6,6 +6,8 @@
 
 #include "../Controller/Task/Struct/TaskData.h"		// ** Unit->SetUnitTask()
 
+#include "Enum/TurnBaseGameState.h"
+
 #include "Spectator.generated.h"
 
 UCLASS()

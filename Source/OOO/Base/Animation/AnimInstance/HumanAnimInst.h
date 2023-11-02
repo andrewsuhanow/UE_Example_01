@@ -62,11 +62,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
 		class UAnimMontage* CurrentMontage = nullptr;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
+		bool IsPlayTOP = true;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
 		float MontageStartTime = 0.f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
 		float MontageTimePause = 0.f;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
-		bool IsPlayTOP = true;
 	// ** DELEGATE_Get( Get/Set, CurrentMontage, IsPlayTOP, MontageStartTime, MontageTimePause, PoseLocomotion, GET_RotateSpeed, GET_MoveSpeed)
 
 	//UFUNCTION(BlueprintCallable)
