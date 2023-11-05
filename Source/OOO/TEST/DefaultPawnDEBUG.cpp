@@ -17,6 +17,8 @@
 #include "../Base/Controller/Task/Enum/DailyBhvrPointPos.h"
 #include "../Base/WorldObject/WayPoint/WayPoint.h"
 
+#include "../Base/Inventory/InventoryComponent.h"
+
 #include "../Base/Controller/Task/Base/Task.h"
 
 
@@ -252,7 +254,7 @@ void AAAADefaultPawnDEBUG::OpenMainInvertory()
 
 	if (SelectTestUnit && hud && gameMode)
 	{
-		hud->ShowInventory(SelectTestUnit, gameMode);
+		hud->ShowInventory(SelectTestUnit->Inventory, gameMode);
 	}
 }
 

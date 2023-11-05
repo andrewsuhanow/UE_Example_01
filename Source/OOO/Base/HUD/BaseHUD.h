@@ -35,8 +35,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_DefaultGameParam")
 		class UW_Screen* Screen;
 	
-	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowInventory(class AUnit* _Unit, ABaseGameMode* _GameMode);
-	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowLoot(class AUnit* _LootUnit, ABaseGameMode* _GameMode);
+	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowInventory(class UInventoryComponent* _Inventor, ABaseGameMode* _GameMode);
+	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowLoot(class UInventoryComponent* _Inventor, ABaseGameMode* _GameMode);
 	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowEquipPanel(class AUnit* _LootUnit);
 	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowLootEquipPanel(class AUnit* _LootUnit);
 	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowFastPanel(class AUnit* _LootUnit);

@@ -26,12 +26,12 @@ class OOO_API UInventoryComponent : public UActorComponent
 
 public:	
 
-	// ** FirstSlotIndexKEY:	KEY in Map : MainInventoryItem
-	// ** FirstSlotIndexKEY:	This Array index
-	// ** FirstSlotIndex:		first ItemSlot in this Attay
+	// ** ItemPosIndex:		KEY in Map : MainInventoryItem.
+	// **					First ItemSlot in this Array.
+	// ** CurrSlotIndex:	This Array index.
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
 		TArray<FMainInventorSlot> MainInventorySlot;
-	// ** First slot of "MainInventorySlot" position
+	// ** KAY = First slot of "MainInventorySlot" position
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")
 		TMap<int32, FItemDT> MainInventoryItem;
 
@@ -40,14 +40,6 @@ public:
 	// ** Add Item to main Inventory
 	///UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
 		bool TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex = -1, TSubclassOf<class AWorldItem> WorldItem = nullptr) ;
-
-/*
-	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
-		bool AddItemToInventory(FItemDT* _ItemDT, ESlotType _SlotType) const;
-
-	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
-		bool AddItemToSlotIndex(FItemDT* _ItemDT, ESlotType _SlotType, int32 ToIndex) const;
-*/
 
 
 public:	
@@ -59,5 +51,18 @@ protected:
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-		
+	
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void Init();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void AddSlotsRowToMainInventor(int32 _MainInvCollNum);
+
+
+	// ** UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool CheckItemCollision(const class AUnit* UnitOvner, const FItemDT* ItemDT, int32 Position);
 };
+

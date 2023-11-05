@@ -42,15 +42,15 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void ShowInventory(class AUnit* _Unit, ABaseGameMode* BGameMode);
+		void ShowInventory(class UInventoryComponent* _Inventor, ABaseGameMode* BGameMode);
 
 
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void UpdateInventory(class AUnit* _Unit, ABaseGameMode* BGameMode);
+		void UpdateInventory(class UInventoryComponent* _Inventor, ABaseGameMode* BGameMode);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void AddSlotsRowAtOnBottom(class AUnit* _Unit, ABaseGameMode* _GameMode, int32 _Row, int32 _CollCount, float _SlotSize);
+		void AddSlotsRowOnBottom(ABaseGameMode* _GameMode, int32 _Row, int32 _CollCount, float _SlotSize);
 
 
 

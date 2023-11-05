@@ -16,14 +16,21 @@ struct FMainInventorSlot
 	GENERATED_USTRUCT_BODY()
 		//GENERATED_BODY()
 
-	// ** First slot of item position
-	// ** and KEY in Map-Inventor-Container
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
-		int32 FirstSlotIndexKEY = -1;
 
-	// ** Pointer on FirstSlotIndexKEY if item bound several Slots
+	FMainInventorSlot() : CurrSlotIndex(-1), ItemPosIndex(-1) {};
+	FMainInventorSlot(int32 _CurrSlotIndex, int32 _ItemPosIndex) : CurrSlotIndex(_CurrSlotIndex), ItemPosIndex(_ItemPosIndex) {};
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
-		int32 FirstSlotIndex = -1;
+		int32 CurrSlotIndex = -1;
+
+	// ** First slot-index position (Item)
+	// ** and, KEY in Map-Inventor-Container
+	// ** -1 - if slot empty
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		int32 ItemPosIndex = -1;
+
+
 
 
 };

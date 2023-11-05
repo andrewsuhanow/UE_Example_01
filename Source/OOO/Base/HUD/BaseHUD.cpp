@@ -8,6 +8,8 @@
 #include "../Base/BaseGameMode.h"
 #include "../Base/BaseGameState.h"
 
+#include "../Inventory/InventoryComponent.h"
+
 #include "Widget/ScreenParts/W_Inventory.h"
 // .. 
 // .. 
@@ -46,14 +48,14 @@ bool ABaseHUD::Init(TSubclassOf<UW_Screen> W_Screen_Class)
 
 
 
-void ABaseHUD::ShowInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
+void ABaseHUD::ShowInventory(UInventoryComponent* _Inventor, ABaseGameMode* _GameMode)
 {
-	Screen->ShowInventory(_Unit, _GameMode);
+	Screen->ShowInventory(_Inventor, _GameMode);
 }
 
-void ABaseHUD::ShowLoot(AUnit* _LootUnit, ABaseGameMode* _GameMode)
+void ABaseHUD::ShowLoot(UInventoryComponent* _LootInventor, ABaseGameMode* _GameMode)
 {
-	Screen->ShowLoot(_LootUnit, _GameMode);
+	Screen->ShowLoot(_LootInventor, _GameMode);
 }
 
 void ABaseHUD::ShowEquipPanel(AUnit* _Unit)

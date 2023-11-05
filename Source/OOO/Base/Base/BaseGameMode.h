@@ -44,10 +44,10 @@ public:
 
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		bool IsInventorSizeFixed = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvCollCountBOUND = 4;		// ** (Const) Horizontal
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvRowCountBOUND = 6;		// ** (Const) Vertical
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 FullRowCount = 30;				// ** (Can be Add Using Scroll)
+	// ** UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")	bool IsInventorSizeFixed = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvCollNum = 6;			// ** (Const) Horizontal
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvRowNum = 9;			// ** (Const) Vertical
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 FullRowNum = 12;				// ** (Can be Add Using Scroll)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float MainInventorSlotSize = 64.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 GlobalInventorHeight = 6;

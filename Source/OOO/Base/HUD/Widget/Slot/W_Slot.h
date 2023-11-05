@@ -73,14 +73,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		UImage* ImgItem = nullptr;
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetImage(UTexture2D* BackgroundImage = nullptr);
+		void SetImage(UTexture2D* ItemImage = nullptr);
 
 
 	// ** Background Image
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		UImage* BackgroungImage;
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetBackgroundImage(UTexture2D* BackgroundImage = nullptr);
+		void SetBackgroundImage(UTexture2D* _BackgroundImage = nullptr);
 
 
 

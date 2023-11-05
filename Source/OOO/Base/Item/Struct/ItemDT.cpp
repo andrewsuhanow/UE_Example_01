@@ -10,18 +10,45 @@
 
 
 
+FItemDT::FItemDT(const FItemDT& Other)
+{
+	GameName = Other.GameName;
+	Description = Other.Description;
+	ItemImage = Other.ItemImage;
+
+	ItemOneCellImage = Other.ItemOneCellImage;
+	IsStackable = Other.IsStackable;
+	Count = Other.Count;
+	HealthMax = Other.HealthMax;
+	Health = Other.Health;
+	ValueKoef = Other.ValueKoef;
+	Cost = Other.Cost;
+	Waight = Other.Waight;
 
 
-UTexture2D* FItemDT::GetFullImage()
+	AllowInventorySlotType = Other.AllowInventorySlotType;
+	InventorySizeX = Other.InventorySizeX;
+	InventorySizeY = Other.InventorySizeY;
+	ItemStaticMash = Other.ItemStaticMash;
+	ItemSkeletalMash = Other.ItemSkeletalMash;
+
+	WeaponDT = Other.WeaponDT;
+}
+
+
+
+
+
+UTexture2D* FItemDT::GetFullImage() const
 {
 	return ItemImage;
 }
-UTexture2D* FItemDT::GetOneSlotImage()
+UTexture2D* FItemDT::GetOneSlotImage() const
 {
 	return ItemOneCellImage;
 }
 
-int32 FItemDT::GetItemHorizontalSixe() const
+int32 FItemDT::GetItemHorizontalSize() const
 {
 	return InventorySizeX;
 }

@@ -22,15 +22,20 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 		//GENERATED_BODY()
 
 
+
+	FItemDT() {};
+	FItemDT(const FItemDT& Other);
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	FName GameName = FName("none");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	FString Description = FString("no description");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	UTexture2D* ItemImage;
-																	UTexture2D* GetFullImage();
+																	UTexture2D* GetFullImage() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	UTexture2D* ItemOneCellImage;
-																	UTexture2D* GetOneSlotImage();
+																	UTexture2D* GetOneSlotImage() const;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		// Soft Mesh
@@ -67,7 +72,7 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 InventorySizeX = 1;
-																	int32 GetItemHorizontalSixe() const;
+																	int32 GetItemHorizontalSize() const;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 InventorySizeY = 1;
 																	int32 GetItemVerticalSize() const;

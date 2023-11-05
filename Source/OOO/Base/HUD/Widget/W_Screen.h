@@ -40,8 +40,8 @@ public:
 
 // *************************    Init    ***************************
 
-	UFUNCTION()		void ShowInventory(class AUnit* _Unit, class ABaseGameMode* _GameMode);
-	UFUNCTION()		void ShowLoot(class AUnit* _LootUnit, ABaseGameMode* _GameMode);
+	UFUNCTION()		void ShowInventory(class UInventoryComponent* _Inventor, class ABaseGameMode* _GameMode);
+	UFUNCTION()		void ShowLoot(class UInventoryComponent* _Inventor, ABaseGameMode* _GameMode);
 	UFUNCTION()		void ShowEquipPanel(class AUnit* _LootUnit);
 	UFUNCTION()		void ShowLootEquipPanel(class AUnit* _LootUnit);
 	UFUNCTION()		void ShowFastPanel(class AUnit* _LootUnit);

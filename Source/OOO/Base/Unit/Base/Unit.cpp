@@ -3,6 +3,9 @@
 #include "Unit.h"
 
 
+#include "../../Base/BaseGameMode.h"
+#include "../../Base/BaseGameState.h"
+#include "../../HUD/BaseHUD.h"
 
 #include "../../Controller/UnitAI.h"
 
@@ -135,6 +138,21 @@ bool AUnit::StartGame(bool finalInit)
 	bool isAllComponentInited = false;
 
 
+	GameState = Cast<ABaseGameState>(GetWorld()->GetGameState());
+	if (!GameState)
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnit::Init():      'GameState' not Get"), *GetName());
+
+	GameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+	if (!GameMode)
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnit::Init():      'GameMode' not Get"), *GetName());
+
+
+	HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+	if (!HUD)
+		UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnit::Init():      'HUD' not Get"), *GetName());
+
+
+
 	// ** Init AI
 	if (AI)
 		isAllComponentInited = true;
@@ -163,7 +181,25 @@ bool AUnit::StartGame(bool finalInit)
 		return false;
 	}
 
+	// ** Invertor param (DEFAULLT)
+	if (finalInit)
+	{
+		if (FullRowNum == 0)
+		{
+			FullRowNum = GameMode->FullRowNum;
+		}
+		if (!MainInvertorySlotTexture)
+		{
+			MainInvertorySlotTexture = GameMode->MainInvertorySlotTexture;
+		}
 
+		Inventory->Init();
+
+		// ** Add default items
+		for(int32 i = 0; i < InitInvertorItems.Num(); ++i)
+			TryAddItemToInventory(nullptr, -1, InitInvertorItems[i]);
+		
+	}
 
 	// +++ SetPose(EUnitPose::Stand, false);		// ** bool _IsUseGroupSpeed
 
@@ -315,10 +351,25 @@ void AUnit::AddAbility(EAbilityType _Ability)
 
 
 
-bool AUnit::TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex, TSubclassOf<AWorldItem> WorldItem) 
+bool AUnit::TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex, TSubclassOf<AWorldItem> WorldItem)  
 {
 	return Inventory->TryAddItemToInventory(ItemDT, ToSlotIndex, WorldItem);
 }
+
+
+int32 AUnit::GetMainInvCollNum() const
+{
+	return GameMode->MainInvCollNum; 
+};
+int32 AUnit::GetMainInvRowNum() const
+{
+	return GameMode->MainInvRowNum;
+};
+float AUnit::MainInventorSlotSize() const
+{
+	return GameMode->MainInventorSlotSize;
+};
+
 
 
 

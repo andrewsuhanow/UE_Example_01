@@ -32,27 +32,31 @@ void UW_Slot::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	SelectImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	SelectImage2->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	SelectImage3->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	
 	
 }
 
 
 
-void UW_Slot::SetImage(UTexture2D* BackgroundImage)
+void UW_Slot::SetImage(UTexture2D* ItemImage)
 {
 
-	// ++++++ Image = 
+	ImgItem->SetBrushFromTexture(ItemImage, false);
+	ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 
-
-	if (!BackgroundImage)
+	if (!ItemImage)
 	{
 		ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	}
 }
 
-void UW_Slot::SetBackgroundImage(UTexture2D* BackgroundImage)
+void UW_Slot::SetBackgroundImage(UTexture2D* _BackgroundImage)
 {
-	// ++ BackgroundImage =
+	BackgroungImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	BackgroungImage->SetBrushFromTexture(_BackgroundImage, false);
 }
 
 

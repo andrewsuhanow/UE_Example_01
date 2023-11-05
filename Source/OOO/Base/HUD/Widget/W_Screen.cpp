@@ -5,6 +5,8 @@
 
 #include "../../Unit/Base/Unit.h"
 
+#include "../../Inventory/InventoryComponent.h"
+
 /*
 
 
@@ -73,13 +75,13 @@ void UW_Screen::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 
 
-void UW_Screen::ShowInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
+void UW_Screen::ShowInventory(UInventoryComponent* _Inventor, ABaseGameMode* _GameMode)
 {
-	InventorView->ShowInventory(_Unit, _GameMode);
+	InventorView->ShowInventory(_Inventor, _GameMode);
 }
-void UW_Screen::ShowLoot(AUnit* _LootUnit, ABaseGameMode* _GameMode)
+void UW_Screen::ShowLoot(UInventoryComponent* _LootInventor, ABaseGameMode* _GameMode)
 {
-	LootView->ShowInventory(_LootUnit, _GameMode);
+	LootView->ShowInventory(_LootInventor, _GameMode);
 }
 
 void UW_Screen::ShowEquipPanel(AUnit* _Unit)

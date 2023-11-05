@@ -7,6 +7,7 @@
 #include "../Slot/W_DropSlot.h"
 
 #include "../../../Unit/Base/Unit.h"
+#include "../../../Inventory/InventoryComponent.h"
 
 #include "../../../Base/BaseGameMode.h"
 
@@ -110,55 +111,52 @@ void UW_Inventory::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 
 
-
-void  UW_Inventory::ShowInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
+void UW_Inventory::ShowInventory(UInventoryComponent* _Inventor, ABaseGameMode* _GameMode)
 {
-	UpdateInventory(_Unit, _GameMode);
+	UpdateInventory(_Inventor, _GameMode);
 }
 
 
 
-void  UW_Inventory::UpdateInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
+
+void UW_Inventory::UpdateInventory(UInventoryComponent* _Inventor, ABaseGameMode* _GameMode)
 {
 
+	AUnit* _Unit = Cast<AUnit>(_Inventor->GetOwner());
+
 	// ** get size data
+	int32 mainInvCollNum = _GameMode->MainInvCollNum;
+	int32 mainInvRowNum = _GameMode->MainInvRowNum;
+	float mainInventorSlotSize	= _GameMode->MainInventorSlotSize;
+
 	bool isInventorSizeFixed = _Unit->IsInventorSizeFixed;
-	int32 mainInvCollCountBOUND = _Unit->MainInvCollCountBOUND;
-	int32 mainInvRowCountBOUND = _Unit->MainInvRowCountBOUND;
-	int32 fullRowCount = _Unit->FullRowCount;
-	float mainInventorSlotSize = _Unit->MainInventorSlotSize;
-	if (mainInvCollCountBOUND == 0 || fullRowCount == 0 || mainInventorSlotSize == 0)
-	{
-		isInventorSizeFixed = _GameMode->IsInventorSizeFixed;
-		mainInvCollCountBOUND = _GameMode->MainInvCollCountBOUND;	// ** CellCount_Col
-		mainInvRowCountBOUND = _GameMode->MainInvRowCountBOUND;
-		fullRowCount = _GameMode->FullRowCount;						// ** CellCount_Row
-		mainInventorSlotSize = _GameMode->MainInventorSlotSize;
-	}
+	int32 fullRowNum = _Unit->FullRowNum;
+	UTexture2D* MainInvertorySlotTexture = _Unit->MainInvertorySlotTexture;
+
+
+
+
 
 
 	// ** Set Total invertory size
 	InventorySizeBox->bOverride_HeightOverride = 1;
-	InventorySizeBox->SetHeightOverride(mainInventorSlotSize * mainInvRowCountBOUND);
+	InventorySizeBox->SetHeightOverride(mainInventorSlotSize * mainInvRowNum);
 	InventorySizeBox->bOverride_WidthOverride = 1;
-	InventorySizeBox->SetWidthOverride(mainInventorSlotSize * mainInvCollCountBOUND);
-	/// ** InventorySizeBox->SetMaxDesiredWidth(mainInventorSlotSize * mainInvCollCountBOUND);
-	/// ** InventorySizeBox->SetMinDesiredWidth(mainInventorSlotSize * mainInvCollCountBOUND);
-	/// ** InventorySizeBox->SetMaxDesiredHeight(mainInventorSlotSize * fullRowCount);
-	/// ** InventorySizeBox->SetMinDesiredHeight(mainInventorSlotSize * fullRowCount);
+	InventorySizeBox->SetWidthOverride(mainInventorSlotSize * mainInvCollNum);
+
 
 
 	// ** set all Slots default   
-	int32 SlotsNum = fullRowCount * mainInvCollCountBOUND;
-	int32 OlredyExistingSlotCount = SlotObj.Num(); 
+	int32 ExistingWSlotNum = SlotObj.Num(); 
+	int32 UnitSlotNum = _Inventor->MainInventorySlot.Num();
 	int32 i;
-	for (i = 0; i < SlotsNum; ++i)
+	for (i = 0; i < UnitSlotNum; ++i)
 	{
-		// ** Add Main-Inventory-Slots new Row 
-		if (i >= OlredyExistingSlotCount)
+		// ** Add new Row 
+		if (i >= ExistingWSlotNum)
 		{
-			AddSlotsRowAtOnBottom(_Unit, _GameMode, i / mainInvCollCountBOUND, mainInvCollCountBOUND, mainInventorSlotSize);
-			OlredyExistingSlotCount = SlotObj.Num();
+			AddSlotsRowOnBottom(_GameMode, i / mainInvCollNum, mainInvCollNum, mainInventorSlotSize);
+			ExistingWSlotNum = SlotObj.Num();
 		}
 		
 		SlotObj[i]->SelectUnit = _Unit;
@@ -168,18 +166,48 @@ void  UW_Inventory::UpdateInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
 			_GameMode->MainInvertorySlotTexture;
 		SlotObj[i]->BackgroungImage->SetBrushFromTexture(texture, false);				// ** nullptr - noImage
 		SlotObj[i]->ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));	// ** hite item icon 
-		SlotObj[i]->SetVisibility(ESlateVisibility::Visible); // Collapsed,
+		SlotObj[i]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden
 
 		// ** set slot size
-		///SlotObj[i]->SzBox->SetHeightOverride(mainInventorSlotSize);
-		///SlotObj[i]->SzBox->SetWidthOverride(mainInventorSlotSize);
-		SlotObj[i]->SzBox->SetMinDesiredWidth(mainInventorSlotSize);
-		SlotObj[i]->SzBox->SetMaxDesiredWidth(mainInventorSlotSize);
-		SlotObj[i]->SzBox->SetMinDesiredHeight(mainInventorSlotSize);
-		SlotObj[i]->SzBox->SetMaxDesiredHeight(mainInventorSlotSize);
+		SlotObj[i]->SzBox->SetHeightOverride(mainInventorSlotSize);
+		SlotObj[i]->SzBox->SetWidthOverride(mainInventorSlotSize);
+	}
+
+	// ** collapsed unnecessary slot
+	if (ExistingWSlotNum > UnitSlotNum)
+	{
+		for (i = UnitSlotNum - 1; i < ExistingWSlotNum; ++i)
+		{
+			SlotObj[i]->SetVisibility(ESlateVisibility::Collapsed); /// Collapsed, Visible, Hidden
+		}
 	}
 
 
+	// ** Assign Unit-ItemDT to Slot
+	for (const auto& It : _Inventor->MainInventoryItem)
+	{
+		// SlotObj[It.Key]->IndexInContainer = i;
+
+		SlotObj[It.Key]->SetImage(It.Value.GetFullImage());
+		SlotObj[It.Key]->SetBackgroundImage(MainInvertorySlotTexture);  
+
+		// ** Hide other Item Slot (Show only first)
+		for (int32 Hor = 0; Hor < It.Value.GetItemHorizontalSize(); ++Hor)
+		{
+			for (int32 Wert = 0; Wert < It.Value.GetItemVerticalSize(); ++Wert)
+			{
+				int32 SlotIndexForHidding = It.Key + Hor + Wert * mainInvCollNum;
+				SlotObj[SlotIndexForHidding]->SetVisibility(ESlateVisibility::Collapsed); /// Collapsed, Visible, Hidden;
+			}
+		}
+		SlotObj[It.Key]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden;
+
+
+		// ** Set Slot SIZE
+		SlotObj[It.Key]->SzBox->SetHeightOverride(mainInventorSlotSize * It.Value.GetItemVerticalSize());
+		SlotObj[It.Key]->SzBox->SetWidthOverride(mainInventorSlotSize * It.Value.GetItemHorizontalSize());
+
+	}
 //---------------------------------------------
 /*
 ///////////////////////////
@@ -194,7 +222,7 @@ void  UW_Inventory::UpdateInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
 			for (i = 0; i < Item_Count; ++i)
 			{
 
-				if (ItemsList[i].SlotUI_Index < SlotsNum)
+				if (ItemsList[i].SlotUI_Index < UnitSlotNum)
 				{
 					SlotObj[ItemsList[i].SlotUI_Index]->ImgItem->SetBrushFromTexture(ItemsList[i].Texture, false);
 					SlotObj[ItemsList[i].SlotUI_Index]->ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
@@ -207,7 +235,7 @@ void  UW_Inventory::UpdateInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
 						{
 							if (W == 0 && H == 0) continue;
 							int32 Index = ItemsList[i].SlotUI_Index + W + (H * CellCount_Col);
-							SlotObj[Index]->SetVisibility(ESlateVisibility::Collapsed); // Hidden
+							SlotObj[Index]->SetVisibility(ESlateVisibility::Collapsed); /// Collapsed, Visible, Hidden
 						}
 					}
 					// ** size
@@ -228,10 +256,8 @@ void  UW_Inventory::UpdateInventory(AUnit* _Unit, ABaseGameMode* _GameMode)
 
 
 
-void UW_Inventory::AddSlotsRowAtOnBottom(AUnit* _Unit, ABaseGameMode* _GameMode, int32 _Row, int32 _CollCount, float _SlotSize)
+void UW_Inventory::AddSlotsRowOnBottom(ABaseGameMode* _GameMode, int32 _Row, int32 _CollCount, float _SlotSize)
 {
-	//if (!PlayerPAWN) return;
-	//if (PlayerPAWN->SelectGroup.Num() != 1) return;
 
 	int32 LastSlotIndex = SlotObj.Num();
 
@@ -248,14 +274,9 @@ void UW_Inventory::AddSlotsRowAtOnBottom(AUnit* _Unit, ABaseGameMode* _GameMode,
 			NewSlot->ImgItem->SetBrushSize(FVector2D(_SlotSize, _SlotSize));
 
 			// ** Set CELL SIZE
-			NewSlot->SzBox->SetMaxDesiredHeight(_SlotSize);
-			NewSlot->SzBox->SetMinDesiredHeight(_SlotSize);
-			NewSlot->SzBox->SetMaxDesiredWidth(_SlotSize);
-			NewSlot->SzBox->SetMinDesiredWidth(_SlotSize);
-			///NewSlot->SzBox->bOverride_HeightOverride = 1;
-			///NewSlot->SzBox->SetHeightOverride(_SlotSize);
-			///NewSlot->SzBox->bOverride_WidthOverride = 1;
-			///NewSlot->SzBox->SetWidthOverride(_SlotSize);
+			NewSlot->SzBox->SetHeightOverride(_SlotSize);
+			NewSlot->SzBox->SetWidthOverride(_SlotSize);
+
 			NewSlot->PanelTypeFix = ESlotType::main_inv;
 			// ** NewSlot->SelectUnit = _Unit;
 

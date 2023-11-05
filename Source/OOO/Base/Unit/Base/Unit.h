@@ -41,6 +41,12 @@ protected:
 
 public:
 
+	UPROPERTY()		class ABaseGameMode* GameMode;
+	UPROPERTY()		class ABaseGameState* GameState;
+	UPROPERTY()		class ABaseHUD* HUD;
+
+public:
+
 // **  ************************   "Game-Delay" at the BeginPlay()  ************************  
 
 	UFUNCTION()		bool StartGame(bool finalInit = false);
@@ -191,21 +197,31 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		TSubclassOf<class UDailyBhvrQueue> DailyBhvrQueueClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		TMap<EAnimationKey, UAnimMontage*> UnitAnimation;
 
-	// ---------------   Inventor   ---------------
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
-		bool IsInventorSizeFixed = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
-		int32 MainInvCollCountBOUND = 0;		// ** (Const) Horizontal
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
-		int32 MainInvRowCountBOUND = 0;		// ** (Const) Vertical
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
-		int32 FullRowCount = 0;						// ** (Can be Add Using Scroll)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
-		float MainInventorSlotSize = 0;
 
+	// ---------------   Inventor   ---------------
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!_Unit_Parameter")
+		class UInventoryComponent* Inventory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")		
+		bool IsInventorSizeFixed = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")		
+		int32 FullRowNum = 0;							// ** (Can be Add Using Scroll)
+	UFUNCTION(Blueprintcallable, Category = "OOO!_Unit_Parameter")
+		int32 GetMainInvCollNum() const;
+	UFUNCTION(Blueprintcallable, Category = "OOO!_Unit_Parameter")
+		int32 GetMainInvRowNum() const;
+	UFUNCTION(Blueprintcallable, Category = "OOO!_Unit_Parameter")
+		float MainInventorSlotSize() const;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		TArray<TSubclassOf<class AWorldItem>> InitInvertorItems;
+
+/*
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
 		int32 GlobalInventorHeight = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter_Inventor")		
@@ -216,7 +232,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
 		float PerkPanelSlotSize = 0; 
-
+*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")
 		UTexture2D* MainInvertorySlotTexture = nullptr;
 	// ---------------   Inventor!!!   ---------------
@@ -258,10 +274,7 @@ public:
 // **  ************************   Inventory   ************************
 
 public:
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!_Inventory")
-		class UInventoryComponent* Inventory;
-
+	   
 	// ** IndexInContainer  (KEY in Map : FastPanelItem)
 	// ** AbilityType
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
