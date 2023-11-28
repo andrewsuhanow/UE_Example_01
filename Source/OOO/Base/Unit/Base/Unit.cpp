@@ -19,9 +19,12 @@
 
 #include "../../Inventory/InventoryComponent.h"
 
+#include "../../Amunition/WeaponComponent.h"
+
 #include "../../Ability/AbilityComponent.h"
 
 #include "../../Item/WorldItem.h"
+
 // --------------------------------------------
 
 //#include "../../Base/BaseGameMode.h"
@@ -84,10 +87,11 @@ AUnit::AUnit()
 	// **  Inventory   
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 
-
 	// **  Ability   
 	Ability = CreateDefaultSubobject<UAbilityComponent>(TEXT("Ability"));
 
+	// **  Weapon  
+	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
 }
 
 
@@ -134,6 +138,12 @@ void AUnit::BeginPlay()
 bool AUnit::StartGame(bool finalInit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ERROR:_______________AUnitAI::Start()_______________Init Continue"));
+
+
+	if(UnitGameType == EUnitGameType::none)
+		UE_LOG(LogTemp, Error, TEXT("ERROR:_______________AUnitAI::Start()_______________'UnitType' is not Init"));
+
+
 
 	bool isAllComponentInited = false;
 
@@ -193,18 +203,34 @@ bool AUnit::StartGame(bool finalInit)
 			MainInvertorySlotTexture = GameMode->MainInvertorySlotTexture;
 		}
 
+		// ** Inventory Component
 		Inventory->Init();
 
-		// ** Add default items
-		for(int32 i = 0; i < InitInvertorItems.Num(); ++i)
-			TryAddItemToInventory(nullptr, -1, InitInvertorItems[i]);
+		InitFastPanel();
+
+		// ** Ability Component
+		// -----
+		// ----- @@@@@@
+		// -----
+
+		// ** Weapon Component
+		WeaponComponent->InitWeapons(this);
+
+		// ** Armor Component
+		//ArmorComponent->InitArmour(this);
+
+
+		// ** Add default items to MainInventor
+		//++++for(int32 i = 0; i < InitInvertorItems.Num(); ++i)
+		//++++	TryAddItemToMainInventory(nullptr, -1, InitInvertorItems[i]);
 		
+
+
+		// +++ SetPose(EUnitPose::Stand, false);		// ** bool _IsUseGroupSpeed
+
+		// +++  ** Bind to delegate for End-Animation-EVENT   (ABaseUnit::    FOnMontageEnded OnAnimationFinish;)
+		// +++ FinishAnimationDELEGATE.BindUObject(AIController, &AUnitAI::OnAnimationFinish);
 	}
-
-	// +++ SetPose(EUnitPose::Stand, false);		// ** bool _IsUseGroupSpeed
-
-	// +++  ** Bind to delegate for End-Animation-EVENT   (ABaseUnit::    FOnMontageEnded OnAnimationFinish;)
-	// +++ FinishAnimationDELEGATE.BindUObject(AIController, &AUnitAI::OnAnimationFinish);
 
 	return  isAllComponentInited;
 }
@@ -229,9 +255,22 @@ void AUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 // **  ************************************************************************
 
 
-void AUnit::SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData)
+void AUnit::SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, 
+	FTaskData _TaskData, ETaskInstigator _TaskInstigator, 
+	ETaskPriority _TaskPriority)
 {
-	AI->SetTask(_bAddMoreOne, _TaskType, _TaskData);
+	AI->SetTask(_bAddMoreOne, _TaskType, _TaskData, _TaskInstigator, _TaskPriority);
+
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		UTexture2D* CurrTaskImage;
+		TArray<UTexture2D*> TasksImage;
+		TArray<int32> TasksIndex;
+
+		AI->GetTasksQueDataFromAI(CurrTaskImage, TasksImage, TasksIndex);
+
+		HUD->UpdateTaskQueuePanel(this, CurrTaskImage, TasksImage, TasksIndex);
+	}
 }
 
 
@@ -283,6 +322,14 @@ void AUnit::NoticeSelfDamageAsPerception(float _DamageAmount, struct FDamageEven
 // **  ************************     AnimInstance     ************************ 
 // **  ************************************************************************
 
+
+void AUnit::SetWeaponAnimType(EWeaponType _NewWeaponAnim)
+{
+	AnimInstance->SetWeaponAnimType(_NewWeaponAnim);
+}
+
+
+
 void AUnit::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime)
 {
 	AnimInstance->CurrentMontage = _AnimMontage;
@@ -293,6 +340,416 @@ void AUnit::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _from
 	AnimInstance->Montage_SetEndDelegate(FinishAnimationDELEGATE, _AnimMontage);
 }
 
+
+void AUnit::OnAnimNotify(FString _NotifyName)
+{
+	AI->OnAnimNotify(_NotifyName);
+}
+
+
+// **  ************************************************************************
+// **  **************************     Unit_Main_Function     *************************** 
+// **  ************************************************************************
+
+
+
+void AUnit::SelectUnit()
+{
+	IsUnitSelected = true;
+
+	if (!IsUnitInGroup())
+	{
+		int32 weaponSlotIndex;
+		ESlotType weaponSlotType;
+		UTexture2D* weaponSlotTexture;
+
+		if (!WeaponComponent->GetCurrentWeaponSlotData(weaponSlotIndex,
+			weaponSlotType, weaponSlotTexture))
+		{
+			weaponSlotIndex = -1;
+		}
+
+		HUD->ShowWpnChangePanel(this, weaponSlotIndex,
+			weaponSlotType, weaponSlotTexture);
+
+		if (HUD->IsEquipPanelShown)
+			HUD->ShowEquipPanel(this);	// ** update
+	}
+
+	// @@@@@ ...
+	// @@@@@ ...
+	// @@@@@ ...
+}
+
+void AUnit::DeselectUnit()
+{
+	IsUnitSelected = false;
+
+	if(!IsUnitInGroup())
+		HUD->HideWpnChangePanel(this);
+
+	// @@@@@ ...
+	// @@@@@ ...
+	// @@@@@ ...
+}
+
+bool AUnit::GetIsUnitSelected()
+{
+	return IsUnitSelected;
+}
+
+bool AUnit::IsUnitInGroup()
+{
+	return (GameState->GetUnitGroupNum() > 1);
+}
+
+
+
+
+// **  ************************************************************************
+// **  **************************     Inventory     *************************** 
+// **  ************************************************************************
+
+
+
+bool AUnit::TryAddItemToMainInventory(FItemDT* ItemDT, int32 ToSlotIndex, 
+							TSubclassOf<AWorldItem> WorldItem, bool ForseAdd)
+{
+	return Inventory->TryAddItemToMainInventory(ItemDT, ToSlotIndex, WorldItem, ForseAdd);
+}
+
+bool AUnit::IsMainInventorySlotEmpty(int32 SlotIndex)
+{
+	return Inventory->IsMainInventorySlotEmpty(SlotIndex);
+}
+
+FItemDT* AUnit::GetItemRefFromMainInventory(int32 SlotIndex)
+{
+	return Inventory->GetItemRefFromMainInventory(SlotIndex);
+}
+
+void AUnit::RemoveItemFromMainInventory(int32 SlotIndex)
+{
+	Inventory->RemoveItemFromMainInventory(SlotIndex);
+}
+
+
+
+
+
+
+int32 AUnit::GetMainInvCollNum() const
+{
+	return GameMode->MainInvCollNum; 
+};
+int32 AUnit::GetMainInvRowNum() const
+{
+	return GameMode->MainInvRowNum;
+};
+float AUnit::MainInventorSlotSize() const
+{
+	return GameMode->MainInventorSlotSize;
+};
+
+
+// **  ************************************************************************
+// **  **********************     Global_Inventory     ************************ 
+// **  ************************************************************************
+
+void AUnit::AddItemToGlobalInventory(FItemDT* ItemDT, int32 ToSlotIndex) 
+{
+	Inventory->AddItemToGlobalInventory(ItemDT, ToSlotIndex);
+}
+
+bool AUnit::IsGlobalInventorySlotEmpty(int32 SlotIndex)
+{
+	return Inventory->IsGlobalInventorySlotEmpty(SlotIndex);
+}
+
+FItemDT* AUnit::GetItemRefFromGlobalInventory(int32 SlotIndex)
+{
+	return Inventory->GetItemRefFromGlobalInventory(SlotIndex);
+}
+
+void AUnit::RemoveItemFromGlobalInventory(int32 SlotIndex)
+{
+	Inventory->RemoveItemFromGlobalInventory(SlotIndex);
+}
+
+
+// **  ************************************************************************
+// **  *************************     Fast_Panel     *************************** 
+// **  ************************************************************************
+
+
+void AUnit::InitFastPanel()
+{
+	int32 fastPanelSlotMaxNum = GameMode->FastPanelSlotNum;
+	FastPanelSlots.Init(FFastPanelSlot(), fastPanelSlotMaxNum);
+}
+
+
+bool AUnit::SetItemToFastPanel(FItemDT* ItemDT, int32 ToSlotIndex)
+{
+	if (ToSlotIndex < 0 || ToSlotIndex >= FastPanelSlots.Num())
+		return false;
+
+	// ** Stack
+	if (
+		FastPanelSlots[ToSlotIndex].IndexInContainer != -1  &&
+		FastPanelSlots[ToSlotIndex].AbilityType == EAbilityType::none &&
+		ItemDT->IsItemStackable())
+	{
+		FItemDT* UnderItemDT = FastPanelItem.Find(FastPanelSlots[ToSlotIndex].IndexInContainer);
+		if (UnderItemDT)
+			if (*ItemDT == *UnderItemDT)
+			{
+				int32 FreeGapeToAddStack = UnderItemDT->CountMax - UnderItemDT->Count;
+				if (FreeGapeToAddStack > 0)
+				{
+					// ** Add to stack (contain full)
+					if (ItemDT->Count <= FreeGapeToAddStack)
+					{
+						UnderItemDT->Count += ItemDT->Count;
+						return true;
+					}
+					// ** Add part of skact (Has a rest)
+					else
+					{
+						UnderItemDT->Count = UnderItemDT->CountMax;
+						ItemDT->Count -= FreeGapeToAddStack;
+						return false; 
+					}
+				}
+			}
+	}
+
+	FastPanelSlots[ToSlotIndex].AbilityType = EAbilityType::none;
+	FastPanelSlots[ToSlotIndex].IndexInContainer = ToSlotIndex;
+
+	FastPanelItem.Add(ToSlotIndex, *ItemDT);
+	return true;
+}
+
+
+bool AUnit::SetAbilityToFastPanel(EAbilityType _Ability, int32 ToSlotIndex)
+{
+	// ** if (ToSlotIndex < 0 || ToSlotIndex >= FastPanelSlots.Num())
+	if (ToSlotIndex >= FastPanelSlots.Num())
+		return false;
+
+	if (ToSlotIndex == -1)
+	{
+		for (int32 i = 0; i < FastPanelSlots.Num(); ++i)
+		{
+			if (FastPanelSlots[i].IndexInContainer == -1)
+			{
+				ToSlotIndex = i;
+				break;
+			}
+		}
+	}
+	if (ToSlotIndex == -1)
+		return false;
+
+	if (FastPanelSlots[ToSlotIndex].IndexInContainer != -1 &&
+		FastPanelSlots[ToSlotIndex].AbilityType == EAbilityType::none)
+		return false;
+
+
+	FastPanelSlots[ToSlotIndex].AbilityType = _Ability;
+	FastPanelSlots[ToSlotIndex].IndexInContainer = 999;	// ** mo matter but -1;
+
+	return true;
+}
+
+
+// ** return "false" if slot empty 
+bool AUnit::GetFastPanelSlotElement(int32 Index, FItemDT*& GetItemDT, EAbilityType*& GetAbilityType)
+{
+	bool isNotEmpty = false;
+
+	if (Index < 0 || Index >= FastPanelSlots.Num())
+		return isNotEmpty;
+
+	if (-1 == FastPanelSlots[Index].IndexInContainer)
+		return isNotEmpty;
+
+	// ** if Ability in slot
+	if (GetAbilityType && FastPanelSlots[Index].AbilityType != EAbilityType::none)
+	{
+		GetAbilityType = &FastPanelSlots[Index].AbilityType;
+		isNotEmpty = true;
+	}
+
+	// ** if Item in slot
+	GetItemDT = FastPanelItem.Find(FastPanelSlots[Index].IndexInContainer);
+	isNotEmpty = true;
+
+
+	return isNotEmpty;
+}
+
+
+void AUnit::RemoveElementFromFastPanel(int32 ToSlotIndex)
+{
+
+	if (ToSlotIndex < 0 || ToSlotIndex >= FastPanelSlots.Num())
+		return;
+
+	if (-1 == FastPanelSlots[ToSlotIndex].IndexInContainer)
+		return;
+
+	// ** if Ability in slot
+	if (FastPanelSlots[ToSlotIndex].AbilityType != EAbilityType::none)
+	{
+		FastPanelSlots[ToSlotIndex].AbilityType = EAbilityType::none;
+		FastPanelSlots[ToSlotIndex].IndexInContainer = -1;
+		return;
+	}
+
+	// ** if Item in slot
+	FItemDT* itemDT_inMap = FastPanelItem.Find(FastPanelSlots[ToSlotIndex].IndexInContainer);
+	if (itemDT_inMap )
+	{
+		FastPanelItem.Remove(FastPanelSlots[ToSlotIndex].IndexInContainer);
+		FastPanelSlots[ToSlotIndex].IndexInContainer = -1;
+	}
+
+}
+
+
+
+
+
+
+// **  ************************************************************************
+// **  ***************************     Ability     **************************** 
+// **  ************************************************************************
+
+
+
+void AUnit::AddAbility(EAbilityType _Ability)
+{
+	Ability->AddAbility(_Ability);
+}
+
+
+
+
+// **  ************************************************************************
+// **  **********************     Weapon_Component     ************************ 
+// **  **********************        Equip_Panel       ************************ 
+// **  ************************************************************************ 
+
+
+int32 AUnit::IsWeaponActive()
+{
+	return WeaponComponent->IsWeaponActive();
+}
+
+bool AUnit::ActivateWeapon()
+{
+	return WeaponComponent->ActivateWeapon();
+}
+bool AUnit::UnactivateWeapon()
+{
+	return WeaponComponent->UnactivateWeapon();
+}
+
+EWeaponType AUnit::GetCurrentWeaponType()
+{
+	return WeaponComponent->GetCurrentWeaponType();
+}
+
+bool AUnit::EquipWeaponByItemDT(const FItemDT* _ItemDT)
+{
+	bool isOk = WeaponComponent->EquipWeaponByItemDT(_ItemDT);
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		if (HUD->IsEquipPanelShown)
+			HUD->ShowEquipPanel(this);	// ** update
+		if (HUD->IsWpnChangePanelOpened)
+			OpenChangeWeaponPanel();	// ** update
+	}
+	return isOk;
+}
+
+bool AUnit::SetWeaponSlotSelected(int32 _WeaponSlotIndex)
+{
+	bool isOk = WeaponComponent->SetWeaponSlotSelected(_WeaponSlotIndex);
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		// ** update EquipPane
+		if (HUD->IsEquipPanelShown)
+			HUD->ShowEquipPanel(this);	
+
+		// ** update ShowWpn-ChangePanel-Title-icon
+		{
+			int32 weaponSlotIndex;
+			ESlotType weaponSlotType;
+			UTexture2D* weaponSlotTexture;
+			if (!WeaponComponent->GetCurrentWeaponSlotData(
+				weaponSlotIndex,
+				weaponSlotType, 
+				weaponSlotTexture))
+			{
+				weaponSlotIndex = -1;
+			}
+			HUD->ShowWpnChangePanel(this, weaponSlotIndex,
+				weaponSlotType, weaponSlotTexture);		
+
+
+			HUD->CloseChangeWeaponPanel();
+		}
+	}
+	return isOk;
+}
+
+int32 AUnit::GetWeaponSlotSelected()
+{
+	return WeaponComponent->GetWeaponSlotSelected();
+}
+
+bool AUnit::IsEquipPanelSlotEmpty(int32 SlotIndex)
+{
+	return WeaponComponent->IsEquipPanelSlotEmpty(SlotIndex);
+}
+
+FItemDT* AUnit::GetItemRefFromEquipPanel(int32 SlotIndex)
+{
+	return WeaponComponent->GetItemRefFromEquipPanel(SlotIndex);
+}
+
+void AUnit::RemoveItemFromEquipPanel(int32 SlotIndex)
+{
+	WeaponComponent->RemoveItemFromEquipPanel(SlotIndex);
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		if (HUD->IsEquipPanelShown)
+			HUD->ShowEquipPanel(this);	// ** update
+		if (HUD->IsWpnChangePanelOpened)
+			OpenChangeWeaponPanel();	// ** update
+	}
+}
+
+
+void AUnit::OpenChangeWeaponPanel() 
+{
+
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		TArray<int32> weaponSlotsIndex;
+		TArray<ESlotType> weaponSlotsType;
+		TArray<UTexture2D*> weaponSlotsTexture;
+
+		WeaponComponent->GetWeaponSlotsListData(weaponSlotsIndex,
+			weaponSlotsType, weaponSlotsTexture);
+		
+		HUD->OpenChangeWeaponPanel(this, weaponSlotsIndex,
+			weaponSlotsType, weaponSlotsTexture);
+	}
+}
 
 
 
@@ -317,10 +774,10 @@ void AUnit::StopMove()
 
 void AUnit::SetRotateSpeed(uint8 _RotSpeedIndex)
 {
-	if(_RotSpeedIndex == 0)
+	if (_RotSpeedIndex == 0)
 		AnimInstance->RotateSpeedSide = 0;
 	else
-	if(_RotSpeedIndex == 1)
+	if (_RotSpeedIndex == 1)
 		AnimInstance->RotateSpeedSide = SlowRotateSpeed;
 	else
 	if (_RotSpeedIndex == 2)
@@ -328,49 +785,6 @@ void AUnit::SetRotateSpeed(uint8 _RotSpeedIndex)
 	else
 		AnimInstance->RotateSpeedSide = FastRotateSpeed;
 }
-
-
-
-
-
-// **  ************************************************************************
-// **  ***************************     Ability     **************************** 
-// **  ************************************************************************
-
-
-
-void AUnit::AddAbility(EAbilityType _Ability)
-{
-	Ability->AddAbility(_Ability);
-}
-
-
-// **  ************************************************************************
-// **  **************************     Inventory     *************************** 
-// **  ************************************************************************
-
-
-
-bool AUnit::TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex, TSubclassOf<AWorldItem> WorldItem)  
-{
-	return Inventory->TryAddItemToInventory(ItemDT, ToSlotIndex, WorldItem);
-}
-
-
-int32 AUnit::GetMainInvCollNum() const
-{
-	return GameMode->MainInvCollNum; 
-};
-int32 AUnit::GetMainInvRowNum() const
-{
-	return GameMode->MainInvRowNum;
-};
-float AUnit::MainInventorSlotSize() const
-{
-	return GameMode->MainInventorSlotSize;
-};
-
-
 
 
 

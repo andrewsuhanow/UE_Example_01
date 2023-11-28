@@ -27,6 +27,14 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 	FItemDT(const FItemDT& Other);
 
 
+	FItemDT& operator=(const FItemDT& Other);
+	friend bool operator==(const FItemDT& Self, const FItemDT& Other);
+	
+
+	
+																	void SetSlotEmpty();	// ** 
+																	bool IsSlotEmpty() const;	// ** is Empty slot
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	FName GameName = FName("none");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	FString Description = FString("no description");
@@ -41,8 +49,11 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 		// Soft Mesh
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	bool IsStackable = false;
+																	bool IsItemStackable() const;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 Count = -1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 Count = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 CountMax = 1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float HealthMax = 100;
 
@@ -67,8 +78,9 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 
 
 	// ** Equip-Panel, FAST-Panel, Inventory, Perk-Panel:Cup/Armor/Clothes/...
+	// ** Slot where item can be kip
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	TArray<ESlotType> AllowInventorySlotType
-									= { ESlotType::global_inv, ESlotType::main_inv, ESlotType::fast_panels};
+									= { ESlotType::global_inv, ESlotType::main_inv, ESlotType::fast_panel};
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 InventorySizeX = 1;
@@ -79,14 +91,8 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 
 
 
-	//////// @@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//////// @@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//////// @@@@@@@@@@@@@@@@@@@@@@@@@@@ Dop it As UObject
-	//////// @@@@@@@@@@@@@@@@@@@@@@@@@@@
-	//////// @@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		UStaticMesh* ItemStaticMash = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		USkeletalMesh* ItemSkeletalMash = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		UObject* MeshPrimitive = nullptr;
 	
 
 

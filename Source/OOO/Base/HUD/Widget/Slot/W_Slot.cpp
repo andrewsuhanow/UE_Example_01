@@ -4,17 +4,14 @@
 
 #include "../../../Unit/Base/Unit.h"
 
-
-
-#include "Components/Image.h"
-
+ #include "../../../HUD/BaseHUD.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"   // UWidgetBlueprintLibrary::DetectDragIfPressed()
 
-/*
-#include "W_DropSlot.h" // Drop Cell
 #include "Components/SizeBox.h"
-*/
+#include "Components/TextBlock.h" 
+#include "Components/Image.h"
+//--777--#include "Components/SizeBoxSlot.h"
 
 //#include "Kismet/GameplayStatics.h"   //   GetAllActorsOfClass
 
@@ -25,41 +22,137 @@ void UW_Slot::NativePreConstruct()
 {
 	Super::NativePreConstruct();
 	
+	// ** Set Slot SIZE
+	SzBox->SetHeightOverride(20.f);
+	SzBox->SetWidthOverride(20.f);
+	//SetSlotSize();
 
 }
+
+
 
 void UW_Slot::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	SelectImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-	SelectImage2->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-	SelectImage3->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	SelectorImage2->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	SelectorImage3->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	
-	
+	TextItemCount->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 24.f));
+	// ** TextItemCount->Font.Size = 24;
+	//TextItemCount->SetColorAndOpacity(FSlateColor(FLinearColor(0.3f, 0.05f, 0.01f, 1.0f)));
+	TextItemCount->SetColorAndOpacity(FSlateColor(FLinearColor(1.0f, 0.9f, 0.0f, 1.0f)));
+	TextItemCount->SetJustification(ETextJustify::Right);
+
+	SetSlotSize();
 }
 
 
 
-void UW_Slot::SetImage(UTexture2D* ItemImage)
+void UW_Slot::SetSlotParam(int32 _IndexInContainer,
+	UTexture2D* _ItemImage, UTexture2D* _BackgroundImage,
+	float _SlotWidth, float _SlotHeight, 
+	float _ImageWidth, float _ImageHeight,
+	float _TranslationX, float _TranslationY,
+	ESlotType _PanelTypeFix)
 {
 
-	ImgItem->SetBrushFromTexture(ItemImage, false);
-	ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
-
-	if (!ItemImage)
+	if (_ItemImage)
+	{
+		ImgItem->SetBrushFromTexture(_ItemImage, false);
+		ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+	else
 	{
 		ImgItem->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	}
+	if (_BackgroundImage)
+	{
+		BackgroungImage->SetBrushFromTexture(_BackgroundImage, false);
+		BackgroungImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+	else
+	{
+		BackgroungImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	}
+
+	if (_IndexInContainer >= 0)
+	{
+		IndexInContainer = _IndexInContainer;
+	}
+
+	if (_SlotWidth != -1)
+	{
+		SlotWidth = _SlotWidth;
+		SzBox->SetWidthOverride(_SlotWidth);
+	}
+	if (_SlotHeight != -1)
+	{
+		SlotHeight = _SlotHeight;
+		SzBox->SetHeightOverride(_SlotHeight);
+	}
+	
+
+
+	if (_ImageWidth != -1 || _ImageHeight != -1)
+	{
+		SzBoxImages->SetWidthOverride(_ImageWidth);
+		SzBoxImages->SetHeightOverride(_ImageHeight);
+
+		// ** ImgItem->SetBrushSize(FVector2D(_ImageWidth, _ImageHeight));
+		// ** BackgroungImage->SetBrushSize(FVector2D(_ImageWidth, _ImageHeight));
+	}
+	else
+	{
+		SzBoxImages->SetWidthOverride(SlotWidth);
+		SzBoxImages->SetHeightOverride(SlotHeight);
+
+		// ** ImgItem->SetBrushSize(FVector2D(SlotWidth, SlotHeight));
+		// ** BackgroungImage->SetBrushSize(FVector2D(SlotWidth, SlotHeight));
+	}
+	
+	if (_TranslationX != 0 || _TranslationY != 0)
+	{
+		SzBoxImages->SetRenderTranslation(FVector2D(_TranslationX, _TranslationY));
+	}
+	else
+	{
+		SzBoxImages->SetRenderTranslation(FVector2D(0.f, 0.f));
+	}
+
+	if (_PanelTypeFix != ESlotType::none)
+	{
+		PanelTypeFix = _PanelTypeFix;
+	}
+
+
+	
 }
 
-void UW_Slot::SetBackgroundImage(UTexture2D* _BackgroundImage)
+
+
+
+void UW_Slot::SetItemCount(int32 RealCount, int32 MaxCount, float FontSize)
 {
-	BackgroungImage->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
-	BackgroungImage->SetBrushFromTexture(_BackgroundImage, false);
+	FString count	 = FString("");
+	FString countMax = FString("");
+	FString slash = FString("");
+	if (MaxCount > 1)
+	{
+		countMax = FString::FromInt(MaxCount);
+		slash = FString("/");
+		count = RealCount > 0 ? FString::FromInt(RealCount) : FString("");
+	}
+
+	
+
+	TextItemCount->SetText(FText::FromString(count + slash + countMax));
+	//TextItemCount->Font.Size = FontSize;
+	TextItemCount->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), FontSize));
 }
 
-
+/*
 void UW_Slot::SelectButton(int32 SelectingType, bool deselect)
 {
 	if (deselect == false)
@@ -82,8 +175,14 @@ void UW_Slot::SelectButton(int32 SelectingType, bool deselect)
 		// .............SHOW
 	}
 }
+*/
 
 
+void UW_Slot::SetSlotSize()
+{
+	SzBox->SetHeightOverride(SlotWidth);
+	SzBox->SetWidthOverride(SlotWidth);
+}
 
 
 // ***************************************************************************
@@ -93,15 +192,162 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 {
 	Super::NativeOnMouseButtonUp(InGeometry, InMouseEvent);
 
-	//UE_LOG(LogTemp, Log, TEXT("WWWWWWWWWWWWWW  Mouse Down"));
+	UE_LOG(LogTemp, Log, TEXT("WWWWWWWWWWWWWW  Mouse Up:   %i"), IndexInContainer);
 
 
-
+	GetWorld()->GetTimerManager().ClearTimer(TH_LMousClickDuration);
+	LMousClickDuration = 0.f;
 	
+
+
+	//////////////	bool IsInvertoryShown = false;
+	//////////////	bool IsLootInvertoryShown = false;
+	//////////////	bool IsGlobalInvertoryShown = false;
+	//////////////	bool IsEquipPaneShown = false;
+	//////////////	bool IsLootEquipPanelShown = false;
+	//////////////	bool IsFastPanelShown = false;
+	//////////////	bool IsPerkPanelShown = false;
+
+
+
+	if (PanelTypeFix == ESlotType::main_inv)
+	{
+		bool is = SelectUnit->IsMainInventorySlotEmpty(IndexInContainer);
+		FItemDT *itm = SelectUnit->GetItemRefFromMainInventory(IndexInContainer);
+		SelectUnit->RemoveItemFromMainInventory(IndexInContainer);
+		IndexInContainer = -1;
+		is = true;
+		is = true;
+
+		ABaseHUD* HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+		if (HUD)
+		{
+			if (HUD->IsInvertoryShown)
+			{
+				HUD->ShowInventory(SelectUnit->Inventory);
+			}
+		}
+
+	}
+	if (PanelTypeFix == ESlotType::global_inv)
+	{
+		bool is = SelectUnit->IsGlobalInventorySlotEmpty(IndexInContainer);
+		FItemDT* itm = SelectUnit->GetItemRefFromGlobalInventory(IndexInContainer);
+		SelectUnit->RemoveItemFromGlobalInventory(IndexInContainer);
+		IndexInContainer = -1;
+		is = true;
+		is = true;
+
+		ABaseHUD* HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+		if (HUD)
+		{
+			if (HUD->IsGlobalInvertoryShown)
+			{
+				HUD->ShowGlobalInventory(SelectUnit->Inventory);
+			}
+		}
+	}
+	if (PanelTypeFix == ESlotType::fast_panel)
+	{
+		FItemDT *RefItemDT = nullptr;
+		EAbilityType *RefAbilityType;
+
+		bool is = SelectUnit->GetFastPanelSlotElement(IndexInContainer, RefItemDT, RefAbilityType);
+		SelectUnit->RemoveElementFromFastPanel(IndexInContainer);
+		IndexInContainer = -1;
+		is = true;
+		is = true;
+
+		ABaseHUD* HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+		if (HUD)
+		{
+			if (HUD->IsFastPanelShown)
+			{
+				HUD->ShowFastPanel(SelectUnit);
+			}
+		}
+	}
+	if (PanelTypeFix == ESlotType::Perk_panel)
+	{
+
+	}
+	if (PanelTypeFix == ESlotType::heavy_amunition)
+	{
+
+	}
+	if (PanelTypeFix == ESlotType::World)
+	{
+
+	}
+	if (PanelTypeFix == ESlotType::weapon_panel)
+	{
+
+		SelectUnit->SetWeaponSlotSelected(IndexInContainer);
+	}
+
+
+	if (PanelTypeFix > ESlotType::weapon_equip && PanelTypeFix < ESlotType::armor_equip)
+	{
+		if (PanelTypeFix == ESlotType::contact_wpn_big)
+		{
+			bool is = SelectUnit->IsEquipPanelSlotEmpty(IndexInContainer);
+			FItemDT* itm = SelectUnit->GetItemRefFromEquipPanel(IndexInContainer);
+			SelectUnit->RemoveItemFromEquipPanel(IndexInContainer);
+			IndexInContainer = -1;
+			
+		}
+		if (PanelTypeFix == ESlotType::contact_wpn_small)
+		{
+			bool is = SelectUnit->IsEquipPanelSlotEmpty(IndexInContainer);
+			FItemDT* itm = SelectUnit->GetItemRefFromEquipPanel(IndexInContainer);
+			SelectUnit->RemoveItemFromEquipPanel(IndexInContainer);
+			IndexInContainer = -1;
+		}
+		if (PanelTypeFix == ESlotType::range_wpn)
+		{
+			bool is = SelectUnit->IsEquipPanelSlotEmpty(IndexInContainer);
+			FItemDT* itm = SelectUnit->GetItemRefFromEquipPanel(IndexInContainer);
+			SelectUnit->RemoveItemFromEquipPanel(IndexInContainer);
+			IndexInContainer = -1;
+		}
+		if (PanelTypeFix == ESlotType::pistol)
+		{
+			bool is = SelectUnit->IsEquipPanelSlotEmpty(IndexInContainer);
+			FItemDT* itm = SelectUnit->GetItemRefFromEquipPanel(IndexInContainer);
+			SelectUnit->RemoveItemFromEquipPanel(IndexInContainer);
+			IndexInContainer = -1;
+		}
+
+	}
+	if (PanelTypeFix > ESlotType::armor_equip)
+	{
+		if (PanelTypeFix == ESlotType::cup)
+		{
+
+		}
+		if (PanelTypeFix == ESlotType::armour)
+		{
+
+		}
+	}
+
+
+
+																// @@@@@@@@@@@@@@@@@@@@@@@   TEST  
+																ABaseHUD* HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+																if (HUD)
+																{
+																	if (HUD->IsEquipPanelShown)
+																	{
+																		HUD->ShowEquipPanel(SelectUnit);
+																	}
+																}
+
+
 	//Reply.NativeReply = FReply::Handled();
-	//return FReply::Unhandled();
-	FEventReply reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
-	return reply.NativeReply;
+	return FReply::Unhandled();
+	// ** FEventReply reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
+	// ** return reply.NativeReply;
 }
 
 
@@ -111,15 +357,28 @@ FReply UW_Slot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPoin
 	Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 
 
-
+	UE_LOG(LogTemp, Log, TEXT("WWWWWWWWWWWWWW  Mouse Dn:   %i"), IndexInContainer);
+	
+	GetWorld()->GetTimerManager().SetTimer(TH_LMousClickDuration, this, &UW_Slot::LMousClickDurationLoop, GetWorld()->GetDeltaSeconds(), true);
 
 
 	//Reply.NativeReply = FReply::Handled();
 	//return FReply::Unhandled();
-	FEventReply reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton); 
-	return reply.NativeReply;
+	return FReply::Handled();
+
+
+	//FEventReply reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton); 
+	//return reply.NativeReply;
 }
  
+void UW_Slot::LMousClickDurationLoop()
+{
+	LMousClickDuration += GetWorld()->GetDeltaSeconds();
+
+}
+
+
+
 
 void UW_Slot::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {

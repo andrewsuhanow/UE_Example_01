@@ -28,6 +28,26 @@ public:
 
 public:
 
+	// ****************************    Game Play    ********************************
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_GamePlay")
+		TArray<AUnit*> SelectedUnits;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_GamePlay")
+		int32 SelectedUnitsNum = 0;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_GamePlay")
+		void SelectOneUnit(AUnit* _NewUnit);
+	UFUNCTION(BlueprintCallable, Category = "OOO_GamePlay")
+		int32 AddToSelectedUnits(AUnit* _NewUnit);
+	UFUNCTION(BlueprintCallable, Category = "OOO_GamePlay")
+		int32 DeselectUnit(AUnit* _Unit);
+	UFUNCTION(BlueprintCallable, Category = "OOO_GamePlay")
+		void DeselectAllUnits();
+	UFUNCTION(BlueprintCallable, Category = "OOO_GamePlay")
+		int32 GetUnitGroupNum();
+
+public:
+
 
 	// ****************************    Turn Base Game State    ********************************
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")

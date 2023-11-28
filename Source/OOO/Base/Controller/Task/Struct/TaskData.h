@@ -28,7 +28,7 @@ struct FTaskData
 		// ** ChildTask
 		ETaskStatus TaskStatus = ETaskStatus::none;								
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
-		// ** GeneralComand = 0,	AI = 1,	DominantComand = 2
+		// ** GeneralComand = 0,	AI = 1,		DominantComand = 2
 		ETaskInstigator TaskInstigator = ETaskInstigator::General;	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
 		// ** Normal,  Hi,  Great

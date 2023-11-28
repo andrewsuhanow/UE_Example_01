@@ -9,6 +9,9 @@
 #include "../Fraction/FractionSystem.h"
 
 // ** ----------------------
+#include "../Animation/Struct/WeaponAnimateGroup.h"
+#include "../Unit/Enum/UnitGameType.h"
+
 
 #include "BaseGameMode.generated.h"
 
@@ -46,22 +49,30 @@ public:
 
 	// ** UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")	bool IsInventorSizeFixed = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvCollNum = 6;			// ** (Const) Horizontal
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvRowNum = 9;			// ** (Const) Vertical
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 FullRowNum = 12;				// ** (Can be Add Using Scroll)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvRowNum = 10;			// ** (Const) Vertical
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 FullRowNum = 13;				// ** (Can be Add Using Scroll)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float MainInventorSlotSize = 64.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 GlobalInventorHeight = 6;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float GlobalInventorSlotSize = 256.f;
+	// ** UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")	float GlobalInventorSlotSize = 256.f;   !!!! = 2 *  MainInventorSlotSize
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float FastPanelSlotSize = 64.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 FastPanelSlotNum = 10;			// ** visible on screen
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 WeaponAttacksPanelSlotNum = 10;	// ** visible on screen
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float PerkPanelSlotSize = 128.f; // ++ 64.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float PerkPanelSlotSize = 128.f; 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float PerkPanelVerticalSize = 640.f; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float WeaponPanelSlotSize = 64.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		UTexture2D* MainInvertorySlotTexture = nullptr;
 
-	
-	
-
+	// ** FAnimationsGroup.Animation
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TMap<EUnitGameType, FWeaponAnimateGroup> GameAnimation;
+	UFUNCTION(Blueprintcallable, Category = "OOO")										UAnimMontage* GetGameAnimation(EUnitGameType _UnitType,
+																														EWeaponType _WeaponType,
+																														EAnimationKey _AnimationKey);
+	UFUNCTION()																			void InitAnimations();
 
 
 public:
@@ -98,14 +109,6 @@ public:
 	UFUNCTION(Blueprintcallable, Category = "OOO_Fraction")
 		EUnitAttitudeStatus GetFractionAttitude(uint8 A, uint8 B);
 
-
-// ****************************************************************************************************	
-// ***************************************    Global Inventory    *************************************
-
-public:
-
-	//+++++UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
-	//+++++	TArray<FInventorItem> GlobalInvertorSlots;
 
 
 // ****************************************************************************************************	

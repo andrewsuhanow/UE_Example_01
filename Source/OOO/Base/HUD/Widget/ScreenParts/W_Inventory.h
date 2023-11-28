@@ -42,7 +42,7 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void ShowInventory(class UInventoryComponent* _Inventor, ABaseGameMode* BGameMode);
+		void ShowInventory(class UInventoryComponent* _Inventor);
 
 
 

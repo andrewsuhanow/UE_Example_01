@@ -53,6 +53,4 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 		UImage* BackgroundImage;
 
-	
-
 };

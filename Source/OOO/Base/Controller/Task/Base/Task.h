@@ -1,6 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+
+//#include "Base/Controller/Task/Base/Task.h"
 
 #pragma once
+
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 
@@ -10,7 +12,7 @@
 
 #include "Task.generated.h"
 
-UCLASS()
+UCLASS(Blueprintable, Blueprinttype)
 class OOO_API UTask : public UObject
 {
 	GENERATED_BODY()
@@ -22,13 +24,19 @@ public:
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!")
 		// ** # MoveToPoint, UseWeapon, UseAbility, ... 
 		ETaskType TaskType = ETaskType::none;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
-		bool IsBreakingTaskActivate = false;
+	//++7777+++UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
+	//++7777+++	bool IsBreakingTaskActivate = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!")
+		UTexture2D* TaskIcon;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!")
+		FString TaskName = FString("none");
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!")
+		FString TaskDescription = FString("none");
 
 public:
 

@@ -4,6 +4,8 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
+#include "../Item/Struct/ItemDT.h"
+#include "Enum/WeaponType.h"
 
 #include "WeaponComponent.generated.h"
 
@@ -30,20 +32,73 @@ public:
 
 public:	
 
+	///UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "Existing weapon", Category = "OOO!_Weapon")
+	// ** Weapon-type unit has
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		FItemDT HandFightData;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		TArray<TSubclassOf<class AWeaponWorldItem>> Weapon_class;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
-		TArray<class AWeaponWorldItem*> EquipSlot;
+public:	
+
+	// ** Weapon class object
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")		
+		TArray<class AWeaponWorldItem*> WeaponSlot;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
-		int32 SelectedWeapon;
+		int32 SelectedWeaponSlot = -1;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool SetWeaponSlotSelected(int32 _WeaponSlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		int32 GetWeaponSlotSelected();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
-		bool IsWeaponActive = false;
+		bool iWeaponActive = false;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool ActivateWeapon();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool UnactivateWeapon();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		int32 IsWeaponActive();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		EWeaponType GetCurrentWeaponType();
+
+public:
+
+	UFUNCTION(BlueprintCallable)
+		void InitWeapons(class AUnit* _UnitOwner);
+
+	bool EquipWeaponByItemDT(const FItemDT* _ItemDT);
 
 
-	//UFUNCTION(BlueprintCallable)
-	//	void InitWeapons(AUnit* _Owner);
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool IsEquipPanelSlotEmpty(int32 SlotIndex);
 
+	///UFUNCTION(BlueprintCallable, Category = "OOO")
+	FItemDT* GetItemRefFromEquipPanel(int32 SlotIndex);
 
-		
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void RemoveItemFromEquipPanel(int32 SlotIndex);
+	
+// ---------------------------------------------------------------------
+
+	// ** Weapons-slots-List Data (index, WpnType, Texture) for W_Weapon_Chenger_Panel
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool GetWeaponSlotsListData(//)
+			TArray<int32> &_WeaponSlotsIndex,
+			TArray<ESlotType> &_WeaponSlotsType,
+			TArray<UTexture2D*> &_WeaponSlotsTexture);
+
+	// ** Current Weapons-slot Data (index, WpnType, Texture) for W_Weapon_Chenger_Panel
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool GetCurrentWeaponSlotData(//)
+			int32& _WeaponSlotsIndex,
+			ESlotType& _WeaponSlotsType,
+			UTexture2D*& _WeaponSlotsTexture);
 };

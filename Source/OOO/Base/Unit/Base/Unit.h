@@ -14,7 +14,9 @@
 
 #include "../../Base/Enum/TurnBaseGameState.h"
 
-#include "../../Animation/Enum/AnimationKey.h"
+#include "../Enum/UnitGameType.h"
+
+#include "../../Amunition/Enum/WeaponType.h"
 
 // --------------------------------------
 
@@ -68,7 +70,10 @@ public:
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData);
+		void SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, 
+			FTaskData _TaskData, 
+			ETaskInstigator _TaskInstigator = ETaskInstigator::General,
+			ETaskPriority _TaskPriority = ETaskPriority::Normal);
 
 	/*
 			AddComand()			// ** FROM HUD,	FROM GameMod/
@@ -141,7 +146,16 @@ public:
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetWeaponAnimType(EWeaponType _NewWeaponAnim);
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime = 0.f);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void OnAnimNotify(FString _NotifyName);
+
 
 /*++++++++++++++++++
 
@@ -179,14 +193,16 @@ public:
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		EUnitGameType UnitGameType = EUnitGameType::none;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		FName GameName = FName("none");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		FName GameId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
-		bool IsUnitInGroup = false;
+	//----------------UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+	//----------------	bool IsUnitInGroup = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		bool IsUnitSelected = false;
 
 	// ** Gape betwean target-point for stoping     (FIX)
@@ -197,17 +213,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		TSubclassOf<class UDailyBhvrQueue> DailyBhvrQueueClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
-		TMap<EAnimationKey, UAnimMontage*> UnitAnimation;
+	
 
 
-	// ---------------   Inventor   ---------------
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO!_Unit_Parameter")
-		class UInventoryComponent* Inventory;
+	// ---------------   Inventor_Parameter   ---------------
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")		
 		bool IsInventorSizeFixed = true;
+	// ** Invertor slot count (0 - use default feon GameMod)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")		
 		int32 FullRowNum = 0;							// ** (Can be Add Using Scroll)
 	UFUNCTION(Blueprintcallable, Category = "OOO!_Unit_Parameter")
@@ -216,6 +229,31 @@ public:
 		int32 GetMainInvRowNum() const;
 	UFUNCTION(Blueprintcallable, Category = "OOO!_Unit_Parameter")
 		float MainInventorSlotSize() const;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")
+		UTexture2D* EquipPanelSlotTexture_BigContactWpn = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")
+		UTexture2D* EquipPanelSlotTexture_SmalContactWpn = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")
+		UTexture2D* EquipPanelSlotTexture_RangeWpn = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Pistol= nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Cup = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Armor = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Clothes = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Collar = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Braslet = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_Ring = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		
+		UTexture2D* EquipPanelSlotTexture_HeavyStuff = nullptr;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
@@ -239,12 +277,22 @@ public:
 	
 public:
 
-// **  ************************   Getters  ************************
 
-	UFUNCTION(Blueprintcallable, Category = "OOO_Animation")
-		UAnimMontage* GetUnitAnimation(EAnimationKey AnimKey) { return nullptr; };
+// **  ************************   Unit_Main_Function  ************************
 
 public:
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		void SelectUnit();
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		void DeselectUnit();
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		bool GetIsUnitSelected();
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		bool IsUnitInGroup();
 
 // **  ************************   Fraction  ************************
 
@@ -260,31 +308,152 @@ public:
 
 
 
-// **  ************************   Ability   ************************
-
-public:
-
-	class UAbilityComponent* Ability;
-
-	UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
-		void AddAbility(EAbilityType _Ability);
-
 
 
 // **  ************************   Inventory   ************************
 
 public:
-	   
-	// ** IndexInContainer  (KEY in Map : FastPanelItem)
-	// ** AbilityType
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
-		TArray<FFastPanelSlot> FastPanelSlots;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Inventory")		
-		TMap<int32, FItemDT> FastPanelItem;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
+		class UInventoryComponent* Inventory;
 
 	///UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
-		bool TryAddItemToInventory(FItemDT* ItemDT, int32 ToSlotIndex = -1, TSubclassOf<class AWorldItem> WorldItem = nullptr) ;
+		bool TryAddItemToMainInventory(FItemDT* ItemDT, int32 ToSlotIndex = -1, 
+			TSubclassOf<class AWorldItem> WorldItem = nullptr, bool ForseAdd= false);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		bool IsMainInventorySlotEmpty(int32 SlotIndex);
+
+	///UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		FItemDT* GetItemRefFromMainInventory(int32 SlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		void RemoveItemFromMainInventory(int32 SlotIndex);
+
+
+
+	// **  -------------------   Global_Inventory   ---------------------
+	///UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		void AddItemToGlobalInventory(FItemDT* ItemDT, int32 ToSlotIndex = -1);
+	
+	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		bool IsGlobalInventorySlotEmpty(int32 SlotIndex);
+
+	///UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		FItemDT* GetItemRefFromGlobalInventory(int32 SlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
+		void RemoveItemFromGlobalInventory(int32 SlotIndex);
+
+// **  ************************   Fast_Panel   ************************
+
+public:
+
+	// ** IndexInContainer  (KEY in Map : FastPanelItem)
+	// ** AbilityType
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")		
+		TArray<FFastPanelSlot> FastPanelSlots;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")		
+		TMap<int32, FItemDT> FastPanelItem;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		void InitFastPanel();
+
+	///UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		bool SetItemToFastPanel(FItemDT* ItemDT, int32 ToSlotIndex = -1);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		bool SetAbilityToFastPanel(EAbilityType _Ability, int32 ToSlotIndex = -1);
+
+	// ** return "false" if slot empty 
+	///UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+	bool GetFastPanelSlotElement(int32 Index,
+		FItemDT*& GetItemDT, EAbilityType*& GetAbilityType);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		void RemoveElementFromFastPanel(int32 ToSlotIndex);
+
+
+
+// **  ************************   Ability   ************************
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
+		class UAbilityComponent* Ability;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
+		void AddAbility(EAbilityType _Ability);
+
+	// ** IndexInContainer  (KEY in Map : FastPanelItem)
+	// ** AbilityType
+
+
+public:
+
+
+// ** *********************     Weapon_Component    ************************
+// ** *********************       Equip_Panel       ************************
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
+		class UWeaponComponent* WeaponComponent;
+
+
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		int32 IsWeaponActive();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool ActivateWeapon();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool UnactivateWeapon();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		EWeaponType GetCurrentWeaponType();
+
+	///UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool EquipWeaponByItemDT(const FItemDT* _ItemDT);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool SetWeaponSlotSelected(int32 _WeaponSlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		int32 GetWeaponSlotSelected();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool IsEquipPanelSlotEmpty(int32 SlotIndex);
+
+	///UFUNCTION(BlueprintCallable, Category = "OOO")
+		FItemDT* GetItemRefFromEquipPanel(int32 SlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void RemoveItemFromEquipPanel(int32 SlotIndex);
+
+	// ** UW_WeaponPanel Open (Data from WeaponComponent)
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void OpenChangeWeaponPanel();
+
+
+
+
+
+	/*++++++++++++++++++++++++++
+
+		// ** Equip-Item  (Put item from Inventory to EQUIP-slot)
+		UFUNCTION(BlueprintCallable, Category = "AAA")
+			int32 TryEquipAmunitionBySlot(EInvCell_Type SlotType, FItemData& itemToEquip, int32 _LastWSlot_Index = -1);
+		// ** Equip-Item  (Put item from Inventory to EQUIP-slot)
+		UFUNCTION(BlueprintCallable, Category = "AAA")
+			int32 EquipAmunition(const FItemData& itemToEquip, int32 _LastWSlot_Index = -1);
+	*/
+
+// ** *********************     Armour Component    *************************
+
+
+
+
+
 
 
 
@@ -336,34 +505,8 @@ public:
 		}
 */
 
-public:
-
-// ** *********************     Amunition    ************************
 
 
-	// ** SLOTS of Equiped Items
-//	UPROPERTY(BlueprintReadOnly, Category = "AAA_Inventory")											// @@@@@@@@@@@@@@@@@@@@@@@@@@ Is this Need
-//		TArray<class AAmunition*> Amunition;
-
-
-public:
-
-// ** *********************     Weapon_Component    ************************
-
-//OPERTY(EditAnywhere, BlueprintReadOnly, Category = "AAA_Weapon")
-//		class UWeaponComp* WeaponComponent;
-/*++++++++++++++++++++++++++
-
-
-	// ** Equip-Item  (Put item from Inventory to EQUIP-slot)
-	UFUNCTION(BlueprintCallable, Category = "AAA")
-		int32 TryEquipAmunitionBySlot(EInvCell_Type SlotType, FItemData& itemToEquip, int32 _LastWSlot_Index = -1);
-	// ** Equip-Item  (Put item from Inventory to EQUIP-slot)
-	UFUNCTION(BlueprintCallable, Category = "AAA")
-		int32 EquipAmunition(const FItemData& itemToEquip, int32 _LastWSlot_Index = -1);
-*/
-
-// ** *********************     Armour Component    *************************
 
 
 

@@ -19,7 +19,7 @@
 
 
 USTRUCT(BlueprintType, Blueprintable)
-struct FAttachActionParam
+struct FAttakParam
 {
 
 	// ** GENERATED_BODY()
@@ -81,24 +81,29 @@ class OOO_API UWeaponDT : public UObject
 
 public:
 
-	// ** Slot-Weapon-Type:   "Sword, LongSword, Axe, Bow, Hand-Fight, "       
+	// ** Weapon-Type:   "Sword, LongSword, Axe, Bow, Hand-Fight,..... "       
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		EWeaponType WeaponType = EWeaponType::Sword;
+		EWeaponType WeaponType = EWeaponType::none;
 
-	// ** "EQUIP-Slot-Type" where this amunition can be placed
+	// ** "EquipSlot-Type" where this amunition can be placed
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		ESlotType AllowInventorySlotType = ESlotType::cup;	// ** Melee, Gun, BigGun, pistol, ...
+		ESlotType AllowInventorySlotType = ESlotType::none;	// ** Melee, Gun, BigGun, pistol, ...
 
-	// ** Attack behaviour/Parameter   (AnimMontage, ButtonImage, Distant, ActorCastAgent)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		TArray<FAttachActionParam> AttachActionParam;
 
 	// ** Where Weapon Drawn, when EQUIP but it's Unactivated (on the Back or on the Belt)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		FName SocketUnactivated = FName("none");
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		FName SocketActivated = FName("none");
 
 
+
+
+
+	// ** Attack behaviour/Parameter   (AnimMontage, ButtonImage, Distant, ActorCastAgent)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		TArray<FAttakParam> AttakParam;
 
 };
 

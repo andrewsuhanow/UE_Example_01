@@ -4,8 +4,10 @@
 #include "BaseGameState.h"
 
 
-#include "../Base/BaseGameMode.h"
+#include "BaseGameMode.h"
 #include "../HUD/BaseHUD.h"
+
+#include "../Unit/Base/Unit.h"
 
 
 
@@ -18,6 +20,55 @@ void ABaseGameState::SetDefaultGameParam(ABaseGameMode* _GameMode, ABaseHUD* _HU
 
 
 
+// ****************************    Game Play    ********************************
+
+
+void ABaseGameState::SelectOneUnit(AUnit* _NewUnit) 
+{
+	DeselectAllUnits();
+	AddToSelectedUnits(_NewUnit);
+}
+
+int32 ABaseGameState::AddToSelectedUnits(AUnit* _NewUnit)
+{
+	SelectedUnits.Add(_NewUnit);
+	++SelectedUnitsNum;
+
+	_NewUnit->SelectUnit();
+
+	return GetUnitGroupNum();
+}
+
+int32 ABaseGameState::DeselectUnit(AUnit* _Unit)
+{
+	if (SelectedUnits.Contains(_Unit))
+	{
+		SelectedUnits.Remove(_Unit);
+		--SelectedUnitsNum;
+
+		_Unit->DeselectUnit();
+	}
+	return GetUnitGroupNum();
+}
+
+void ABaseGameState::DeselectAllUnits()
+{
+	for (int32 i = 0; i < SelectedUnits.Num(); ++i)
+	{
+		SelectedUnits[i]->DeselectUnit();
+	}
+	SelectedUnits.Reset();
+	SelectedUnitsNum = 0;
+}
+
+int32 ABaseGameState::GetUnitGroupNum()
+{
+	return SelectedUnitsNum;
+}
+
+
+
+// ****************************    Turn Base Game State    ********************************
 
 void ABaseGameState::SetNewTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
 {

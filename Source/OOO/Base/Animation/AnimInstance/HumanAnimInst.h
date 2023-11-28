@@ -5,6 +5,7 @@
 #include "Animation/AnimInstance.h"
 
 #include "../../Unit/Enum/UnitPose.h"
+#include "../../Amunition/Enum/WeaponType.h"
 
 #include "HumanAnimInst.generated.h"
 
@@ -67,14 +68,20 @@ public:
 		float MontageStartTime = 0.f;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_AnimMontage")
 		float MontageTimePause = 0.f;
-	// ** DELEGATE_Get( Get/Set, CurrentMontage, IsPlayTOP, MontageStartTime, MontageTimePause, PoseLocomotion, GET_RotateSpeed, GET_MoveSpeed)
 
-	//UFUNCTION(BlueprintCallable)
-	///////////////	void GetAnimMontageParam(struct FAnimMontageParam AnimMontageParam);
 
+
+	// ** Sit, Crouch, MoveSlow, MoveFast, Run, Sptint 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_State")												
 		EUnitPose PoseLocomotion = EUnitPose::Stand;
 
+	// ** HandFight, Sword, LongSword, Pike, Bow, RupidGun, Rifle, ...
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_State")												
+		EWeaponType WeaponAnimType = EWeaponType::Locomotion;
+
+	UFUNCTION(BlueprintCallable)
+		void SetWeaponAnimType(EWeaponType _NewWeaponAnim);
+	
 		// **   Idle Relax or Idle ready 
 	//UPROPERTY()
 	//+++++++++++++++++++++++++		bool IsAttackReady_Pose = false;

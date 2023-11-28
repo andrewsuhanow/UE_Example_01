@@ -3,13 +3,15 @@
 
 
 
-//#include "Amunition/Enum/EWeaponType.h"
+// #include "Base/Amunition/Enum/WeaponType.h"
 
 //#include "CoreMinimal.h"
 
 UENUM(BlueprintType, Blueprintable)
 enum class EWeaponType : uint8
 {
+	none,
+
 	Locomotion, // Base_Locomotion,
 
 	HandFight,
@@ -26,7 +28,7 @@ enum class EWeaponType : uint8
 	LongSword,
 	Glefa,
 
-	Dagger,
+	Dagger,				// ** 777777
 	Pistol,
 
 	Bow,
@@ -34,7 +36,7 @@ enum class EWeaponType : uint8
 	RapidGun,
 	HeavyGun,
 
-	Throw,
+	Throw,				// **  77777777
 	
 	//Mage,
 

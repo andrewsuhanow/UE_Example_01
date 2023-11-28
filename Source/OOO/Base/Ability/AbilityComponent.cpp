@@ -35,7 +35,7 @@ void UAbilityComponent::AddAbility(EAbilityType Ability)
 		FAbilityDT* Row = reinterpret_cast<FAbilityDT*>(It.Value);
 		if (Row->AbilityType == Ability)
 		{
-			AbilitySlot.Add(Ability, *Row);
+			Abilities.Add(Ability, *Row);
 			break;
 		}
 	}

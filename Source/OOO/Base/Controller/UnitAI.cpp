@@ -161,8 +161,9 @@ void AUnitAI::OnMoveCompleted(FAIRequestID RequestID, const FPathFollowingResult
 
 void AUnitAI::OnFinishAnimation(UAnimMontage* FinishedAnimMontage, bool _bInterrupted)
 {
-	// ....
 	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnFinishAnimation():         %s"), *GetName());
+
+	UpdateLogic();
 }
 
 void AUnitAI::OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
@@ -171,7 +172,13 @@ void AUnitAI::OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
 	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnChangeTurnBaseGameState():         %s"), *GetName());
 }
 
+void AUnitAI::OnAnimNotify(FString _NotifyName)
+{
+	// ....
+	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnAnimNotify():         %s"), *GetName());
 
+	UpdateLogic();
+}
 
 
 
@@ -313,7 +320,7 @@ void AUnitAI::SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskDat
 		if (_bAddMoreOne)
 		{
 			StoreQueueTaskDT.Add(_TaskData);
-			if (!CurrTaskRef)
+			//--77--if (!CurrTaskRef)
 				UpdateLogic();
 		}
 		else
@@ -421,14 +428,20 @@ void AUnitAI::UpdateLogic()
 			CurrTaskRef->StartTask(this);
 		}
 		return;
-	}
+	}	
 	// ** Has Task in GeneralQuery
-	else 
+	else
 	if (!CurrTaskRef && StoreQueueTaskDT.Num() > 0)
 	{
 		StoreGeneralTaskDT = StoreQueueTaskDT[0];
 		StoreGeneralTaskDT.TaskStatus = ETaskStatus::NewTask;
 		UpdateLogic();
+		return;
+	}
+	else
+	if (CurrTaskRef)
+	{
+		CurrTaskRef->ContinueTask(this);
 		return;
 	}
 	else
@@ -440,7 +453,7 @@ void AUnitAI::UpdateLogic()
 			CurrTaskRef->BreakTask(this);
 		else
 		{
-			CurrTaskDTBuffer;							 // ** TEST_TEST
+			//-----CurrTaskDTBuffer;							 // ** TEST_TEST
 			CurrTaskRef = ActionTaskssObj[DailyBhvrTaskIndex];
 			CurrTaskRef->ContinueTask(this);
 		}
@@ -503,12 +516,12 @@ float AUnitAI::GetUnitStopDistance()
 
 bool AUnitAI::IsUnitInGroup()
 {
-	return UnitOwner->IsUnitInGroup;
+	return UnitOwner->IsUnitInGroup();
 }
 
 bool AUnitAI::IsUnitSelected()
 {
-	return UnitOwner->IsUnitSelected;
+	return UnitOwner->GetIsUnitSelected();
 }
 
 
@@ -521,6 +534,44 @@ FName AUnitAI::GetUnitGameName()
 void AUnitAI::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime)
 {
 	return UnitOwner->PlayAnimate(_AnimMontage, _isPlayTOP, _fromTime);
+}
+
+void AUnitAI::GetTasksQueDataFromAI(UTexture2D*& _CurrTaskImage,
+	TArray<UTexture2D*>& _TasksImage,
+	TArray<int32>& _TasksIndex)
+{
+	if (!CurrTaskRef)
+		return;
+
+	_CurrTaskImage = CurrTaskDTBuffer[0].TaskRef->TaskIcon;
+
+	for (int32 i = 0; i < StoreQueueTaskDT.Num(); ++i)
+	{
+		_TasksIndex.Add(i);
+		_TasksImage.Add(StoreQueueTaskDT[i].TaskRef->TaskIcon);
+	}
+}
+
+
+int32 AUnitAI::IsWeaponActive()
+{
+	return UnitOwner->IsWeaponActive();
+}
+
+bool AUnitAI::ActivateWeapon()
+{
+	return UnitOwner->ActivateWeapon();
+}
+bool AUnitAI::UnactivateWeapon()
+{
+	return UnitOwner->UnactivateWeapon();
+}
+
+
+UAnimMontage* AUnitAI::GetGameAnimation(EAnimationKey _AnimationKey)
+{
+	return GameMode->GetGameAnimation(UnitOwner->UnitGameType,
+				UnitOwner->GetCurrentWeaponType(), _AnimationKey);
 }
 
 // **  ************************************************************************

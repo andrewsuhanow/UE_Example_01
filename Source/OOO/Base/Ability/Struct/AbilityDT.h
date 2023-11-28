@@ -17,10 +17,12 @@ struct FAbilityDT : public FTableRowBase //  FTableRowBase - make avaulable in D
 	GENERATED_USTRUCT_BODY()
 		//GENERATED_BODY()
 
+public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	
 		EAbilityType AbilityType = EAbilityType::none;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	UTexture2D* AbilityImage;
+																	UTexture2D* GetImage() const;
 	
 };

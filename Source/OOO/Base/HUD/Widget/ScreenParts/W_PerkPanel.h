@@ -8,6 +8,8 @@
 #include "W_PerkPanel.generated.h"
 
 
+class UScrollBox;
+class USizeBox;
 
 
 UCLASS()
@@ -23,11 +25,26 @@ public:
 	virtual void NativePreConstruct() override;
 	virtual void NativeConstruct() override;
 
-	   	 
 
 
+
+public:
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void ShowInventory(class AUnit* _Unit, ABaseGameMode* BGameMode);
+		void ShowPerkPanel(class AUnit* _Unit, ABaseGameMode* _GameMode);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void UpdatePerkPanel(class AUnit* _Unit, class ABaseGameMode* _GameMode);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void AddCellToPerkPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture);
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		USizeBox* PerkPanelSizeBox;					// ** Border size					//  SzBox_Inventory
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		UScrollBox* PerkPanelScroll;													//  Scroll_Inventory
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		TArray<class UW_Slot*> SlotObj;
 };
 

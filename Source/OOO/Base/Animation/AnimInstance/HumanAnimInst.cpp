@@ -80,6 +80,19 @@ void UHumanAnimInst::NativeUpdateAnimation(float DeltaTime)
 
 
 
+void UHumanAnimInst::SetWeaponAnimType(EWeaponType _NewWeaponAnim)
+{
+	WeaponAnimType = _NewWeaponAnim;
+}
+
+
+
+
+
+
+
+
+
 void UHumanAnimInst::TopRotateAngle(float DeltaTime)
 {
 

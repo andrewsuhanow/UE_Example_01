@@ -18,7 +18,7 @@ struct FFastPanelSlot
 		//GENERATED_BODY()
 
 	// ** if Item:		Index in Map
-	// ** if Ability:	This Array Index (no matter)
+	// ** if Ability:	This Array Index (no matter but -1)
 	// ** if -1:		Empty slot
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		int32 IndexInContainer = -1;

@@ -19,6 +19,10 @@
 
 #include "../Base/Inventory/InventoryComponent.h"
 
+#include "../Base/Amunition/WeaponComponent.h"
+
+#include "../Base/Ability/Enum/AbilityType.h"
+
 #include "../Base/Controller/Task/Base/Task.h"
 
 
@@ -55,6 +59,11 @@ void AAAADefaultPawnDEBUG::SelectUnit_3()
 }
 void AAAADefaultPawnDEBUG::SelectUnit_Performance(FName _SelectUnitName)
 {
+	GameState = Cast<ABaseGameState>(GetWorld()->GetGameState());
+	GameMod = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+
+	
+
 	TArray<AActor*> AllUnitsActor;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AUnit::StaticClass(), AllUnitsActor);
 	for (int32 i = 0; i < AllUnitsActor.Num(); i++)
@@ -63,13 +72,13 @@ void AAAADefaultPawnDEBUG::SelectUnit_Performance(FName _SelectUnitName)
 		if (unit->GameName == _SelectUnitName)
 		{
 			SelectTestUnit = unit;
-			
-			SelectTestUnit->IsUnitSelected = true;
+			GameState->SelectOneUnit(unit);
 
+			GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
 			return;
 		}
 	}
-}
+} 
 
 //---------------------------------------------------------
 
@@ -246,56 +255,307 @@ void AAAADefaultPawnDEBUG::InitDailyBehaviorDT()
 //---------------------------------------------------------  Inventor
 
 
-void AAAADefaultPawnDEBUG::OpenMainInvertory()
+
+
+
+
+void AAAADefaultPawnDEBUG::InitTestInvertorItems()
 {
 
-	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
-	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
-
-	if (SelectTestUnit && hud && gameMode)
+	if (0 == ItemsToAddRes.Num())
 	{
-		hud->ShowInventory(SelectTestUnit->Inventory, gameMode);
+		TArray<UBlueprint*> wpnTMP;
+		TArray<UTexture2D*> fullImageTexture;
+		TArray<UTexture2D*> oneImageTexture;
+		TArray<int32> sizeX;
+		TArray<int32> sizeY;
+		TArray<int32> Count;
+		TArray<int32> CountMax;
+		TArray<bool> IsStackable;
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Amunition/WeapomDT/BigWorldDT_BP.BigWorldDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_1x4.ITEM_CELL_1x4")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/BigSword/BibSword02.BibSword02")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(1);
+		sizeY.Add(4);
+		ItemsToAdd.Add(FName("1x4"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Amunition/WeapomDT/GunDT_BP.GunDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_2x4.ITEM_CELL_2x4")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Rifle/Rifle03.Rifle03")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(2);
+		sizeY.Add(4);
+		ItemsToAdd.Add(FName("2x4 Gun"));
+
+		wpnTMP.Add(nullptr);
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugAbility/Blue_Potion.Blue_Potion")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugAbility/Blue_Potion.Blue_Potion")));
+		Count.Add(3);
+		CountMax.Add(10);
+		IsStackable.Add(true);
+		sizeX.Add(1);
+		sizeY.Add(1);
+		ItemsToAdd.Add(FName("1x1 3/10"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Amunition/WeapomDT/BowDT_BP.BowDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Bow/Bow01.Bow01")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Bow/Bow01.Bow01")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(4);
+		sizeY.Add(2);
+		ItemsToAdd.Add(FName("4x2 Bow"));
+
+		wpnTMP.Add(nullptr);
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_4x1.ITEM_CELL_4x1")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_4x1.ITEM_CELL_4x1")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(4);
+		sizeY.Add(1);
+		ItemsToAdd.Add(FName("4x1"));
+
+		wpnTMP.Add(nullptr);
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_3x3.ITEM_CELL_3x3")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_3x3.ITEM_CELL_3x3")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(3);
+		sizeY.Add(3);
+		ItemsToAdd.Add(FName("3x3"));
+
+		wpnTMP.Add(nullptr);
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_2x2.ITEM_CELL_2x2")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_2x2.ITEM_CELL_2x2")));
+		Count.Add(2);
+		CountMax.Add(5);
+		IsStackable.Add(true);
+		sizeX.Add(2);
+		sizeY.Add(2);
+		ItemsToAdd.Add(FName("2x2 2/5"));
+
+		wpnTMP.Add(nullptr);
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_4x4.ITEM_CELL_4x4")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_4x4.ITEM_CELL_4x4")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(4);
+		sizeY.Add(4);
+		ItemsToAdd.Add(FName("4x4"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Amunition/WeapomDT/SpearDT_BP.SpearDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Pike/Spear01.Spear01")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Pike/Spear01.Spear01")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(1);
+		sizeY.Add(5);
+		ItemsToAdd.Add(FName("1x5 Spear"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Amunition/WeapomDT/PistolDT_BP.PistolDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Pistol/pistol01.pistol01")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Pistol/pistol01.pistol01")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(1);
+		sizeY.Add(2);
+		ItemsToAdd.Add(FName("1x2 Pistol 1"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Amunition/WeapomDT/PistolDT_BP.PistolDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Pistol/pistol02.pistol02")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Pistol/pistol02.pistol02")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(2);
+		sizeY.Add(1);
+		ItemsToAdd.Add(FName("2x1 Pistol 2"));
+
+
+
+
+		for (int32 i = 0; i < ItemsToAdd.Num(); ++i)
+		{
+			ItemsToAddRes.Add(MakeShared<FItemDT>());
+			if(wpnTMP[i])
+				ItemsToAddRes.Last().Get()->WeaponDT = (UClass*)wpnTMP[i]->GeneratedClass;
+			ItemsToAddRes.Last().Get()->ItemImage = fullImageTexture[i];
+			ItemsToAddRes.Last().Get()->ItemOneCellImage = oneImageTexture[i];
+
+			ItemsToAddRes.Last().Get()->CountMax = CountMax[i];
+			ItemsToAddRes.Last().Get()->Count = Count[i];
+
+			ItemsToAddRes.Last().Get()->IsStackable = IsStackable[i];
+
+			ItemsToAddRes.Last().Get()->InventorySizeX = sizeX[i];
+			ItemsToAddRes.Last().Get()->InventorySizeY = sizeY[i];
+		}
 	}
 }
 
 
+void AAAADefaultPawnDEBUG::OpenMainInvertory()
+{
+
+	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+	if (SelectTestUnit && hud)
+	{
+		hud->ShowInventory(SelectTestUnit->Inventory);
+
+		GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+	}
+}
 
 
 void AAAADefaultPawnDEBUG::AddItemToInventory()
 {
-	if (SelectTestUnit)
+	if (SelectTestUnit && AddItemIndex >= 0 && AddItemIndex < ItemsToAdd.Num())
 	{
-		for (int32 i = 0; i < AddStartItems.Num(); ++i)
-		{
-			SelectTestUnit->TryAddItemToInventory(nullptr, AddToSlotIndex, AddStartItems[i]);
-			//AWorldItem* CDO = Cast<AWorldItem>(AddStartItems[i].Get());
-			//SelectTestUnit->TryAddItemToInventory(&CDO->ItemDT, AddToSlotIndex, InventorWorldItem);
-			
-		}
-
-		if (InventorWorldItem)
-		{
-			
-		}
+		SelectTestUnit->TryAddItemToMainInventory(ItemsToAddRes[AddItemIndex].Get(), AddToSlotIndex, nullptr, IsForseAdd);
+		OpenMainInvertory();
 	}
 }
+
+
+//---------------------------------------------------------  Global-Inventor
+
+
+void AAAADefaultPawnDEBUG::OpenGlobalInvertory()
+{
+	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+	if (SelectTestUnit && hud)
+	{
+		hud->ShowGlobalInventory(SelectTestUnit->Inventory);
+
+		GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+	}
+}
+
+void AAAADefaultPawnDEBUG::AddItemToGlobalInventory()
+{
+
+	if (SelectTestUnit && AddItemIndex >= 0 && AddItemIndex < ItemsToAdd.Num())
+	{
+		SelectTestUnit->AddItemToGlobalInventory(ItemsToAddRes[AddItemIndex].Get(), AddToSlotIndex);
+		OpenGlobalInvertory();
+	}
+}
+
+//---------------------------------------------------------  Equip-Panel
+
+void AAAADefaultPawnDEBUG::OpenEquipPanel()
+{
+	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+	if (SelectTestUnit && hud)
+	{
+		hud->ShowEquipPanel(SelectTestUnit);
+
+		GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+	}
+}
+void AAAADefaultPawnDEBUG::AddItemToEquipPanel()
+{
+	
+	if (SelectTestUnit && AddItemIndex >= 0 && AddItemIndex < ItemsToAdd.Num())
+	{
+		SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[AddItemIndex].Get());
+		//---OpenEquipPanel();
+	}
+	
+}
+
 
 
 
 //---------------------------------------------------------  Ability
 
 
+void AAAADefaultPawnDEBUG::ShowPerkPanel()
+{
+	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 
+	if (SelectTestUnit && hud)
+	{
+		hud->ShowPerkPanel(SelectTestUnit, gameMode);
+
+		GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+	}
+}
 
 void AAAADefaultPawnDEBUG::AddAbility()
 {
-	for (int32 i = 0; i < Ability.Num(); ++i)
+	//////////for (int32 i = 0; i < Ability.Num(); ++i)
+	//////////{
+	//////////	if (SelectTestUnit)
+	//////////	{
+	//////////		SelectTestUnit->AddAbility(Ability[i]);
+	//////////	}
+	//////////}
+
+	if (SelectTestUnit)
 	{
-		if (SelectTestUnit)
-		{
-			SelectTestUnit->AddAbility(Ability[i]);
-		}
+		SelectTestUnit->AddAbility(EAbilityType::drink);
+		SelectTestUnit->AddAbility(EAbilityType::harvest);
+		SelectTestUnit->AddAbility(EAbilityType::health);
+		SelectTestUnit->AddAbility(EAbilityType::usem_middle);
+		SelectTestUnit->AddAbility(EAbilityType::pick_up);
+		SelectTestUnit->AddAbility(EAbilityType::throw_sing);
 	}
+}
+
+
+
+//---------------------------------------------------------  Fast-Panel
+
+
+
+void AAAADefaultPawnDEBUG::ShowFastPanel()
+{
+	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+
+	if (SelectTestUnit && hud)
+	{
+		hud->ShowFastPanel(SelectTestUnit);
+
+		GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
+	}
+}
+
+void AAAADefaultPawnDEBUG::AddItemToFastPanel()
+{
+	if (SelectTestUnit && AddItemIndex >= 0 && AddItemIndex < ItemsToAdd.Num())
+	{
+		SelectTestUnit->SetItemToFastPanel(ItemsToAddRes[AddItemIndex].Get(), AddToSlotIndex);
+		ShowFastPanel();
+	}
+}
+
+
+void AAAADefaultPawnDEBUG::AddAbilityToFastPanel()
+{
+	if (AbilityToAdd != EAbilityType::none)
+	{
+		SelectTestUnit->SetAbilityToFastPanel(AbilityToAdd, AddToSlotIndex);
+	}
+
+	ShowFastPanel();
+
 }
 
 

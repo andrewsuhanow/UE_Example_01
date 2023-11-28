@@ -24,7 +24,7 @@ public:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
-			TMap<EAbilityType, FAbilityDT> AbilitySlot;
+			TMap<EAbilityType, FAbilityDT> Abilities;
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void AddAbility(EAbilityType Ability);

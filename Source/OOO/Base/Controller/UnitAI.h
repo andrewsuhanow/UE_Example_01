@@ -15,6 +15,9 @@
 #include "Enum/UnitPositionLogik.h"
 //#include "Enum/TaskInstigator.h"
 
+#include "../Amunition/Enum/WeaponType.h"
+#include "../Animation/Enum/AnimationKey.h"
+
 #include "../Base/Enum/TurnBaseGameState.h"
 
 
@@ -61,7 +64,7 @@ public:
 	UPROPERTY()		int32 DailyBhvrTaskIndex = -1;			// ** Index in TaskObj
 
 
-	UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array (Task queue for screen draw)
+	UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array (Task queue for screen draw) 
 
 	UPROPERTY()		FTaskData StoreGeneralTaskDT;			// ** Stored General	TaskDT 
 	UPROPERTY()		FTaskData StoreAITaskDT;				// ** Stored AI			TaskDT 
@@ -130,6 +133,8 @@ public:
 	// ** EVENT:    "CHange GameState"    (RealTime,  Pause,  TurnBase,)
 	UFUNCTION()		void OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState);
 
+	UFUNCTION()		void OnAnimNotify(FString _NotifyName);
+
 
 public:
 
@@ -141,6 +146,9 @@ public:
 	UFUNCTION()		void Rotate();
 /*	UFUNCTION()		void PlayAnimate();	
 	UFUNCTION()		void Wait();
+	// ** ...
+	// ** ...
+	// ** ...
 */
 
 
@@ -167,28 +175,40 @@ public:
 	UFUNCTION()		void UpdateLogic();
 
 
+
+
+
 public:
 
 // **  ************************   Self_Operation  ************************
 
 	UFUNCTION()		FVector GetCurrSelfLocation();
 	UFUNCTION()		FRotator GetCurrSelfRotation();
-	UFUNCTION()		void	SetSelfRotation(FRotator rot);
+	UFUNCTION()		void SetSelfRotation(FRotator rot);
 	UFUNCTION()		FVector GetUnitRightVector();
 	UFUNCTION()		FVector GetUnitForwardVector();
 
-	UFUNCTION()		void	SetUnitRotateSpeed(uint8 _RotSpeedIndex);	// ** 0, 1, 2, 3
-	UFUNCTION()		void	SetUnitMoveSpeed(float _Speed);
-	UFUNCTION()		void	UnitStopMove();
+	UFUNCTION()		void SetUnitRotateSpeed(uint8 _RotSpeedIndex);	// ** 0, 1, 2, 3
+	UFUNCTION()		void SetUnitMoveSpeed(float _Speed);
+	UFUNCTION()		void UnitStopMove();
 
-	UFUNCTION()		float	GetUnitStopDistance();
+	UFUNCTION()		float GetUnitStopDistance();
 
-	UFUNCTION()		bool	IsUnitInGroup();
-	UFUNCTION()		bool	IsUnitSelected();
+	UFUNCTION()		bool IsUnitInGroup();
+	UFUNCTION()		bool IsUnitSelected();
 
-	UFUNCTION()		FName	GetUnitGameName();
+	UFUNCTION()		FName GetUnitGameName();
 
-	UFUNCTION()		void	PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime = 0.f);
+	UFUNCTION()		void PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime = 0.f);
+
+	UFUNCTION()		void GetTasksQueDataFromAI(UTexture2D*& _CurrTaskImage,
+							TArray<UTexture2D*>& _TasksImage,
+							TArray<int32>& _TasksIndex);
+	// ** Weapon getters/setters
+	UFUNCTION()		int32 IsWeaponActive();
+	UFUNCTION()		bool ActivateWeapon();
+	UFUNCTION()		bool UnactivateWeapon();
+	UFUNCTION()		UAnimMontage* GetGameAnimation(EAnimationKey _AnimationKey);
 
 public:
 

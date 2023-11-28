@@ -40,6 +40,9 @@ void ABaseGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// ** Init-Animation
+	InitAnimations();
+
 	// ** "Game-Delay" 
 	GetWorld()->GetTimerManager().SetTimer(TH_Start, this, &ThisClass::StartGame, 1.f, false);
 
@@ -156,6 +159,7 @@ void ABaseGameMode::StartGame()
 
 
 	HUD->SetDefaultGameParam(this, BGameState);
+
 	BGameState->SetDefaultGameParam(this, HUD);
 
 
@@ -182,26 +186,333 @@ void ABaseGameMode::SceneUnitsInit()
 		}
 	}
 
-	ABaseGameState* GmState = Cast<ABaseGameState>(GetWorld()->GetGameState());
-	if (GmState)
+
+	// ** Finish Unit-Init
+
+	for (int32 i = 0; i < UnitsIt.Num(); ++i)
 	{
-		for (int32 i = 0; i < UnitsIt.Num(); ++i)
+		AUnit* unit = Cast<AUnit>(UnitsIt[i]);
+		if (unit)
 		{
-			AUnit* unit = Cast<AUnit>(UnitsIt[i]);
-			if (unit)
-			{
-				unit->StartGame(true);
+			unit->StartGame(true);
 
-				// ** XXXXXXXXXXXXXXX
-				GmState->TurnBaseGmStateSender.AddUObject(unit->AI, &AUnitAI::OnChangeTurnBaseGameState);
-			}
+			// ** XXXXXXXXXXXXXXX
+			BGameState->TurnBaseGmStateSender.AddUObject(unit->AI, &AUnitAI::OnChangeTurnBaseGameState);
 		}
-		GetWorld()->GetTimerManager().ClearTimer(TH_SceneUnitsInit);
-
-		return;
 	}
-	GetWorld()->GetTimerManager().SetTimer(TH_SceneUnitsInit, this, &ThisClass::SceneUnitsInit, 0.5f, false);
+
+	GetWorld()->GetTimerManager().ClearTimer(TH_SceneUnitsInit);
+
 }
+
+
+
+// ****************************************************************************************************	
+// **********************************      Default Game Param      ************************************
+
+UAnimMontage* ABaseGameMode::GetGameAnimation(EUnitGameType _UnitGameType,
+	EWeaponType _WeaponType, 
+	EAnimationKey _AnimationKey)
+{
+	FWeaponAnimateGroup* unitGroup = GameAnimation.Find(_UnitGameType);
+	if (unitGroup)
+	{
+		FAnimateGroup* animGroup = unitGroup->WeaponGroupAnimation.Find(_WeaponType);
+		if (animGroup)
+		{
+			return *animGroup->Animation.Find(_AnimationKey);
+		}
+	}
+	return nullptr;
+}
+
+
+
+
+
+
+
+
+
+
+// ** TEST  TEST   TEST
+// ** TEST  TEST   TEST
+// ** TEST  TEST   TEST				// ** All Game animations  (need add in Game-Mod  (TMap <Unit, (TMap <Weapon, (TMap <AnimKEY, Animation))>>>))
+// ** TEST  TEST   TEST
+// ** TEST  TEST   TEST
+void ABaseGameMode::InitAnimations()
+{
+
+	FWeaponAnimateGroup weaponElement;
+	FAnimateGroup animElement;
+	UAnimMontage* montage_use = nullptr;
+	UAnimMontage* montage_equip = nullptr;
+	UAnimMontage* montage_unequip = nullptr;
+	UAnimMontage* montage_attack1 = nullptr;
+	UAnimMontage* montage_attack2 = nullptr;
+	UAnimMontage* montage_attack3 = nullptr;
+	UAnimMontage* montage_attack4 = nullptr;
+	UAnimMontage* montage_attack5 = nullptr;
+	//---------UAnimMontage* montage_block = nullptr;
+	UAnimMontage* montage_parrir = nullptr;
+	UAnimMontage* montage_attack_1_novice = nullptr;
+	UAnimMontage* montage_attack_2_novicer = nullptr;
+	UAnimMontage* montage_attack2_altern = nullptr;
+	UAnimMontage* montage_attack3_altern = nullptr;
+	UAnimMontage* montage_attack4_altern = nullptr;
+
+	UAnimMontage* prepare_and_cast = nullptr;
+	UAnimMontage* cast = nullptr;
+	UAnimMontage* prepare_to_cast = nullptr;
+
+	
+
+	// **      7777777777777777
+
+	montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Shared_Mutual/Cast___LaftHand___AO/M_Ability_E.M_Ability_E"));
+	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
+	//if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	//if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	//if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	//if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
+	//if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
+	//if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
+	//if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
+	//-------if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	//if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	//if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
+	//if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
+	//if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
+	//if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
+	//if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+	montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 =
+	montage_attack3 = montage_attack4 = montage_attack5 = montage_parrir =
+	montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	weaponElement.WeaponGroupAnimation.Add(EWeaponType::Locomotion, animElement);
+	animElement.Animation.Reset();
+
+	//animElement.Animation.Add(EAnimationKey::use, frffff);
+	//animElement.Animation.Add(EAnimationKey::equip, frffff);
+	//animElement.Animation.Add(EAnimationKey::unequip, frffff);
+	//animElement.Animation.Add(EAnimationKey::attack1, frffff);
+	//animElement.Animation.Add(EAnimationKey::attack2, frffff);
+	//animElement.Animation.Add(EAnimationKey::attack3, frffff);
+	//animElement.Animation.Add(EAnimationKey::attack4, frffff);
+	//animElement.Animation.Add(EAnimationKey::attack5, frffff);
+	//animElement.Animation.Add(EAnimationKey::block, frffff);
+	//animElement.Animation.Add(EAnimationKey::parrir, frffff);
+	//if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_parrir);
+	//if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_parrir);
+	//if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_parrir);
+	//if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_parrir);
+	//if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_parrir);
+	montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 =
+	montage_attack3 = montage_attack4 = montage_attack5 = montage_parrir =
+	montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	//weaponElement.WeaponGroupAnimation.Add(EWeaponType::HandFight, animElement);
+	//animElement.Animation.Reset();
+
+	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
+	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Weapon_OnOff__Alternate/M_LSw_WeaponOn.M_LSw_WeaponOn"));
+	montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Weapon_OnOff__Alternate/M_LSw_WeaponOff.M_LSw_WeaponOff"));
+	montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Attack_1_b__Longs_Attack_RD.M_LSw_Attack_1_b__Longs_Attack_RD"));
+	montage_attack2 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Attack_2_b__Longs_Attack_LD.M_LSw_Attack_2_b__Longs_Attack_LD"));
+	montage_attack3 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Attack_3_b__Longs_Attack_L.M_LSw_Attack_3_b__Longs_Attack_L"));
+	montage_attack4 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_2/M_LSw_Attack_4_c__Longs_Attack_D.M_LSw_Attack_4_c__Longs_Attack_D"));
+	montage_attack5 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Sting_Attack_A_b__CC.M_LSw_Sting_Attack_A_b__CC"));
+	//------montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	montage_attack_1_novice = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_0/M_LSw_Attack_1_a__Longs_Attack_RD2.M_LSw_Attack_1_a__Longs_Attack_RD2"));
+	montage_attack_2_novicer = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_0/M_LSw_Attack_2_a__Sword_Attack_Sp_U.M_LSw_Attack_2_a__Sword_Attack_Sp_U"));
+	montage_attack2_altern = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Attack_2a_b__Longs_Attack_L__After-15.M_LSw_Attack_2a_b__Longs_Attack_L__After-15"));
+	//montage_attack3_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
+	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
+	if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
+	if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
+	if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
+	//---if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
+	if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
+	if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
+	if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
+	if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+	montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 = 
+	montage_attack3 = montage_attack4 = montage_attack5 = montage_parrir =
+	montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	weaponElement.WeaponGroupAnimation.Add(EWeaponType::LongSword, animElement);
+	animElement.Animation.Reset();
+
+	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
+	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Gun_Rifle/ReadyOnOff/M_EquipRifle.M_EquipRifle"));
+	montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Gun_Rifle/ReadyOnOff/M_HolsterRifle.M_HolsterRifle"));
+	montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Gun_Rifle/Attack/M_Rifle_ShootOnce.M_Rifle_ShootOnce"));
+	montage_attack2 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Gun_Rifle/Attack/M_Rifle_ShootBurstLoop.M_Rifle_ShootBurstLoop"));
+	//montage_attack3 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack5 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack_1_novice = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack_2_novicer = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
+	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
+	if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
+	if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
+	if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
+	//------if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
+	if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
+	if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
+	if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
+	if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+	montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 =
+		montage_attack3 = montage_attack4 = montage_attack5 = montage_parrir =
+	montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	weaponElement.WeaponGroupAnimation.Add(EWeaponType::RapidGun, animElement);
+	animElement.Animation.Reset();
+
+	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
+	//montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack5 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack_1_novice = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack_2_novicer = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
+	//if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	//if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	//if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	//if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
+	//if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
+	//if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
+	//if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
+	//if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	//if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	//if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
+	//if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
+	//if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
+	//if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
+	//if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+	//montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 =
+	//	montage_attack3 = montage_attack4 = montage_attack5 = montage_block = montage_parrir =
+	//montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	//weaponElement.WeaponGroupAnimation.Add(EWeaponType::Sword, animElement);
+	//animElement.Animation.Reset();
+
+	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
+	//montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack5 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack_1_novice = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack_2_novicer = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
+	//if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	//if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	//if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	//if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
+	//if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
+	//if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
+	//if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
+	//if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	//if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	//if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
+	//if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
+	//if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
+	//if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
+	//if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+	//montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 =
+	//	montage_attack3 = montage_attack4 = montage_attack5 = montage_block = montage_parrir =
+	//montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	//weaponElement.WeaponGroupAnimation.Add(EWeaponType::Pistol, animElement);
+
+	GameAnimation.Add(EUnitGameType::Human, weaponElement);
+
+	animElement.Animation.Reset();
+	weaponElement.WeaponGroupAnimation.Reset();
+
+	// ****************************   Holem   *********************************
+
+	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
+	//montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack5 = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	montage_attack_1_novice = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Sting_Attack_A_b__CC.M_LSw_Sting_Attack_A_b__CC"));
+	//montage_attack_2_novicer = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack2_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack3_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	//montage_attack4_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
+	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
+	if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
+	if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
+	if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
+	//----if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
+	if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
+	if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
+	if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
+	if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+	//montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 =
+	//montage_attack3 = montage_attack4 = montage_attack5 = montage_block = montage_parrir =
+	//montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
+
+	weaponElement.WeaponGroupAnimation.Add(EWeaponType::HandFight, animElement);
+	animElement.Animation.Reset();
+
+	GameAnimation.Add(EUnitGameType::Holem, weaponElement);
+
+}
+
+
+
+
+
 
 
 

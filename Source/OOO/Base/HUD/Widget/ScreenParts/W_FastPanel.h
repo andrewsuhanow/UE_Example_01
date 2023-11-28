@@ -8,7 +8,9 @@
 #include "W_FastPanel.generated.h"
 
 
-
+class UHorizontalBox;  //#include "Components/VerticalBox.h"
+//class UScrollBox;
+class USizeBox;
 
 UCLASS()
 class OOO_API UW_FastPanel : public UUserWidget
@@ -28,6 +30,24 @@ public:
 	   	 
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void ShowInventory(class AUnit* _Unit, ABaseGameMode* BGameMode);
+		void ShowFastPanel(class AUnit* _FastPanelUnit);
+
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void UpdateFastPanel(class AUnit* _FastPanelUnit, class ABaseGameMode* _GameMode);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void AddCellToFastPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture);
+
+public:
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		USizeBox* FastPanelSizeBox;					// ** Border size					
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		UHorizontalBox* FastPanelHorizontalBox;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		TArray<class UW_Slot*> SlotObj;
+
+
+
 };
 

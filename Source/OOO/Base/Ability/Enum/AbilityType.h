@@ -27,7 +27,7 @@ enum class EAbilityType : uint8
 	pick_up,
 	drop,
 
-	healdt,
+	health,
 
 	MAX
 };

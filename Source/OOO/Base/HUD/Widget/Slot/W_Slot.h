@@ -4,15 +4,15 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 
-
 #include "../../../Inventory/Enum/SlotType.h"
 
 #include "W_Slot.generated.h"
 
-//class UButton;
 class UImage;
 class UTextBlock;
 class USizeBox;
+class UTextBlock;
+
 
 
 UCLASS()
@@ -42,6 +42,46 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
 		int32 IndexInContainer = -1;
 
+public:
+
+	// ** item image
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* ImgItem = nullptr;
+
+
+	// ** Background Image
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* BackgroungImage;
+
+
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) 
+		UTextBlock* TextItemCount;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetItemCount(int32 RealCount, int32 MaxCount, float FontSize = 15.f);
+
+
+
+public:
+
+	// ** Slot Size   (Set in BP-Editor OR in Sctipt<init>)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		float SlotWidth = 64;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		float SlotHeight = 64;
+	UFUNCTION()
+		void SetSlotSize();
+
+public:
+
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetSlotParam(int32 _IndexInContainer,
+			UTexture2D* _ItemImage, UTexture2D* _BackgroundImage,
+			float _SlotWidth = -1.f, float _SlotHeight = -1.f, 
+			float _ImageWidth = -1.f, float _ImageHeight = -1.f,
+			float _TranslationX = 0, float _TranslationY = 0,
+			ESlotType _PanelTypeFix = ESlotType::none);
 
 public:
 
@@ -65,23 +105,14 @@ public:
 		int32 CheckPlaceUnder(const class UW_Slot* ItemSlotUnder, const class UW_DropSlot* ItemSlotDraging);
 	  
 
-	 
 public:
-	   	  	  
 
-	// ** item image
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* ImgItem = nullptr;
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetImage(UTexture2D* ItemImage = nullptr);
-
-
-	// ** Background Image
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* BackgroungImage;
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetBackgroundImage(UTexture2D* _BackgroundImage = nullptr);
-
+	UPROPERTY()
+		float LMousClickDuration = 0;
+	UPROPERTY()
+		FTimerHandle TH_LMousClickDuration;
+	UFUNCTION()
+		void LMousClickDurationLoop();
 
 
 
@@ -90,24 +121,23 @@ public:
 
 
 	
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (BindWidget))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
 		USizeBox* SzBox;
+	//--UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (BindWidget))
+	//---	UOverlay* ImagesOverlay;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (BindWidget))
+		USizeBox* SzBoxImages;
 	
 	// ** SelectImage
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* SelectImage1;
+		UImage* SelectorImage1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* SelectImage2;
+		UImage* SelectorImage2;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* SelectImage3;
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SelectButton(int32 SelectingType, bool deselect = true);
+		UImage* SelectorImage3;
+	//-----UFUNCTION(BlueprintCallable, Category = "OOO")
+	//-----	void SelectButton(int32 SelectingType, bool deselect = true);
 
 
-	// ** Slot Size   (Set in BP-Editor OR in Sctipt<init>)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
-		float slotWidth = 128;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
-		float slotheight = 128;
 	
 };

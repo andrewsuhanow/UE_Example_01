@@ -40,15 +40,42 @@ public:
 
 // *************************    Init    ***************************
 
-	UFUNCTION()		void ShowInventory(class UInventoryComponent* _Inventor, class ABaseGameMode* _GameMode);
-	UFUNCTION()		void ShowLoot(class UInventoryComponent* _Inventor, ABaseGameMode* _GameMode);
-	UFUNCTION()		void ShowEquipPanel(class AUnit* _LootUnit);
-	UFUNCTION()		void ShowLootEquipPanel(class AUnit* _LootUnit);
-	UFUNCTION()		void ShowFastPanel(class AUnit* _LootUnit);
-	UFUNCTION()		void ShowPerkPanel(class AUnit* _LootUnit);
-	UFUNCTION()		void ShowWpnAttackPanel(class AUnit* _LootUnit);
+	UFUNCTION()		void ShowInventory(class UInventoryComponent* _InventorObj, class ABaseHUD* _HUD);
+	UFUNCTION()		void ShowLoot(class UInventoryComponent* _LootInventorObj, ABaseGameMode* _GameMode, class ABaseHUD* _HUD);
+	UFUNCTION()		void ShowGlobalInventory(class UInventoryComponent* _InventorObj, class ABaseHUD* _HUD);
+	UFUNCTION()		void ShowEquipPanel(class AUnit* _LootUnit, class ABaseHUD* _HUD);
+	UFUNCTION()		void ShowLootEquipPanel(class AUnit* _LootUnit, class ABaseHUD* _HUD);
+
+	UFUNCTION()		void ShowFastPanel(class AUnit* _FastPanelUnit, class ABaseHUD* _HUD);
+
+	UFUNCTION()		void ShowPerkPanel(class AUnit* _Unit, class ABaseGameMode* _GameMode, class ABaseHUD* _HUD);
+
 	UFUNCTION()		void ShowHealthPanel(class AUnit* _LootUnit);
-	UFUNCTION()		void ShowWpnChangePanel(class AUnit* _LootUnit);
+
+	UFUNCTION()		void ShowWpnChangePanel(class AUnit* _Unit,
+											int32& _WeaponSlotIndex,
+											ESlotType& _WeaponSlotType,
+											UTexture2D*& _WeaponSlotTexture);
+	UFUNCTION()		void HideWpnChangePanel();
+	UFUNCTION()		void OpenWpnChangePanel(class AUnit* _Unit,
+											TArray<int32>& _WeaponSlotsIndex,
+											TArray<ESlotType>& _WeaponSlotsType,
+											TArray<UTexture2D*>& _WeaponSlotsTexture);
+	UFUNCTION()		void CloseWpnChangePanel();
+	UFUNCTION()		void ShowWpnAttackPanel(class AUnit* _LootUnit);
+
+	UFUNCTION()		void ShowTaskQueuePanel(class AUnit* _Unit,
+											UTexture2D*& _CurrTaskIcon,
+											TArray<UTexture2D*>& _TasksIcon,
+											TArray<int32>& _TasksIndex);
+	UFUNCTION()		void HideTaskQueuePanel();
+	UFUNCTION()		void UpdateTaskQueuePanel(class AUnit* _Unit,
+											UTexture2D*& _CurrTaskIcon,
+											TArray<UTexture2D*>& _TasksIcon,
+											TArray<int32>& _TasksIndex);
+
+
+
 	UFUNCTION()		void ShowPosePanel(class AUnit* _LootUnit);
 	UFUNCTION()		void ShowAIPanel(class AUnit* _LootUnit);
 	UFUNCTION()		void ShowGroupPanel(class AUnit* _LootUnit);
@@ -57,17 +84,38 @@ public:
 
 
 
-
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_Inventory* InventorView;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_Inventory* LootView;
- 
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-/*	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_EquipPanel* EquipPanelView;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_GlobalInventory* GlobalInventoryView;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_EquipPanel* EquipPanelView;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_EquipPanel* LootEquipPanelView;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_FastPanel* FastPanelView;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_PerkPanel* PerkPanelView;
 
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_FastPanel* FastPanelView;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_WeaponPanel* WeaponPanelView;
+
+	//UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_AAAAAWeaponAAAATTTAAACCCKKKPanel* WeaponAttackPanelView;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_TaskQueuePanel* TaskQueuePanelView;
+
+
+	// ---------------------------
+
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UButton* InvertorButton;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UButton* EquipPanelButton;
+
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*	
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_PerkPanel* PerkPanelView;
+
+	
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_FastPanel* WpnAttackPanelView;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_HealthPanel* HealthPanelView;
@@ -78,4 +126,11 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_Map* MapView;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_MenuPanel* MenuPanelView;
 */
+
+
+
+
+
+
+
 };

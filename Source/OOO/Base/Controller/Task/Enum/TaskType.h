@@ -1,7 +1,7 @@
 
 #pragma once
 
-// #include "../Controller/Task/Enum/TaskType.h"
+// #include "Base/Controller/Task/Enum/TaskType.h"
 
 UENUM(BlueprintType)
 enum class ETaskType : uint8
@@ -18,6 +18,9 @@ enum class ETaskType : uint8
 	RotateAngle,
 
 	Wait,
+
+	ActivateWeapon,
+	ChangeWeapon,			// ** 7777777777777777777777
 
 	XXXXX1,
 	XXXXX2,
