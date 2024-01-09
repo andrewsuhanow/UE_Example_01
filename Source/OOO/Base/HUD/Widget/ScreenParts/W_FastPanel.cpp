@@ -58,27 +58,29 @@ void UW_FastPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void  UW_FastPanel::ShowFastPanel(AUnit* _FastPanelUnit)
 {
 	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
-	UpdateFastPanel(_FastPanelUnit, gameMode);
+	UpdateFastPanel(_FastPanelUnit);
 	SetVisibility(ESlateVisibility::Visible);  				// ** Visible,  Hidden,  Collapsed
 }
 
 
 
-void UW_FastPanel::UpdateFastPanel(AUnit* _FastPanelUnit, ABaseGameMode* _GameMode)
+void UW_FastPanel::UpdateFastPanel(AUnit* _FastPanelUnit)
 {
 
-	float slotSize = _GameMode->FastPanelSlotSize;
-	int32 fastPanelSlotMaxNum = _GameMode->FastPanelSlotNum;
+	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+
+	float slotSize = gameMode->FastPanelSlotSize;
+	int32 fastPanelSlotMaxNum = gameMode->FastPanelSlotNum;
 	int32 unitFastPanelSlotNum = _FastPanelUnit->FastPanelSlots.Num();
 	int32 SlotObjNum = SlotObj.Num();
 	UTexture2D* SlotBackTexture = _FastPanelUnit->MainInvertorySlotTexture;
 	if (!SlotBackTexture)
-		SlotBackTexture = _GameMode->MainInvertorySlotTexture;
+		SlotBackTexture = gameMode->MainInvertorySlotTexture;
 
 	// ** Add new slot (if need)
 	while(SlotObjNum < fastPanelSlotMaxNum)
 	{
-		AddCellToFastPanel(_GameMode, slotSize, SlotBackTexture);
+		AddCellToFastPanel(gameMode, slotSize, SlotBackTexture);
 		++SlotObjNum;
 	}
 

@@ -31,13 +31,15 @@ public:
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void ShowWeaponAttacksPanel(class AUnit* _Unit, ABaseGameMode* _GameMode);
+		void ShowAttacksWpnPanel(class AUnit* _Unit, TArray<UTexture2D*>& _AttackIcon,
+									int32& _SelectIndex, int32& _PermanentIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void HideWeaponAttacksPanel();
+		void HideAttacksWpnPanel();
 		
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void UpdateWeaponAttacksPanel(class AUnit* _Unit, class ABaseGameMode* _GameMode);
+		void UpdateAttacksWpnPanel(class AUnit* _Unit, TArray<UTexture2D*>& _AttackIcon,
+									int32& _SelectIndex, int32& _PermanentIndex);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void AddCellToWeaponAttacksPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture);

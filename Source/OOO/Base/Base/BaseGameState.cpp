@@ -68,9 +68,23 @@ int32 ABaseGameState::GetUnitGroupNum()
 
 
 
-// ****************************    Turn Base Game State    ********************************
+// ****************************    Turn_Base_Game_State    ********************************
 
 void ABaseGameState::SetNewTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
 {
 	TurnBaseGmStateSender.Broadcast( TurnBaseGameState = _TurnBaseGameState );		//  RealTime,  Pause,  TurnBase
+}
+
+
+
+// ****************************    Possesing_Game_State    ********************************
+
+void ABaseGameState::SetPossesingGameState(EPossesingGameState _PossesingGameState)
+{
+	PossesingGameState = _PossesingGameState;
+}
+
+EPossesingGameState ABaseGameState::GetPossesingGameState() const
+{
+	return PossesingGameState;
 }

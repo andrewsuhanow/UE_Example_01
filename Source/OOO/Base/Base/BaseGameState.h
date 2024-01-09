@@ -5,6 +5,7 @@
 #include "GameFramework/GameStateBase.h"
 
 #include "Enum/TurnBaseGameState.h"
+#include "Enum/PossesingGameState.h"
 
 #include "BaseGameState.generated.h"
 
@@ -49,7 +50,7 @@ public:
 public:
 
 
-	// ****************************    Turn Base Game State    ********************************
+	// ****************************    Turn_Base_Game_State    ********************************
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		ETurnBaseGameState TurnBaseGameState = ETurnBaseGameState::RealTime;			// ** RealTime,  Pause,  TurnBase,
 
@@ -59,4 +60,19 @@ public:
 	UFUNCTION(BlueprintCallable)
 		void SetNewTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState);
 
+
+
+public:
+
+	// ****************************    Possesing_Game_State    ********************************
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
+		EPossesingGameState PossesingGameState = EPossesingGameState::top_down;
+
+	UFUNCTION(BlueprintCallable)
+		void SetPossesingGameState(EPossesingGameState _PossesingGameState);
+
+	UFUNCTION(BlueprintCallable)
+		EPossesingGameState GetPossesingGameState() const;
+	
 };

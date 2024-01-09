@@ -18,9 +18,13 @@
 #include "../Amunition/Enum/WeaponType.h"
 #include "../Animation/Enum/AnimationKey.h"
 
+
+#include "../Item/Struct/ItemDT.h"
+
 #include "../Base/Enum/TurnBaseGameState.h"
+#include "../Base/Enum/PossesingGameState.h"
 
-
+#include "../Unit/Enum/UnitPose.h"
 
 #include "UnitAI.generated.h"
 
@@ -64,17 +68,18 @@ public:
 	UPROPERTY()		int32 DailyBhvrTaskIndex = -1;			// ** Index in TaskObj
 
 
-	UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array (Task queue for screen draw) 
+	UPROPERTY()		TArray<FTaskData> FractionQueueTaskDT;	// ** Stored General	TaskDT-Array (Task queue for screen draw) 
+	//UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array (Task queue for screen draw) 
 
-	UPROPERTY()		FTaskData StoreGeneralTaskDT;			// ** Stored General	TaskDT 
-	UPROPERTY()		FTaskData StoreAITaskDT;				// ** Stored AI			TaskDT 
-	UPROPERTY()		FTaskData StoreDominantTaskDT;			// ** Stored Dominant	TaskDT 		
+	UPROPERTY()		FTaskData FractionTaskDT;			// ** Stored General	TaskDT 
+	UPROPERTY()		FTaskData NpcTaskDT;				// ** Stored General	TaskDT 
+	UPROPERTY()		FTaskData CriticalTaskDT;			// ** Stored General	TaskDT 
 
 	//UPROPERTY()		FTaskData MainTaskDT;				// ** Using Parrent Task		
 	//UPROPERTY()		FTaskData PartTaskDT;				// ** Using Child Task
 
 	//UPROPERTY()		FTaskData CurrTaskDT;				// ** Current Task
-	UPROPERTY()		TArray<FTaskData> CurrTaskDTBuffer;		// ** for sub-Task Queue
+	UPROPERTY()		TArray<FTaskData> TasksBuffer;	//----CurrTaskDTBuffer;		// ** for sub-Task Queue
 	UPROPERTY()		class UTask* CurrTaskRef;
 
 	UPROPERTY(VisibleAnywhere, Category = "OOO")
@@ -141,39 +146,30 @@ public:
 // **  ************************   Core_Action  ************************
 
 
-	UFUNCTION()		void MoveToPoint();
-	UFUNCTION()		void MoveToUnit();
-	UFUNCTION()		void Rotate();
-/*	UFUNCTION()		void PlayAnimate();	
-	UFUNCTION()		void Wait();
-	// ** ...
-	// ** ...
-	// ** ...
-*/
-
-
 
 public:
 
 // **  ************************   Global_Operation  ************************
 
 
-	UFUNCTION(Blueprintcallable, Category = "OOO_GameTime")
-		int32 GetGameHour();
-	UFUNCTION(Blueprintcallable, Category = "OOO_GameTime")
+	UFUNCTION(Blueprintcallable, Category = "OOO_Gobal_Operation")
+		int32 GetGameHour();	
+	UFUNCTION(Blueprintcallable, Category = "OOO_Gobal_Operation")
 		void OnNewGameHour(int32 iHour);
 
+	UFUNCTION(Blueprintcallable, Category = "OOO_Gobal_Operation")
+		EPossesingGameState GetPossesingGameState();
 public:
 
 // **  ************************   Misc_Operation  ************************
 
 
 	UFUNCTION()		void SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData,
-								ETaskInstigator _TaskInstigator = ETaskInstigator::General, 
+								ETaskCauser _TaskCauser = ETaskCauser::FractionTask,
 								ETaskPriority _TaskPriority = ETaskPriority::Normal);
 
 	UFUNCTION()		void UpdateLogic();
-
+	UPROPERTY()		FTimerHandle TH_UpdateLogic;
 
 
 
@@ -182,13 +178,13 @@ public:
 
 // **  ************************   Self_Operation  ************************
 
-	UFUNCTION()		FVector GetCurrSelfLocation();
+	UFUNCTION()		FVector GetCurrSelfLocation() const;
 	UFUNCTION()		FRotator GetCurrSelfRotation();
 	UFUNCTION()		void SetSelfRotation(FRotator rot);
 	UFUNCTION()		FVector GetUnitRightVector();
 	UFUNCTION()		FVector GetUnitForwardVector();
 
-	UFUNCTION()		void SetUnitRotateSpeed(uint8 _RotSpeedIndex);	// ** 0, 1, 2, 3
+	UFUNCTION()		void SetUnitRotateSpeedByPose(EUnitPose _UnitPose);
 	UFUNCTION()		void SetUnitMoveSpeed(float _Speed);
 	UFUNCTION()		void UnitStopMove();
 
@@ -200,6 +196,7 @@ public:
 	UFUNCTION()		FName GetUnitGameName();
 
 	UFUNCTION()		void PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime = 0.f);
+	UFUNCTION()		void StopAnimate();
 
 	UFUNCTION()		void GetTasksQueDataFromAI(UTexture2D*& _CurrTaskImage,
 							TArray<UTexture2D*>& _TasksImage,
@@ -210,18 +207,21 @@ public:
 	UFUNCTION()		bool UnactivateWeapon();
 	UFUNCTION()		UAnimMontage* GetGameAnimation(EAnimationKey _AnimationKey);
 
+
+	UFUNCTION()		class AWeaponWorldItem* GetCurrWeaponItem();
+
+	//----------------------------------FItemDT* GetCurrWeaponData();
+
+	UFUNCTION()		FTransform GetUnitSocketParam(FName _SocketName);
+
 public:
 
 // **  ************************   Target_Operation  ************************
 
 	UFUNCTION()		FVector GetCurrTargetLocation();
 	
+	UFUNCTION()		float GetDistanceToTarget(AActor* _TargetActor, bool _WithMoveDistCorrector = false) const;
 
-// ****************************************************
-// *****************   TEST_DEBUG  *****************
-// ****************************************************
-public:
 
-	//--------------void AddTaskMovePointTEST(ETaskType _TaskType, FVector _Location, bool _IsRotateByPoint, FRotator _Rotation);
 
 };

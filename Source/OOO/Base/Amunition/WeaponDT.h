@@ -1,7 +1,7 @@
 ﻿
 #pragma once
 
-//#include Base/Amunition/WeaponDT.h"
+// ** #include "Base/Amunition/WeaponDT.h"
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
@@ -10,6 +10,12 @@
 #include "../Inventory/Enum/SlotType.h"
 
 #include "../Unit/Struct/PoseLocomotion.h"
+#include "Enum/AttackHitCollisionType.h"
+#include "Enum/UseDistanceType.h"
+
+#include "../Controller/Task/Enum/TacticalMoveStepLogic.h"
+
+#include "../Animation/Enum/AnimationKey.h"
 
 //------------#include "Srtuct/WeaponDT.h"
 
@@ -26,30 +32,26 @@ struct FAttakParam
 	GENERATED_USTRUCT_BODY()
 		
 
+public:
+
+
+	//FAttakParam();
+
 
 	// ** Button using Image
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		UTexture2D* ButtonImage;
 
-	// ** Can't Attack when Target Closer then...
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
-		float MinDist = 100.f;
-	// ** Can't Attack when Target far then...
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		float MaxDist = 500.f;
-	// ** Optimal distance for Fire (betwean Attack AI_Unit will shift to optimal distance)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		float OptimalDist = 150.f;
 	// ** if can Aiming  (it's "Field Od View" parameter)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		float SnipeZoomFOV = -1.f;
 
 	// ** if can Aiming  (it's "Field Od View" parameter)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		float RollBackTime = 30.f;
+		float RollBackTime = -1.f;
 	// ** Hit probability
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
-		float Accuracy = 70.f;
+		float Accuracy = 0.f;
 
 
 
@@ -59,12 +61,35 @@ struct FAttakParam
 
 
 	// ** Speeds and pictures
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_PoseLocomotion")
-				TArray<struct FPoseLocomotion> PoseLocomotionParam;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		EAttackHitCollisionType AttackCollisionType = EAttackHitCollisionType::Simple;
+
+	// ** RULE:   
+	// ** [0] = MainAttack
+	// ** [1] = AlternateAttack (Short version, if anim use in Attack-Series or after other anim)
+	// ** [2] = MainAttack in place			//PrepateAttack	(Anim before "MainAttack" or before "AttackHolding")
+	// ** [3] = AlternateAttack  in place   //AttackHolding	(Bow or magik aiming/focusing)
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		TArray<EAnimationKey> AnimationKEY; // = EAnimationKey::none;
+
+	EAnimationKey GetAnimKey_Attack();
+	EAnimationKey GetAnimKey_AlternateAttack();
+
+	EAnimationKey GetAnimKey_AttackInPlace();
+	EAnimationKey GetAnimKey_AlternateAttackInPlace();
+	//	EAnimationKey GetAnimKey_PrepateAttack();
+	//	EAnimationKey GetAnimKey_AttackHolding();
 
 
-
-
+/*	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		bool IsAnimTOP_RTS = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		bool IsAnimTOP_3rd = true;
+*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		//	bool IsNeedClearVisible = true;
+		EUseDistanceType UseDistanceType = EUseDistanceType::optimal_dist;
 
 			// ** Actor stored all Effect-Parameter   (spawning when AnimNotify-trigger or Collision-Hit)
 //++++			UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
@@ -73,11 +98,20 @@ struct FAttakParam
 };
 
 
+
+// ** -------------------------------------------------------------------------------------------
+
+
+
 UCLASS(Blueprintable, BlueprintType)
 class OOO_API UWeaponDT : public UObject
 {
 	GENERATED_BODY()
 
+
+public:
+
+	UWeaponDT();
 
 public:
 
@@ -89,6 +123,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		ESlotType AllowInventorySlotType = ESlotType::none;	// ** Melee, Gun, BigGun, pistol, ...
 
+public:
 
 	// ** Where Weapon Drawn, when EQUIP but it's Unactivated (on the Back or on the Belt)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
@@ -97,9 +132,29 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		FName SocketActivated = FName("none");
 
+public:
 
+	// ** Move-Speeds, Rorate-Speeds and pictures (Mod)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		TArray<struct FPoseLocomotion> PoseLocomotionParamMOD;
 
+public:
 
+	// ** Can't Attack when Target Closer then...
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		float MinDist = 100.f;
+	// ** Can't Attack when Target far then...
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		float MaxDist = 600.f;
+	// ** Optimal distance for Fire (betwean Attack AI_Unit will shift to optimal distance)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		float OptimalDist = 150.f;
+
+	// ** 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
+		TArray<ETacticalMoveStepLogic> TacticalMoveStepLogic;
+
+public:
 
 	// ** Attack behaviour/Parameter   (AnimMontage, ButtonImage, Distant, ActorCastAgent)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")

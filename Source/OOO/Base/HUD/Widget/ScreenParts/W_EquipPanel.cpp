@@ -9,6 +9,9 @@
 #include "../../../Unit/Base/Unit.h"
 #include "../../../Amunition/WeaponComponent.h"
 #include "../../../Amunition/WeaponWorldItem.h"
+#include "../../../Amunition/ArmorComponent.h"
+#include "../../../Amunition/ArmorWorldItem.h"
+
 //------#include "../../../Inventory/InventoryComponent.h"
 
 #include "../../../Item/Struct/ItemDT.h"
@@ -164,9 +167,7 @@ void UW_EquipPanel::UpdateEquipPanel(class AUnit* _Unit)
 
 
 
-	// ** Weapon-Equip-Slot update
-
-
+	// **************** Weapon-Equip-Slot update
 
 	/// ** hide all Weapon-Equip-Slot
 	for (int32 i = 0; i < WeaponSlotsArray.Num(); ++i)
@@ -200,25 +201,48 @@ void UW_EquipPanel::UpdateEquipPanel(class AUnit* _Unit)
 
 
 			// ** find matches W_slot wis Weapon and set
-			SetEquipSlotParam(_Unit, toEquipSlotType, unitSlotIndex, mainInvertorySlotTexture, itemSlotTexture);
+			SetEquipSlotParam(_Unit, WeaponSlotsArray, toEquipSlotType, unitSlotIndex, 
+				mainInvertorySlotTexture, itemSlotTexture);
 		}
 	}
 
 
-	// ** Armor-Equip-Slot update
-
-	// --- @@@@@@
-	// --- @@@@@@ ...
-	// --- @@@@@@
-
-
-
-
+	// **************** Armor-Equip-Slot update
 
 	/// ** hide all Armor-Equip-Slot
 	for (int32 i = 0; i < ArmorSlotsArray.Num(); ++i)
 	{
 		ArmorSlotsArray[i]->SetVisibility(ESlateVisibility::Collapsed);
+		ArmorSlotsArray[i]->SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+		//ArmorSlotsArray[si]->SelectorImage1->SetVisibility(ESlateVisibility::Hidden);
+	}
+	
+	if (_Unit->ArmorComponent)
+	{
+		// ** find and assign New-Slot-Param
+		int32 unitArmorSlotsNum = _Unit->ArmorComponent->ArmorSlot.Num();
+		for (int32 i = 0; i < unitArmorSlotsNum; ++i)
+		{
+			// ** Get Current-Armor-Slot (from Unit->ArmorComponent)
+			AArmorWorldItem* unitArmorSlot = _Unit->ArmorComponent->ArmorSlot[i];
+
+			int32 unitSlotIndex = -1;
+			ESlotType toEquipSlotType = unitArmorSlot->EquipSlotTypeFix;
+
+			if (toEquipSlotType == ESlotType::hand_fight)
+				continue;
+
+			if (!unitArmorSlot->ItemDT.IsSlotEmpty())// && unitArmorSlot->ItemDT.ArmorDT)
+			{
+				itemSlotTexture = unitArmorSlot->ItemDT.GetOneSlotImage();
+				unitSlotIndex = i;
+			}
+
+
+			// ** find matches W_slot wis Armor and set
+			SetEquipSlotParam(_Unit, ArmorSlotsArray, toEquipSlotType, unitSlotIndex, 
+				mainInvertorySlotTexture, itemSlotTexture);
+		}
 	}
 }
 
@@ -226,24 +250,25 @@ void UW_EquipPanel::UpdateEquipPanel(class AUnit* _Unit)
 
 
 void UW_EquipPanel::SetEquipSlotParam(class AUnit* _Unit, 
+	TArray<class UW_Slot*> &_SlotsArray,
 	ESlotType ToEquipSlotType, int32 unitSlotIndex,
 	UTexture2D* _MainInvertorySlotTexture, 
 	UTexture2D* _ItemSlotTexture)
 {
 
-	for (int32 si = 0; si < WeaponSlotsArray.Num(); ++si)
+	for (int32 si = 0; si < _SlotsArray.Num(); ++si)
 	{
-		if (ToEquipSlotType == WeaponSlotsArray[si]->PanelTypeFix)
+		if (ToEquipSlotType == _SlotsArray[si]->PanelTypeFix)
 		{
-			float theSaimSlotWidth = WeaponSlotsArray[si]->SlotWidth;
-			float theSaimSlotHeight = WeaponSlotsArray[si]->SlotHeight;
+			float theSaimSlotWidth = _SlotsArray[si]->SlotWidth;
+			float theSaimSlotHeight = _SlotsArray[si]->SlotHeight;
 			ESlotType dontChangeType = ESlotType::none;	// ** its EquipSlot here
 			if (!_ItemSlotTexture)
 				_MainInvertorySlotTexture = EquipSlotsDefaultTextureArray[si];
 
-			WeaponSlotsArray[si]->SelectUnit = _Unit;
+			_SlotsArray[si]->SelectUnit = _Unit;
 
-			WeaponSlotsArray[si]->SetSlotParam(unitSlotIndex,
+			_SlotsArray[si]->SetSlotParam(unitSlotIndex,
 				_ItemSlotTexture, _MainInvertorySlotTexture,
 				theSaimSlotWidth, theSaimSlotHeight,
 				theSaimSlotWidth, theSaimSlotHeight,
@@ -252,12 +277,12 @@ void UW_EquipPanel::SetEquipSlotParam(class AUnit* _Unit,
 
 			// ** set selected slot
 			
-			if (unitSlotIndex == _Unit->GetWeaponSlotSelected())
+			if (unitSlotIndex == _Unit->GetSelectedWeaponSlotIndex())
 			{
-				WeaponSlotsArray[si]->SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+				_SlotsArray[si]->SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 			}
 
-			WeaponSlotsArray[si]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden
+			_SlotsArray[si]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden
 			return;
 		}
 	}

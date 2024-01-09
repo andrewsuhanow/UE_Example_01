@@ -2,8 +2,6 @@
 // #include "Base/Amunition/WeaponWorldItem.h"
 #include "WeaponWorldItem.h"
 
-#include "../Unit/Base/Unit.h"
-
 #include "WeaponDT.h"
 
 
@@ -34,6 +32,34 @@ AWeaponWorldItem::AWeaponWorldItem()
 }
 
 
+int32 AWeaponWorldItem::GetSelectedAttackIndex()
+{
+
+	if (SelectedAttacIndex != -1)
+		return SelectedAttacIndex;
+
+	else if (PermanentAttacIndex != -1)
+		return PermanentAttacIndex;
+
+	else
+		return -1;
+
+}
+
+bool AWeaponWorldItem::IsAttackIndexCorrect(int32 Index)
+{
+	UWeaponDT* weaponDT_CDO = ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
+	return (weaponDT_CDO->AttakParam.Num() > Index);
+}
+
+
+TArray<ETacticalMoveStepLogic>* AWeaponWorldItem::GetCurrTacticalMoveSteps()
+{
+	UWeaponDT* weaponDT_CDO = ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
+	return &weaponDT_CDO->TacticalMoveStepLogic;
+}
+
+/*
 void AWeaponWorldItem::SetMesh(UObject* MeshPrimitive)
 {
 
@@ -53,6 +79,7 @@ void AWeaponWorldItem::SetMesh(UObject* MeshPrimitive)
 		SkeletalMeshComponent->SetSkeletalMesh(nullptr);
 		SkeletalMeshComponent->bHiddenInGame = true;
 
+		// ******** if "Static Mesh"
 		AWorldItem::SetMesh(MeshPrimitive);
 	}
 }
@@ -86,6 +113,8 @@ void AWeaponWorldItem::SetVisibility(bool IsVisibility)
 
 	Super::SetVisibility(IsVisibility);
 }
+*/
+
 
 bool AWeaponWorldItem::IcCanEquipItemOnSlot(const FItemDT& _Item, ESlotType SlotType)
 {
@@ -106,7 +135,7 @@ bool AWeaponWorldItem::EquipItemOnSlot(const FItemDT& _Item, ESlotType SlotType)
 	return false;
 }
 
-bool AWeaponWorldItem::IcCanEquipItemOnIndex(const FItemDT& _Item, int32 _Index)
+bool AWeaponWorldItem::IsCanEquipItemOnIndex(const FItemDT& _Item, int32 _Index)
 {
 	if(_Index == -1)
 		return false;

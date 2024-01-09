@@ -97,7 +97,8 @@ public:
 		void UpdateEquipPanel(class AUnit* _Unit);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetEquipSlotParam(class AUnit* _Unit,
+		void SetEquipSlotParam(class AUnit* _Unit, 
+			TArray<class UW_Slot*> &_SlotsArray,
 			ESlotType ToEquipSlotType, int32 unitSlotIndex,
 			UTexture2D* _MainInvertorySlotTexture,
 			UTexture2D* _ItemSlotTexture);

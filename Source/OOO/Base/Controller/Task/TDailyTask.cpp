@@ -5,6 +5,9 @@
 
 #include "../UnitAI.h"
 
+#include "Base/Task.h"
+#include "TMoveTo.h"
+
 #include "Kismet/GameplayStatics.h"   // ** GetAllActorsOfClass
 
 
@@ -36,16 +39,15 @@ void UTDailyTask::ContinueTask(AUnitAI* _OwnerAI)
 		}
 
 		// ** Store first SubTask in AI
-		if (_OwnerAI->CurrTaskDTBuffer.Num() == 0)
+		if (_OwnerAI->TasksBuffer.Num() == 0)
 		{
 			FTaskData newTask;
-			newTask.TaskStatus = ETaskStatus::none;							// ** New
-			newTask.TaskInstigator = ETaskInstigator::none;					// ** AI;
+			newTask.TaskCauser = ETaskCauser::none;							// ** New
 			newTask.TaskPriority = ETaskPriority::Normal;
 			newTask.TaskRef = _OwnerAI->CurrTaskRef;
-			newTask.TaskDislocation = ETaskDislocation::PointNoRotate;
-			newTask.Location = CurrTargetLocation;
-			_OwnerAI->CurrTaskDTBuffer.Add(newTask);
+			//+++++++++++++++++newTask.TaskDislocation1111 = ETaskDislocation::PointNoRotate;
+			// ---77777777777777777--- newTask.Location = CurrTargetLocation;
+			_OwnerAI->TasksBuffer.Add(newTask);
 			//--777--_OwnerAI->SetTask(false, ETaskType::DailyBehavior, newTask, ETaskInstigator::AI, ETaskPriority::Normal);
 		}
 		
@@ -54,13 +56,11 @@ void UTDailyTask::ContinueTask(AUnitAI* _OwnerAI)
 		if (_OwnerAI->GetUnitStopDistance() < dist)
 		{
 			FTaskData SubMoveTask;
-			SubMoveTask.TaskStatus = ETaskStatus::ChildTask;
-			///---- SubMoveTask.TaskInstigator = ETaskInstigator::OtherTask;
-			///---- SubMoveTask.TaskPriority = ETaskPriority::Normal;
-			///---- SubMoveTask.TaskRef = ETaskType::MoveToPoint;
-			SubMoveTask.TaskDislocation = ETaskDislocation::PointNoRotate;
-			SubMoveTask.Location = CurrTargetLocation;
-			_OwnerAI->SetTask(false, ETaskType::MoveToPoint, SubMoveTask, ETaskInstigator::OtherTask, ETaskPriority::Normal);
+			float stopDist = 0.f;
+			UTMoveTo::SetMoveData_MoveToPoint(SubMoveTask, _OwnerAI->UnitOwner, CurrTargetLocation, stopDist, EUnitPose::RelaxMove);
+			UE_LOG(LogTemp, Warning, TEXT("Task::DailyBhvr,    Start-SubTask:  Move "));
+
+			_OwnerAI->SetTask(false, ETaskType::MoveTo, SubMoveTask, ETaskCauser::ChildTask, ETaskPriority::Normal);
 			return;
 		}
 		//else

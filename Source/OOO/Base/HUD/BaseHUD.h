@@ -54,7 +54,14 @@ public:
 																			TArray<ESlotType>& _WeaponSlotsType,
 																			TArray<UTexture2D*>& _WeaponSlotsTexture);
 	UFUNCTION(BlueprintCallable, Category = "OOO")		void CloseChangeWeaponPanel();
-	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowWpnAttackPanel(class AUnit* _LootUnit);
+
+
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")		void ShowAttacksWpnPanel(class AUnit* _Unit, TArray<UTexture2D*>& _AttackIcon, 
+																				int32& _SelectIndex, int32& _PermanentIndex);
+	UFUNCTION(BlueprintCallable, Category = "OOO")		void HideAttacksWpnPanel();
+	UFUNCTION(BlueprintCallable, Category = "OOO")		void UpdateAttacksWpnPanel(class AUnit* _Unit, TArray<UTexture2D*>& _AttackIcon,
+																				int32& _SelectIndex, int32& _PermanentIndex);
 
 
 
@@ -98,7 +105,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
 		bool IsWpnChangePanelShown = false;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
-		bool IsWpnChangePanelOpened= false;
+		bool IsWpnChangePanelOpened = false;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		bool IsAttacksWpnPanelShown = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
 		bool IsTaskQueuePanelShowen = false;

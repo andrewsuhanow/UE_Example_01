@@ -56,76 +56,75 @@ void UW_WeaponAttacksPanel::NativeTick(const FGeometry& MyGeometry, float InDelt
 
 
 
-void UW_WeaponAttacksPanel::ShowWeaponAttacksPanel(AUnit* _Unit, ABaseGameMode* _GameMode)
+void UW_WeaponAttacksPanel::ShowAttacksWpnPanel(AUnit* _Unit, 
+	TArray<UTexture2D*>& _AttackIcon, int32& _SelectIndex, int32& _PermanentIndex)
 {
-	UpdateWeaponAttacksPanel(_Unit, _GameMode);
+	UpdateAttacksWpnPanel(_Unit, _AttackIcon, _SelectIndex, _PermanentIndex);
 	SetVisibility(ESlateVisibility::Visible);  				// ** Visible,  Hidden,  Collapsed
 }
 
-void UW_WeaponAttacksPanel::HideWeaponAttacksPanel()
+
+void UW_WeaponAttacksPanel::HideAttacksWpnPanel()
 {
-	SetVisibility(ESlateVisibility::Collapsed);  				// ** Visible,  Hidden,  Collapsed
+	SetVisibility(ESlateVisibility::Collapsed);  			// ** Visible,  Hidden,  Collapsed
 }
 
 
 
-void UW_WeaponAttacksPanel::UpdateWeaponAttacksPanel(AUnit* _Unit, ABaseGameMode* _GameMode)
+void UW_WeaponAttacksPanel::UpdateAttacksWpnPanel(AUnit* _Unit, 
+	TArray<UTexture2D*>& _AttackIcon, int32& _SelectIndex, int32& _PermanentIndex)
 {
-	float slotSize = _GameMode->FastPanelSlotSize;
-	int32 fastPanelSlotNum = _GameMode->FastPanelSlotNum;
-	UTexture2D* SlotBackTexture = _Unit->MainInvertorySlotTexture;
-	if (!SlotBackTexture)
-		SlotBackTexture = _GameMode->MainInvertorySlotTexture;
+	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
 
-/*
-	// ** Set Total Global-Invertory size
-	WeaponPanelSizeBox->bOverride_HeightOverride = 1;
-	WeaponPanelSizeBox->SetHeightOverride(_GameMode->PerkPanelVerticalSize);
-	WeaponPanelSizeBox->bOverride_WidthOverride = 1;
-	WeaponPanelSizeBox->SetWidthOverride(slotSize);
-*/
+	float slotSize = gameMode->FastPanelSlotSize;
+	int32 weaponAttacksPanelSlotNum = gameMode->WeaponAttacksPanelSlotNum;
+	int32 currWeaponAttacksNum = _AttackIcon.Num();
+	UTexture2D* slotBackTexture = _Unit->MainInvertorySlotTexture;
+	if (!slotBackTexture)
+		slotBackTexture = gameMode->MainInvertorySlotTexture;
+
 
 	int32 SlotObjNum = SlotObj.Num();
+
+
+	// ** Add new slot (if need)
+	while (SlotObjNum < weaponAttacksPanelSlotNum)
+	{
+		AddCellToWeaponAttacksPanel(gameMode, slotSize, slotBackTexture);
+		++SlotObjNum;
+	}
+	
 
 	// ** Hide All Slot
 	for (int32 i = 0; i < SlotObjNum; ++i)
 	{
-		SlotObj[i]->SetVisibility(ESlateVisibility::Collapsed); /// Collapsed, Visible, Hidden
+		SlotObj[i]->SetSlotParam(-1,	// ** -1: not linked with real unit Slot (is empty Slot)
+			nullptr, slotBackTexture,
+			slotSize, slotSize,
+			slotSize, slotSize,
+			0, 0,						// ** dont Translation;
+			ESlotType::weapon_attacks_panel);		
 	}
 
 
 	// ** Assign Unit-ItemDT to Slot
-	int32  currentItemSlot = 0;
-	for (const auto& It : _Unit->Ability->Abilities)
+	int32 actualAttackNum = FMath::Min(weaponAttacksPanelSlotNum, currWeaponAttacksNum);
+	for (int32 i = 0; i < actualAttackNum; ++i)
 	{
-		// ** TMap<EAbilityType, FAbilityDT> Abilities;
-		// ** It.Key = EAbilityType;
-		// ** It.Value = FAbilityDT;
 
-		if (currentItemSlot >= SlotObjNum)
-		{
-			AddCellToWeaponAttacksPanel(_GameMode, slotSize, SlotBackTexture);
-			++SlotObjNum;
-		}
-
-		UTexture2D* Image = It.Value.GetImage();
-
-		SlotObj[currentItemSlot]->SetSlotParam(currentItemSlot,
-			Image, SlotBackTexture,
+		SlotObj[i]->SetSlotParam(i,		// ** link to attack-index 
+			_AttackIcon[i], slotBackTexture,
 			slotSize, slotSize,
 			slotSize, slotSize,
 			0, 0,						// ** dont Translation;
-			ESlotType::weapon_attacks_panel);	// ** Its weapon-Slot
-
-		SlotObj[currentItemSlot]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden
-
-		++currentItemSlot;
+			ESlotType::weapon_attacks_panel);		
 	}
 
 }
 
 
-void UW_WeaponAttacksPanel::AddCellToWeaponAttacksPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture)
+
+void UW_WeaponAttacksPanel::AddCellToWeaponAttacksPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* _SlotBackTexture)
 {
 
 	UW_Slot* NewSlot = WidgetTree->ConstructWidget<UW_Slot>(_GameMode->W_Slot_Class);
@@ -133,11 +132,13 @@ void UW_WeaponAttacksPanel::AddCellToWeaponAttacksPanel(ABaseGameMode* _GameMode
 	if (NewSlot)
 	{
 		NewSlot->SetSlotParam(-1,		// ** -1: not linked with real unit Slot (is empty Slot)
-			nullptr, SlotBackTexture,
+			nullptr, _SlotBackTexture,
 			_SlotSize, _SlotSize,
 			_SlotSize, _SlotSize,
 			0, 0,						// ** dont Translation;
 			ESlotType::weapon_attacks_panel);		// ** Its weapon-Slot
+
+		NewSlot->SetItemCount(0, 0, 0);	// ** Set slot-text (hide text)
 
 		NewSlot->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
 

@@ -34,7 +34,7 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void UpdateFastPanel(class AUnit* _FastPanelUnit, class ABaseGameMode* _GameMode);
+		void UpdateFastPanel(class AUnit* _FastPanelUnit);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void AddCellToFastPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture);

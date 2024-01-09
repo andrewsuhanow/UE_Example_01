@@ -33,7 +33,7 @@ public:
 public:	
 
 	///UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "Existing weapon", Category = "OOO!_Weapon")
-	// ** Weapon-type unit has
+	// ** REQUIRE to:  (WeaponDT, OneItemImage)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		FItemDT HandFightData;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
@@ -51,11 +51,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		bool SetWeaponSlotSelected(int32 _WeaponSlotIndex);
 
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		int32 GetWeaponSlotSelected();
+	//UFUNCTION(BlueprintCallable, Category = "OOO")
+	//	int32 GetWeaponSlotSelected();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
 		bool iWeaponActive = false;
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		bool IsWeaponActive();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		int32 GetSelectedWeaponSlotIndex();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void GetSelectedWeaponAttacksData(TArray<UTexture2D*> &_attackImage,
+			int32 &_SelectIndex, int32 &_PermanentIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		EWeaponType GetWeaponTypeBySlotIndex(int32 _SlotIndex) const;
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		bool ActivateWeapon();
@@ -64,7 +77,8 @@ public:
 		bool UnactivateWeapon();
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		int32 IsWeaponActive();
+		//-------FItemDT* GetCurrWeaponData();
+		AWeaponWorldItem* GetCurrWeaponItem();
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		EWeaponType GetCurrentWeaponType();

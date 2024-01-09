@@ -19,6 +19,9 @@
 
 #include "../Base/Inventory/InventoryComponent.h"
 #include "../Base/Amunition/WeaponWorldItem.h"
+#include "../Base/Amunition/WeaponDT.h"
+#include "../Base/Amunition/ArmorWorldItem.h"
+#include "../Base/Amunition/ArmorDT.h"
 
 #include "../Base/Amunition/WeaponComponent.h"
 
@@ -107,7 +110,7 @@ void AInventorDEBUG::InitTestInvertorItems()
 		TArray<int32> CountMax;
 		TArray<bool> IsStackable;
 
-		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Weapon/WeapomDT/BigWorldDT_BP.BigWorldDT_BP")));
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Weapon/WeapomDT/BigSwordDT_BP.BigSwordDT_BP")));
 		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/DebugInvertor/ITEM_CELL_1x4.ITEM_CELL_1x4")));
 		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/BigSword/BibSword02.BibSword02")));
 		itemMesh.Add(LoadObject<UObject>(nullptr, TEXT("/Game/Test/Geometry/Weapon/Sword2H/BigSword02/BigSword02.BigSword02")));
@@ -228,14 +231,55 @@ void AInventorDEBUG::InitTestInvertorItems()
 		sizeY.Add(1);
 		ItemsToAdd.Add(FName("2x1 Pistol 2"));
 
+		//--------------------------------  Armor
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Armor/ArmorDT/HelmetDT_BP.HelmetDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Cup/Cup02.Cup02")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Cup/Cup02.Cup02")));
+		itemMesh.Add(LoadObject<UObject>(nullptr, TEXT("/Game/Test/Geometry/Armor/Helmet/SM_SteelHelmet.SM_SteelHelmet")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(2);
+		sizeY.Add(2);
+		ItemsToAdd.Add(FName("ARMOR: 2x2 Helmet"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Armor/ArmorDT/CuirasDT_BP.CuirasDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Armor/Armor11.Armor11")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Armor/Armor11.Armor11")));
+		itemMesh.Add(LoadObject<UObject>(nullptr, TEXT("/Game/Test/CharacterHuman/SK_CharM_Golden.SK_CharM_Golden")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(3);
+		sizeY.Add(4);
+		ItemsToAdd.Add(FName("ARMOR: 3x4 Cuiras"));
+
+		wpnTMP.Add(LoadObject<UBlueprint>(nullptr, TEXT("/Game/Core/Armor/ArmorDT/ShieldDT_BP.ShieldDT_BP")));
+		fullImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Shield/Shield01-a.Shield01-a")));
+		oneImageTexture.Add(LoadObject<UTexture2D>(nullptr, TEXT("/Game/Test/TextureUI/UI/EquipSlot/Shield/Shield01-a.Shield01-a")));
+		itemMesh.Add(LoadObject<UObject>(nullptr, TEXT("/Game/Test/Geometry/Armor/Shield/Shield02.Shield02")));
+		Count.Add(1);
+		CountMax.Add(1);
+		IsStackable.Add(false);
+		sizeX.Add(3);
+		sizeY.Add(3);
+		ItemsToAdd.Add(FName("ARMOR: 3x3 Shield"));
 
 
 
 		for (int32 i = 0; i < ItemsToAdd.Num(); ++i)
 		{
-			ItemsToAddRes.Add(MakeShared<FItemDT>());
-			if(wpnTMP[i])
-				ItemsToAddRes.Last().Get()->WeaponDT = (UClass*)wpnTMP[i]->GeneratedClass;
+			//ItemsToAddRes.Add(MakeShared<FItemDT>());
+			ItemsToAddRes.Add(MakeShareable(new FItemDT()));
+			if (wpnTMP[i])
+			{
+				if(((UClass*)wpnTMP[i]->GeneratedClass)->IsChildOf(UWeaponDT::StaticClass()))
+					ItemsToAddRes.Last().Get()->WeaponDT = (UClass*)wpnTMP[i]->GeneratedClass;
+				else //if (((UClass*)wpnTMP[i]->GeneratedClass)->IsChildOf(UArmorDT::StaticClass()))
+					ItemsToAddRes.Last().Get()->ArmorDT = (UClass*)wpnTMP[i]->GeneratedClass;
+
+			}
 			ItemsToAddRes.Last().Get()->ItemImage = fullImageTexture[i];
 			ItemsToAddRes.Last().Get()->ItemOneCellImage = oneImageTexture[i];
 
@@ -251,6 +295,7 @@ void AInventorDEBUG::InitTestInvertorItems()
 		}
 	}
 }
+
 
 
 void AInventorDEBUG::OpenMainInvertory()
@@ -320,7 +365,8 @@ void AInventorDEBUG::AddItemToEquipPanel()
 	
 	if (SelectTestUnit && AddItemIndex >= 0 && AddItemIndex < ItemsToAdd.Num())
 	{
-		SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[AddItemIndex].Get());
+		//----SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[AddItemIndex].Get());
+		SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[AddItemIndex].Get());
 		//---OpenEquipPanel();
 	}
 	
@@ -333,9 +379,17 @@ void AInventorDEBUG::SetEquipPanelSet()
 {
 	InitTestInvertorItems();
 
-	SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[0].Get());
-	SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[1].Get());
-	SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[9].Get());
+	//---SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[0].Get());
+	//---SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[1].Get());
+	//---SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[9].Get());
+
+	SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[0].Get());
+	SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[1].Get());
+	SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[9].Get());
+	// ** Armor
+	SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[11].Get());
+	SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[12].Get());
+	SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[13].Get());
 
 
 	OpenEquipPanel();

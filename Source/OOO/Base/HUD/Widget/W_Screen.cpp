@@ -53,7 +53,7 @@
 #include "ScreenParts/W_FastPanel.h"
 #include "ScreenParts/W_HealthPanel.h"
 #include "ScreenParts/W_WeaponPanel.h"
-//#include "ScreenParts/W_WeaponAttackPanel.h"
+#include "ScreenParts/W_WeaponAttacksPanel.h"
 #include "ScreenParts/W_TaskQueuePanel.h"
 #include "ScreenParts/W_PosePanel.h"
 #include "ScreenParts/W_AIPanel.h"
@@ -74,18 +74,22 @@ void UW_Screen::NativeConstruct()
 
 
 	InventorView->SetVisibility(ESlateVisibility::Collapsed);  				// ** Visible,  Hidden,  Collapsed
-	LootView->SetVisibility(ESlateVisibility::Collapsed);  					// ** Visible,  Hidden,  Collapsed
+	LootView->SetVisibility(ESlateVisibility::Collapsed);  					
 
-	EquipPanelView->SetVisibility(ESlateVisibility::Collapsed);  			// ** Visible,  Hidden,  Collapsed
-	LootEquipPanelView->SetVisibility(ESlateVisibility::Collapsed);  		// ** Visible,  Hidden,  Collapsed
+	EquipPanelView->SetVisibility(ESlateVisibility::Collapsed);  			
+	LootEquipPanelView->SetVisibility(ESlateVisibility::Collapsed);  		
 
-	GlobalInventoryView->SetVisibility(ESlateVisibility::Collapsed);  		// ** Visible,  Hidden,  Collapsed
+	GlobalInventoryView->SetVisibility(ESlateVisibility::Collapsed);  		
 
-	PerkPanelView->SetVisibility(ESlateVisibility::Collapsed);  			// ** Visible,  Hidden,  Collapsed
+	PerkPanelView->SetVisibility(ESlateVisibility::Collapsed);  			
 
-	FastPanelView->SetVisibility(ESlateVisibility::Hidden);  				// ** Visible,  Hidden,  Collapsed
+	FastPanelView->SetVisibility(ESlateVisibility::Hidden);  				
 
-	WeaponPanelView->SetVisibility(ESlateVisibility::Hidden);  					// ** Visible,  Hidden,  Collapsed
+	WeaponPanelView->SetVisibility(ESlateVisibility::Hidden);  				
+
+	AttacksWpnPanelView->SetVisibility(ESlateVisibility::Hidden);
+
+	TaskQueuePanelView->SetVisibility(ESlateVisibility::Hidden);  			
 
 
 
@@ -180,10 +184,25 @@ void UW_Screen::CloseWpnChangePanel()
 
 
 
-void UW_Screen::ShowWpnAttackPanel(AUnit* _Unit)
+void UW_Screen::ShowAttacksWpnPanel(AUnit* _Unit, 
+	TArray<UTexture2D*>& _AttackIcon, int32& _SelectIndex, int32& _PermanentIndex)
 {
-
+	AttacksWpnPanelView->ShowAttacksWpnPanel(_Unit, _AttackIcon, 
+		_SelectIndex, _PermanentIndex);
 }
+
+void UW_Screen::HideAttacksWpnPanel()
+{
+	AttacksWpnPanelView->HideAttacksWpnPanel();
+}
+
+void UW_Screen::UpdateAttacksWpnPanel(AUnit* _Unit, 
+	TArray<UTexture2D*>& _AttackIcon, int32& _SelectIndex, int32& _PermanentIndex)
+{
+	AttacksWpnPanelView->UpdateAttacksWpnPanel(_Unit, _AttackIcon, 
+		_SelectIndex, _PermanentIndex);
+}
+
 
 
 

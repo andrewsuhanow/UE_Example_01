@@ -7,6 +7,8 @@
 #include "../../Base/BaseGameState.h"
 #include "../../HUD/BaseHUD.h"
 
+#include "../../UnitState/UnitStateComponent.h"
+
 #include "../../Controller/UnitAI.h"
 
 #include "../../Animation/AnimInstance/HumanAnimInst.h"
@@ -20,10 +22,12 @@
 #include "../../Inventory/InventoryComponent.h"
 
 #include "../../Amunition/WeaponComponent.h"
+#include "../../Amunition/ArmorComponent.h"
 
 #include "../../Ability/AbilityComponent.h"
 
-#include "../../Item/WorldItem.h"
+//#include "../../Item/WorldItem.h"
+#include "../../Amunition/WeaponWorldItem.h"
 
 // --------------------------------------------
 
@@ -84,6 +88,9 @@ AUnit::AUnit()
 
 
 
+	// **  UnitState  
+	UnitState = CreateDefaultSubobject<UUnitStateComponent>(TEXT("UnitState"));
+
 	// **  Inventory   
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 
@@ -92,6 +99,25 @@ AUnit::AUnit()
 
 	// **  Weapon  
 	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
+
+	// **  Armor  
+	ArmorComponent = CreateDefaultSubobject<UArmorComponent>(TEXT("Armor"));
+
+	// ** Pose locomotion default param
+	if (PoseLocomotionParam.Num() == 0)
+	{
+		PoseLocomotionParam.Add(FPoseLocomotion());
+		PoseLocomotionParam.Last().Pose = EUnitPose::RelaxMove;
+		PoseLocomotionParam.Last().MoveSpeed = 200.f;
+		PoseLocomotionParam.Last().RotateSpeed = 400.f;
+
+		// ** Crawl		= 200.f
+		// ** Crouch	= 300.f
+		// ** RelaxMove = 400.f
+		// ** FastMove	= 800.f
+		// ** Run		= 1200.f
+		// ** Sprint	= 1600.f
+	}
 }
 
 
@@ -176,6 +202,7 @@ bool AUnit::StartGame(bool finalInit)
 	if (finalInit)
 	{
 		AI->Init(true);
+		// **  Anim Finish     
 		FinishAnimationDELEGATE.BindUObject(AI, &AUnitAI::OnFinishAnimation);
 	}
 
@@ -215,18 +242,19 @@ bool AUnit::StartGame(bool finalInit)
 
 		// ** Weapon Component
 		WeaponComponent->InitWeapons(this);
+		ArmorComponent->InitArmor(this);
 
 		// ** Armor Component
-		//ArmorComponent->InitArmour(this);
+		// ++++++++ ArmorComponent->InitArmour(this);
 
+		SetPose(EUnitPose::RelaxMove);
 
 		// ** Add default items to MainInventor
-		//++++for(int32 i = 0; i < InitInvertorItems.Num(); ++i)
+		//++++ for(int32 i = 0; i < InitInvertorItems.Num(); ++i)
 		//++++	TryAddItemToMainInventory(nullptr, -1, InitInvertorItems[i]);
 		
 
-
-		// +++ SetPose(EUnitPose::Stand, false);		// ** bool _IsUseGroupSpeed
+		
 
 		// +++  ** Bind to delegate for End-Animation-EVENT   (ABaseUnit::    FOnMontageEnded OnAnimationFinish;)
 		// +++ FinishAnimationDELEGATE.BindUObject(AIController, &AUnitAI::OnAnimationFinish);
@@ -252,18 +280,27 @@ void AUnit::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 // **  ************************************************************************
 // **  ************************     AI_Controller     ************************* 
-// **  ************************************************************************
+// **  ************************************************************************ 
 
 
 void AUnit::SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType, 
-	FTaskData _TaskData, ETaskInstigator _TaskInstigator, 
-	ETaskPriority _TaskPriority)
+	FTaskData _TaskData, ETaskCauser _TaskCauser, ETaskPriority _TaskPriority)
 {
-	AI->SetTask(_bAddMoreOne, _TaskType, _TaskData, _TaskInstigator, _TaskPriority);
+	AI->SetTask(_bAddMoreOne, _TaskType, _TaskData, _TaskCauser, _TaskPriority);
+}
 
+
+
+// **  ************************************************************************
+// **  ***************************       HUD       **************************** 
+// **  ************************************************************************ 
+
+
+void AUnit::UpdateTaskQueuePanel_HUD()
+{
 	if (GetIsUnitSelected() && !IsUnitInGroup())
 	{
-		UTexture2D* CurrTaskImage;
+		UTexture2D* CurrTaskImage = nullptr;
 		TArray<UTexture2D*> TasksImage;
 		TArray<int32> TasksIndex;
 
@@ -275,16 +312,33 @@ void AUnit::SetUnitTask(bool _bAddMoreOne, ETaskType _TaskType,
 
 
 
+void AUnit::UpdateAttacksWpnPanel_HUD()
+{
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		TArray<UTexture2D*> attackImage;
+		int32 selectIndex;
+		int32 permanentIndex;
+		WeaponComponent->GetSelectedWeaponAttacksData(attackImage,
+			selectIndex, permanentIndex);
+
+		HUD->UpdateAttacksWpnPanel(this, attackImage, selectIndex, permanentIndex);
+	}
+}
+
+
 // **  ************************************************************************
 // **  ************************     PERCEPTION     ************************* 
 // **  ************************************************************************
 
 void AUnit::TargetPerceptionUpdated(AActor* _ActorActivator, FAIStimulus _Stimulus)
 {
+	if (!AI)
+		return;
 
 	if (_Stimulus.Type.Name == FName("Default__AISense_Sight"))
 	{
-		AI->UpdateLogic();
+		//++++++++AI->UpdateLogic();
 	}
 	/*
 	else if (_Stimulus.Type.Name == FName("Default__AISense_Damage"))
@@ -298,7 +352,7 @@ void AUnit::TargetPerceptionUpdated(AActor* _ActorActivator, FAIStimulus _Stimul
 	else if (_Stimulus.Type.Name == FName("Default__AISense_Hearing"))
 	{
 		// ** UE_LOG(LogTemp, Error, TEXT("---Unit REMEMBERING (Hearing)---"));
-		AI->UpdateLogic();
+		//+++++++AI->UpdateLogic();
 	}
 }
 
@@ -328,6 +382,28 @@ void AUnit::SetWeaponAnimType(EWeaponType _NewWeaponAnim)
 	AnimInstance->SetWeaponAnimType(_NewWeaponAnim);
 }
 
+void  AUnit::UpdateRotateAnimSpeedHandler(TArray<FPoseLocomotion>* _ActualPosesArray)
+{
+	if (!_ActualPosesArray)
+		GetActualPoseLocomotion(*_ActualPosesArray);
+
+	TArray<float> RotateSpeedSwetcher;
+
+	for (uint8 i = uint8(EUnitPose::Fly); i >= uint8(EUnitPose::Crawl); --i)
+	{
+		RotateSpeedSwetcher.Add(9999.f);	// ** Extra-MAX  --- it mean thet Pose is absent
+
+		for (int32 n = 0; n < _ActualPosesArray->Num(); ++n)
+		{
+			if ((*_ActualPosesArray)[n].Pose == EUnitPose(i))
+			{
+				RotateSpeedSwetcher.Last() = (*_ActualPosesArray)[n].RotateSpeed;
+				break;
+			}
+		}
+	}
+	AnimInstance->SetRotateSpeedHandle(RotateSpeedSwetcher);
+}
 
 
 void AUnit::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fromTime)
@@ -340,6 +416,10 @@ void AUnit::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _from
 	AnimInstance->Montage_SetEndDelegate(FinishAnimationDELEGATE, _AnimMontage);
 }
 
+void AUnit::StopAnimate()
+{
+	StopAnimMontage(GetCurrentMontage());
+}
 
 void AUnit::OnAnimNotify(FString _NotifyName)
 {
@@ -347,9 +427,38 @@ void AUnit::OnAnimNotify(FString _NotifyName)
 }
 
 
-// **  ************************************************************************
-// **  **************************     Unit_Main_Function     *************************** 
-// **  ************************************************************************
+// **  ********************************************************************************
+// **  **********************       Unit_Parameter_Getters       ********************** 
+// **  ********************************************************************************
+
+
+FTransform AUnit::GetUnitSocketParam(FName _SocketName)
+{
+	return GetMesh()->GetSocketTransform(_SocketName, ERelativeTransformSpace::RTS_World);
+}
+
+
+float AUnit::GetUnitCapsuleRadius()
+{
+	float capsuleRadius;
+	float capsuleHalfHaight;
+	GetCapsuleComponent()->GetScaledCapsuleSize(capsuleRadius, capsuleHalfHaight);
+	return capsuleRadius;
+}
+
+float AUnit::GetUnitCapsuleHalfHaight()
+{
+	float capsuleRadius;
+	float capsuleHalfHaight;
+	GetCapsuleComponent()->GetScaledCapsuleSize(capsuleRadius, capsuleHalfHaight);
+	return capsuleHalfHaight;
+}
+
+
+
+// **  ********************************************************************************
+// **  **************************     Unit_Main_Function     ************************** 
+// **  ********************************************************************************
 
 
 
@@ -376,6 +485,15 @@ void AUnit::SelectUnit()
 			HUD->ShowEquipPanel(this);	// ** update
 	}
 
+	UpdateTaskQueuePanel_HUD();
+
+	TArray<UTexture2D*> attackImage;
+	int32 selectIndex;
+	int32 permanentIndex;
+	WeaponComponent->GetSelectedWeaponAttacksData(attackImage,
+		selectIndex, permanentIndex);
+	HUD->ShowAttacksWpnPanel(this, attackImage, selectIndex, permanentIndex);
+
 	// @@@@@ ...
 	// @@@@@ ...
 	// @@@@@ ...
@@ -387,6 +505,10 @@ void AUnit::DeselectUnit()
 
 	if(!IsUnitInGroup())
 		HUD->HideWpnChangePanel(this);
+
+	UpdateTaskQueuePanel_HUD();
+
+	HUD->HideAttacksWpnPanel();
 
 	// @@@@@ ...
 	// @@@@@ ...
@@ -403,6 +525,144 @@ bool AUnit::IsUnitInGroup()
 	return (GameState->GetUnitGroupNum() > 1);
 }
 
+
+
+
+// **  ************************************************************************
+// **  *************************     Unit_State     *************************** 
+// **  ************************************************************************
+
+
+
+int32 AUnit::GetLevel() const
+{
+	return -1;
+}
+void AUnit::SetLevel(int32 _Val)
+{
+
+}
+void AUnit::ModLevel(int32 _Val)
+{
+
+}
+
+
+
+
+int32 AUnit::GetCurrentHP() const
+{
+	return -1;
+}
+
+int32 AUnit::GetCriticalHP(bool _GetBaseValue) const
+{
+	return -1;
+}
+int32 AUnit::GetMinHP(bool _GetBaseValue) const
+{
+	return -1;
+}
+int32 AUnit::GetHP(bool _GetBaseValue) const
+{
+	return -1;
+}
+int32 AUnit::GetTotalWpnLevel(bool _GetBaseValue) const
+{
+	return -1;
+}
+int32 AUnit::GetTotalGunLevel(bool _GetBaseValue) const
+{
+	return -1;
+}
+int32 AUnit::GetTotalMagikLevel(bool _GetBaseValue) const
+{
+	return -1;
+}
+
+
+
+void AUnit::SetCurrentHP(int32 _Val)
+{
+
+}
+void AUnit::SetCriticalHP(int32 _Val, bool _GetBaseValue)
+{
+
+}
+void AUnit::SetMinHP(int32 _Val, bool _GetBaseValue)
+{
+
+}
+void AUnit::SetHP(int32 _Val, bool _GetBaseValue)
+{
+
+}
+void AUnit::SetTotalWpnLevel(int32 _Val, bool _GetBaseValue)
+{
+
+}
+void AUnit::SetTotalGunLevel(int32 _Val, bool _GetBaseValue)
+{
+
+}
+void AUnit::SetTotalMagikLevel(int32 _Val, bool _GetBaseValue)
+{
+
+}
+
+
+void AUnit::ModCurrentHP(int32 _Val)
+{
+
+}
+void AUnit::ModCriticalHP(int32 _Val)
+{
+
+}
+void AUnit::ModMinHP(int32 _Val)
+{
+
+}
+void AUnit::ModHP(int32 _Val)
+{
+
+}
+void AUnit::ModTotalWpnLevel(int32 _Val)
+{
+
+}
+void AUnit::ModTotalGunLevel(int32 _Val)
+{
+
+}
+void AUnit::ModTotalMagikLevel(int32 _Val)
+{
+
+}
+
+
+// **  ************************************************************************
+// **  *************************     Skill_Depend     ************************* 
+// **  ************************************************************************
+
+int32 AUnit::GetSkillDepend_FirstAttackSeries() const
+{
+	// ** TEST
+	return 5;   // ** Level + CurrWeaponLevel  
+}
+
+
+
+
+// **  ************************************************************************
+// **  ***************************     Fraction     *************************** 
+// **  ************************************************************************
+
+
+// .....
+// .....
+// .....
 
 
 
@@ -650,11 +910,36 @@ int32 AUnit::IsWeaponActive()
 
 bool AUnit::ActivateWeapon()
 {
-	return WeaponComponent->ActivateWeapon();
+	bool isSucces = WeaponComponent->ActivateWeapon();
+	if (isSucces)
+	{
+		TArray<FPoseLocomotion> actualPoseLocomotion;
+		GetActualPoseLocomotion(actualPoseLocomotion);
+		// ** Speed By Pose (depend Weapon speed-mod)
+		SetMoveSpeed(GetMoveSpeedFromPose(CurrUnitPose, &actualPoseLocomotion));
+		// ** Rotate switcher (depend Weapon speed-mod)
+		UpdateRotateAnimSpeedHandler(&actualPoseLocomotion);
+	}
+	return isSucces;
 }
 bool AUnit::UnactivateWeapon()
 {
-	return WeaponComponent->UnactivateWeapon();
+	bool isSucces = WeaponComponent->UnactivateWeapon();
+	if (isSucces)
+	{
+		TArray<FPoseLocomotion> actualPoseLocomotion;
+		GetActualPoseLocomotion(actualPoseLocomotion);
+		// ** Speed By Pose (depend Weapon speed-mod)
+		SetMoveSpeed(GetMoveSpeedFromPose(CurrUnitPose, &actualPoseLocomotion));
+		// ** Rotate switcher (depend Weapon speed-mod)
+		UpdateRotateAnimSpeedHandler(&actualPoseLocomotion);
+	}
+	return isSucces;
+}
+
+AWeaponWorldItem* AUnit::GetCurrWeaponItem()
+{
+	return WeaponComponent->GetCurrWeaponItem();
 }
 
 EWeaponType AUnit::GetCurrentWeaponType()
@@ -662,9 +947,17 @@ EWeaponType AUnit::GetCurrentWeaponType()
 	return WeaponComponent->GetCurrentWeaponType();
 }
 
-bool AUnit::EquipWeaponByItemDT(const FItemDT* _ItemDT)
+
+bool AUnit::EquipAmunitionByItemDT(const FItemDT* _ItemDT)
 {
-	bool isOk = WeaponComponent->EquipWeaponByItemDT(_ItemDT);
+	bool isOk = false;
+
+	if(_ItemDT->IsItemWeapon())
+		isOk = WeaponComponent->EquipWeaponByItemDT(_ItemDT);
+
+	else // ** if(_ItemDT->IsItemArmor())
+		isOk = ArmorComponent->EquipArmorByItemDT(_ItemDT);
+
 	if (GetIsUnitSelected() && !IsUnitInGroup())
 	{
 		if (HUD->IsEquipPanelShown)
@@ -677,7 +970,29 @@ bool AUnit::EquipWeaponByItemDT(const FItemDT* _ItemDT)
 
 bool AUnit::SetWeaponSlotSelected(int32 _WeaponSlotIndex)
 {
-	bool isOk = WeaponComponent->SetWeaponSlotSelected(_WeaponSlotIndex);
+	bool isSucces = false;
+
+	// ** Select other weapon (dont activate, only change index)
+	if (!WeaponComponent->IsWeaponActive())
+	{
+		isSucces = WeaponComponent->SetWeaponSlotSelected(_WeaponSlotIndex);
+	}
+
+	// ** if unit activate weapon => Use task "Change weapon"
+	else
+	{
+		FTaskData newTask;
+		/// ** UTActivateWeapon::SetActivateWeaponTaskData_ChangeWpn(newTask, this, _WeaponSlotIndex);
+		newTask.Int32Param.Add(_WeaponSlotIndex);
+		
+		SetUnitTask(false, // ** NO_MATTAER
+			ETaskType::ActivateWeapon,
+			newTask,
+			ETaskCauser::CriticalTask,
+			ETaskPriority::Normal);
+	}
+	
+
 	if (GetIsUnitSelected() && !IsUnitInGroup())
 	{
 		// ** update EquipPane
@@ -686,7 +1001,7 @@ bool AUnit::SetWeaponSlotSelected(int32 _WeaponSlotIndex)
 
 		// ** update ShowWpn-ChangePanel-Title-icon
 		{
-			int32 weaponSlotIndex;
+			int32 weaponSlotIndex; 
 			ESlotType weaponSlotType;
 			UTexture2D* weaponSlotTexture;
 			if (!WeaponComponent->GetCurrentWeaponSlotData(
@@ -703,12 +1018,18 @@ bool AUnit::SetWeaponSlotSelected(int32 _WeaponSlotIndex)
 			HUD->CloseChangeWeaponPanel();
 		}
 	}
-	return isOk;
+	return isSucces;
 }
 
-int32 AUnit::GetWeaponSlotSelected()
+
+int32 AUnit::GetSelectedWeaponSlotIndex()
 {
-	return WeaponComponent->GetWeaponSlotSelected();
+	return WeaponComponent->GetSelectedWeaponSlotIndex();
+}
+
+EWeaponType AUnit::GetWeaponTypeBySlotIndex(int32 _SlotIndex) const
+{
+	return WeaponComponent->GetWeaponTypeBySlotIndex(_SlotIndex);
 }
 
 bool AUnit::IsEquipPanelSlotEmpty(int32 SlotIndex)
@@ -752,18 +1073,28 @@ void AUnit::OpenChangeWeaponPanel()
 }
 
 
+// **  ************************************************************************
+// **  **********************     Armor_Component      ************************ 
+// **  **********************        Equip_Panel       ************************ 
+// **  ************************************************************************ 
+
+
+bool AUnit::EquipArmorByItemDT(const FItemDT* _ItemDT)
+{
+	bool isOk = ArmorComponent->EquipArmorByItemDT(_ItemDT);
+	if (GetIsUnitSelected() && !IsUnitInGroup())
+	{
+		if (HUD->IsEquipPanelShown)
+			HUD->ShowEquipPanel(this);	// ** update
+	}
+	return isOk;
+}
+
 
 
 // **  ************************************************************************
 // **  ************************     Pose-Locomotion     ************************ 
 // **  ************************************************************************
-
-
-
-void AUnit::SetMoveSpeed(float _Speed)
-{
-	GetCharacterMovement()->MaxWalkSpeed = _Speed;
-}
 
 void AUnit::StopMove()
 {
@@ -771,69 +1102,158 @@ void AUnit::StopMove()
 }
 
 
-
-void AUnit::SetRotateSpeed(uint8 _RotSpeedIndex)
+void AUnit::GetActualPoseLocomotion(TArray<FPoseLocomotion>& _ActualPoseLocomotion)
 {
-	if (_RotSpeedIndex == 0)
-		AnimInstance->RotateSpeedSide = 0;
+	int32 activeWpnSlot = -1;
+
+	if (WeaponComponent &&
+		(activeWpnSlot = WeaponComponent->GetSelectedWeaponSlotIndex()) != -1)
+	{
+		// ** link PoseLocomotion from "WeaponComponent" 
+		UWeaponDT* currWeaponDT_CDO = WeaponComponent->WeaponSlot[activeWpnSlot]->
+			ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
+
+		for (int32 i = 0; i < PoseLocomotionParam.Num(); ++i)
+		{
+			FPoseLocomotion defaultPoseData;
+			defaultPoseData.Pose = PoseLocomotionParam[i].Pose;
+			defaultPoseData.MoveSpeed = PoseLocomotionParam[i].MoveSpeed;
+			defaultPoseData.RotateSpeed = PoseLocomotionParam[i].RotateSpeed;
+			defaultPoseData.PoseImage = PoseLocomotionParam[i].PoseImage;
+
+			///bool isPoseExistInWeapon = false;
+			TArray<FPoseLocomotion>& dataFromWeaponRef = currWeaponDT_CDO->PoseLocomotionParamMOD;
+			for (int32 n = 0; n < dataFromWeaponRef.Num(); ++n)
+			{
+				if (defaultPoseData.Pose == dataFromWeaponRef[n].Pose)
+				{
+					defaultPoseData.MoveSpeed += dataFromWeaponRef[n].MoveSpeed;
+					defaultPoseData.RotateSpeed += dataFromWeaponRef[n].RotateSpeed;
+					///isPoseExistInWeapon = false;
+					_ActualPoseLocomotion.Add(defaultPoseData);
+					break;
+				}
+			}
+		}
+		//-----return &currWeaponDT_CDO->PoseLocomotionParamMOD;
+	}
 	else
-	if (_RotSpeedIndex == 1)
-		AnimInstance->RotateSpeedSide = SlowRotateSpeed;
-	else
-	if (_RotSpeedIndex == 2)
-		AnimInstance->RotateSpeedSide = NormalRotateSpeed;
-	else
-		AnimInstance->RotateSpeedSide = FastRotateSpeed;
+	{
+		_ActualPoseLocomotion = PoseLocomotionParam;
+	}
 }
 
+
+void  AUnit::SetPose(EUnitPose _UnitPose)
+{
+
+	if (CurrUnitPose != _UnitPose)
+	{
+		CurrUnitPose = _UnitPose;
+
+		AnimInstance->UnitPose = _UnitPose;
+
+		TArray<FPoseLocomotion> actualPoseLocomotion;
+		GetActualPoseLocomotion(actualPoseLocomotion);
+		// ** Speed By Pose (depend Weapon speed-mod)
+		SetMoveSpeed(GetMoveSpeedFromPose(CurrUnitPose, &actualPoseLocomotion));
+		// ** Rotate switcher (depend Weapon speed-mod)
+		UpdateRotateAnimSpeedHandler(&actualPoseLocomotion);
+	}
+}
+
+
+EUnitPose AUnit::GetCurrUnitPose() const
+{
+	return CurrUnitPose;
+}
+
+
+void AUnit::SetMoveSpeed(float _Speed)
+{
+	GetCharacterMovement()->MaxWalkSpeed = _Speed;
+
+}
+
+void AUnit::SetMoveSpeedFromPose(EUnitPose _UnitPose, TArray<FPoseLocomotion>* _ActualPosesArray)
+{
+	if (!_ActualPosesArray)
+		GetActualPoseLocomotion(*_ActualPosesArray);
+
+
+	// ** find request pose
+	for (int32 i = 0; i < _ActualPosesArray->Num(); ++i)
+	{
+		if (_UnitPose == (*_ActualPosesArray)[i].Pose)
+		{
+			SetMoveSpeed((*_ActualPosesArray)[i].MoveSpeed);
+			return;
+		}
+	}
+
+	// ** if not finded => Return latest pose
+	if (_ActualPosesArray->Num() > 0)
+		SetMoveSpeed(_ActualPosesArray->Last().MoveSpeed);
+
+	// ** ERROR:  forgot set pose
+	SetMoveSpeed(0);
+
+}
+
+float AUnit::GetMoveSpeedFromPose(EUnitPose _UnitPose, TArray<FPoseLocomotion>* _ActualPosesArray)
+{
+	if (!_ActualPosesArray)
+		GetActualPoseLocomotion(*_ActualPosesArray);
+
+
+	// ** find request pose
+	for (int32 i = 0; i < _ActualPosesArray->Num(); ++i)
+	{
+		if (_UnitPose == (*_ActualPosesArray)[i].Pose)
+			return  (*_ActualPosesArray)[i].MoveSpeed;
+	}
+
+	// ** if not finded => Return latest pose
+	if(_ActualPosesArray->Num() > 0)
+		return _ActualPosesArray->Last().MoveSpeed;
+
+	// ** ERROR:  forgot set pose
+	return 0.f;
+
+}
+
+
+
+void AUnit::SetRotateSpeedFromVal(float _NewSpeed)
+{
+	AnimInstance->SetRotateAnimSpeed(_NewSpeed);
+}
+
+
+float AUnit::GetRotateSpeedFromPose(EUnitPose _UnitPose)
+{
+	TArray<FPoseLocomotion> actualPoseLocomotion;
+	GetActualPoseLocomotion(actualPoseLocomotion);
+
+	// ** find request pose
+	for (int32 i = 0; i < actualPoseLocomotion.Num(); ++i)
+	{
+		if (_UnitPose == actualPoseLocomotion[i].Pose)
+			return actualPoseLocomotion[i].RotateSpeed;
+	}
+
+	// ** if not finded => Return latest pose
+	if (actualPoseLocomotion.Num() > 0)
+		return actualPoseLocomotion.Last().RotateSpeed;
+
+	// ** ERROR:  forgot set pose
+	return 0.f;
+}
 
 
 // **  ************************************************************************
 // **  ************************     TEST_DEBUG    ************************
 // **  ************************************************************************
 
-
-#define WAY_POINT_NAME_TEST0001(A) PointNameForMove ## (A)
-//#define IS_POINT_NAME_ROTATE_TEST0001(a) IsRotateByPoint##a
-void AUnit::MoveToPointName()
-{
-	TArray<AActor*> AllWayPointActors;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWayPoint::StaticClass(), AllWayPointActors);
-//	int j = 0;
-//	WAY_POINT_NAME_TEST0001(j);
-
-//	for(; j <= 10; ++j)
-	{
-//		if((WAY_POINT_NAME_TEST0001(j)) != FName("none"))
-		for (int32 i = 0; i < AllWayPointActors.Num(); i++)
-		{
-			AWayPoint* wayPoint = Cast<AWayPoint>(AllWayPointActors[i]);
-			if (wayPoint->WayPointName == PointNameForMove1)
-			{
-				FTaskData taskData;
-				taskData.Location = wayPoint->GetActorLocation();	// ** or Unit
-				if (IsRotateByPoint1)
-				{
-					taskData.Rotation = wayPoint->GetActorRotation();
-					taskData.TaskDislocation = ETaskDislocation::PointRotate;
-				}
-				else
-				{
-					taskData.TaskDislocation = ETaskDislocation::PointNoRotate;
-				}
-				bool bAddMoreOne = true;
-				SetUnitTask(bAddMoreOne, ETaskType::MoveToPoint, taskData);
-			}
-		}
-	}
-
-
-
-
-
-
-
-
-}
 
 

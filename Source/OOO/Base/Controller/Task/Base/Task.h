@@ -8,7 +8,7 @@
 
 #include "../Enum/TaskType.h"
 
-#include "../../Enum/TaskInstigator.h"
+#include "../Struct/TaskData.h"
 
 #include "Task.generated.h"
 
@@ -20,7 +20,7 @@ class OOO_API UTask : public UObject
 
 public:
 
-	//-------NO-it's in Struct::TaskData--- int32 Priority = 0;
+	//--------static void SetDataGoalLocation(FTaskData& _TaskData, FVector _GoalLocation);
 
 public:
 
@@ -50,10 +50,20 @@ public:
 		virtual void TaskPerformance(class AUnitAI* _OvnerAI) {};
 
 	UFUNCTION()
+		virtual void OnAnimationNotify(class AUnitAI* _OwnerAI, FString _NotifyName) {};
+
+	UFUNCTION()
 		virtual void TaskComplit(class AUnitAI* _OvnerAI);
 
 	UFUNCTION()
 		virtual void BreakTask(class AUnitAI* _OwnerAI);
+
+	// ** Set default Parameter
+	UFUNCTION()
+		virtual void ResetTask(class AUnitAI* _OwnerAI) {};
+
+	UFUNCTION()
+		virtual bool IdentifyTask(class AUnitAI* _ThisAI) { return false; };
 
 };
 

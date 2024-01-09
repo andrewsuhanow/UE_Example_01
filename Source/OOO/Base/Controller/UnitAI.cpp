@@ -1,5 +1,5 @@
 
-// ** #include "../Controller/UnitAI.h"
+// ** #include "Base/Controller/UnitAI.h"
 #include "UnitAI.h"
 
 #include "../Unit/Base/Unit.h"
@@ -7,6 +7,8 @@
 #include "Task/Base/Task.h"
 #include "Task/Struct/TaskData.h"
 #include "Task/Base/DailyBhvrQueue.h"
+
+#include "../Amunition/WeaponWorldItem.h"
 
 //-------------------------
 
@@ -59,8 +61,8 @@ AUnitAI::AUnitAI()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//-----MainTaskDT.TaskStatus = ETaskStatus::MainTask;
-	//-----PartTaskDT.TaskStatus = ETaskStatus::PartTask;
+	//-----MainTaskDT.TaskCauser = ETaskCauser::MainTask;
+	//-----PartTaskDT.TaskCauser = ETaskCauser::PartTask;
 }
 
 
@@ -174,10 +176,8 @@ void AUnitAI::OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
 
 void AUnitAI::OnAnimNotify(FString _NotifyName)
 {
-	// ....
-	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnAnimNotify():         %s"), *GetName());
-
-	UpdateLogic();
+	if (CurrTaskRef)
+		CurrTaskRef->OnAnimationNotify(this, _NotifyName);
 }
 
 
@@ -188,76 +188,10 @@ void AUnitAI::OnAnimNotify(FString _NotifyName)
 // **  ************************************************************************
 
 
-void AUnitAI::MoveToPoint()
-{
-
-	/*
-	// ** MOVE HOME
-		//---------------------------------------------FVector Point = taskGoalLocation;
-		Set_StopDistance_ForMoveAction(0.f);
-		Set_UsingStrafe_ForMoveAction(false);
-		MoveToActor(_Actor, _StopDistBefore, _bStopOnOverlap, _bUsePathfinding, _IsStrafe);
-
-	// ** Move
-		AI_MoveToPoint(_Location, _StopDistBefore + 30.f, false, true, false, false);
-	*/
-
-//	AI_MoveToPoint(GetCurrentTargetPoint(CurrTargetLocationEXIST), mStopDistance_ForMoveAction, bStopOnOverlap, bUsePathfinding, mIsStrafe_ForMoveAction, bDebugProjectileToNavigation);
-//++++++	MoveToLocation(_Location, _StopDistBefore, _bStopOnOverlap, _bUsePathfinding, _bDebugProjectileToNavigation, _IsStrafe);
-}
-
-void AUnitAI::MoveToUnit()
-{
-
-	/*
-
-	// ** MOVE for Attack (from far)
-		if (BehaviorComp->mCurrDistToTarget > BehaviorComp->mCurrWeapon_Max_Dist)
-			{
-				float stopDistance = BehaviorComp->mCurrWeapon_Max_Dist - GetCapsuleRadius_Self() * 3.f;
-
-				//ActionSTATE_TMP = EActionState::Move;
-				//ActionParallelSTATE_TMP = EActionState::none;
-
-				//---------bool IsOtherActionApplay = Action_MoveCloser_ToPoint(_Controller, targetPoint, _SelfCapsuleRadius, stopDistance);
-				AI_MoveToActor(GetCurrentTargetActor(), stopDistance, true, true, false);
-			}
-	// ** ATTACK (contack <can from far but neer close>)
-			if (IsAIContactWeaponType())
-			{
-
-				AI_MoveToActor(GetCurrentTargetActor(), BehaviorComp->mCurrWeapon_Min_Dist, true, true, false);
-			}
-	
-	*/
-//+++++++	MoveToActor(_Actor, _StopDistBefore, _bStopOnOverlap, _bUsePathfinding, _IsStrafe);
-
-}
-
-void AUnitAI::Rotate()
-{
-	/*
-	// ** Vector from Rotator
-	FVector dir = FRotationMatrix(GetControlRotation()).GetScaledAxis(EAxis::X);
-
-	// ** Rotator from vector
-	FRotator Rot = LocalDir = PosDir.Rotation();
-	*/
 
 
-	/*
-	SetCurrTargetLocation(EndLocation); // ** FVector
-	FVector selfPosition = _Controller->GetPawn()->GetActorLocation();
-	FVector _Direction = (EndLocation - selfPosition).GetSafeNormal();
-	NormalRotateToPoint(_Direction); // ** FVector
-		float DeltaRotate = GetAngleRotateToPoint(PawnOwner, _Direction);
-		if (FMath::Abs(DeltaRotate) > 0.01f)
-		{
-			SetCurrTargetLocation(PawnOwner->GetActorLocation() + _Direction * 100);
-			SetRotateSpeed(3);
-		}
-	*/
-}
+
+
 
 
 // **  ************************************************************************
@@ -275,17 +209,24 @@ void AUnitAI::OnNewGameHour(int32 iHour)
 	UpdateLogic();
 }
 
+EPossesingGameState AUnitAI::GetPossesingGameState()
+{
+	return GameState->GetPossesingGameState();
+}
+
+
+
 // **  ************************************************************************
 // **  **********************       Misc_Operation      **********************
 // **  ************************************************************************
 
 
 void AUnitAI::SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData,
-					ETaskInstigator _TaskInstigator, ETaskPriority _TaskPriority)
+//--------					ETaskInstigator _TaskInstigator, ETaskPriority _TaskPriority)
+							ETaskCauser _TaskCauser, ETaskPriority _TaskPriority)
 {
 	// ** Complete "_TaskData"
 
-	_TaskData.TaskInstigator = _TaskInstigator;
 	_TaskData.TaskPriority = _TaskPriority;
 
 	for (int32 i = 0; i < ActionTaskssObj.Num(); ++i)
@@ -297,54 +238,64 @@ void AUnitAI::SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskDat
 		}
 	}
 
+	if (!_TaskData.TaskRef)
+	{
+		return;
+	}
+
+
 	// ** Confirm new Task to UnitAI
 
-	if (_TaskInstigator == ETaskInstigator::Dominant)
+	if (_TaskCauser == ETaskCauser::CriticalTask)
 	{
-		StoreDominantTaskDT = _TaskData;
-		StoreDominantTaskDT.TaskStatus = ETaskStatus::NewTask;
+		CriticalTaskDT = _TaskData;
+		CriticalTaskDT.TaskCauser = ETaskCauser::CriticalTask_New;
 		UpdateLogic();
-		return;
+		//---------return;
 	}
 	else
-	if (_TaskInstigator == ETaskInstigator::AI)
+	if (_TaskCauser == ETaskCauser::NpcTask)
 	{
-		StoreAITaskDT = _TaskData;
-		StoreAITaskDT.TaskStatus = ETaskStatus::NewTask;
+		NpcTaskDT = _TaskData;
+		NpcTaskDT.TaskCauser = ETaskCauser::NpcTask_New;
 		UpdateLogic();
-		return;
+		//----------return;
 	}
 	else
-	if (_TaskInstigator == ETaskInstigator::General)
+	if (_TaskCauser == ETaskCauser::FractionTask)
 	{
 		if (_bAddMoreOne)
 		{
-			StoreQueueTaskDT.Add(_TaskData);
-			//--77--if (!CurrTaskRef)
+			FractionQueueTaskDT.Add(_TaskData);
+			if (!CurrTaskRef)
 				UpdateLogic();
 		}
 		else
 		{
-			StoreQueueTaskDT.Reset();
-			StoreQueueTaskDT.Add(_TaskData);
-			StoreGeneralTaskDT = _TaskData;
-			StoreGeneralTaskDT.TaskStatus = ETaskStatus::NewTask;
 			if (CurrTaskRef)
 				CurrTaskRef->BreakTask(this);
-			else
-				UpdateLogic();
+			FractionQueueTaskDT.Reset();
+			FractionQueueTaskDT.Add(_TaskData);
+			FractionTaskDT = _TaskData;
+			FractionTaskDT.TaskCauser = ETaskCauser::FractionTask_New;
+			UpdateLogic();
 
 		}
 	}
 	else
-	if (_TaskInstigator == ETaskInstigator::OtherTask)
+	if (_TaskCauser == ETaskCauser::ChildTask)
+	//if (_TaskCauser == ETaskInstigator::OtherTask)
 	{
-		CurrTaskDTBuffer.Add(_TaskData);
+		TasksBuffer.Add(_TaskData);
+		TasksBuffer.Last().TaskCauser = ETaskCauser::ChildTask;
 		CurrTaskRef = _TaskData.TaskRef;
 		CurrTaskRef->StartTask(this);
 	}
 
-	
+	// ** HUD-Task-Queue update
+	UnitOwner->UpdateTaskQueuePanel_HUD();
+	// ** HUD-Attack-Wpn panel update
+	UnitOwner->UpdateAttacksWpnPanel_HUD();
 }
 
 
@@ -352,112 +303,119 @@ void AUnitAI::UpdateLogic()
 {
 	// ** if Unit "Fall-Down" now or other Hi-PriorityLogic
 
-	if (CurrTaskDTBuffer.Num() > 0)
-		if(CurrTaskDTBuffer.Last().TaskPriority == ETaskPriority::Great)
+	if (TasksBuffer.Num() > 0)
+		if(TasksBuffer.Last().TaskPriority == ETaskPriority::Great)
 			return;
 
 
-	// ** *******  Set New Tasks  *******  
-		// --@@@@@@@@@@@@@@@@@@@@@@@@-- Lambda
-		//if (CurrTaskRef)
-		//	CurrTaskRef->TotalBreakTask(this);
-		//else
-		//{
-		//	CurrTaskDT = MainTaskDT = StoreDominantTaskDT;
-		//	CurrTaskRef = MainTaskDT.TaskRef;
-		//	CurrTaskRef->StartTask();
-		//}
+	/// ** *******  Set New Tasks  *******  
+		/// --@@@@@@@@@@@@@@@@@@@@@@@@-- Lambda
+		///if (CurrTaskRef)
+		///	CurrTaskRef->TotalBreakTask(this);
+		///else
+		///{
+		///	CurrTaskDT = MainTaskDT = CriticalTaskDT;
+		///	CurrTaskRef = MainTaskDT.TaskRef;
+		///	CurrTaskRef->StartTask();
+		///}
+
 
 	// ** *******  Check New Tasks  *******
 
 	// ** Has Dominant task
-	if (StoreDominantTaskDT.TaskStatus == ETaskStatus::NewTask)
+	if (CriticalTaskDT.TaskCauser == ETaskCauser::CriticalTask_New)
 	{
 		if (CurrTaskRef)
 			CurrTaskRef->BreakTask(this);
 		else
 		{
-			CurrTaskDTBuffer.Reset();
+			TasksBuffer.Reset();
 
 			FTaskData TaskDT_TMP;
-			TaskDT_TMP = StoreDominantTaskDT;
-			StoreDominantTaskDT.TaskStatus = ETaskStatus::none;
-			TaskDT_TMP.TaskStatus = ETaskStatus::DominantComand;
-			CurrTaskDTBuffer.Add(TaskDT_TMP);
-			CurrTaskRef = CurrTaskDTBuffer.Last().TaskRef;
+			TaskDT_TMP = CriticalTaskDT;
+			CriticalTaskDT.TaskCauser = ETaskCauser::none;
+			TaskDT_TMP.TaskCauser = ETaskCauser::CriticalTask;
+			TasksBuffer.Add(TaskDT_TMP);
+			CurrTaskRef = TasksBuffer.Last().TaskRef;
 			CurrTaskRef->StartTask(this);
 		}
-		return;
+		//-----------return;
 	}
 	// ** Has AI task
 	else 
-	if (StoreAITaskDT.TaskStatus == ETaskStatus::NewTask)
+	if (NpcTaskDT.TaskCauser == ETaskCauser::NpcTask_New)
 	{
 		if (CurrTaskRef)
 			CurrTaskRef->BreakTask(this);
 		else
 		{
-			CurrTaskDTBuffer.Reset();
+			TasksBuffer.Reset();
 
 			FTaskData TaskDT_TMP;
-			TaskDT_TMP = StoreAITaskDT;
-			StoreAITaskDT.TaskStatus = ETaskStatus::none;
-			TaskDT_TMP.TaskStatus = ETaskStatus::AIComand;
-			CurrTaskDTBuffer.Add(TaskDT_TMP);
-			CurrTaskRef = CurrTaskDTBuffer.Last().TaskRef;
+			TaskDT_TMP = NpcTaskDT;
+			NpcTaskDT.TaskCauser = ETaskCauser::none;
+			TaskDT_TMP.TaskCauser = ETaskCauser::NpcTask;
+			TasksBuffer.Add(TaskDT_TMP);
+			CurrTaskRef = TasksBuffer.Last().TaskRef;
 			CurrTaskRef->StartTask(this);
 		}
-		return;
+		//-----------return;
 	}
 	// ** Has General task
 	else
-	if (StoreGeneralTaskDT.TaskStatus == ETaskStatus::NewTask)
+	if (FractionTaskDT.TaskCauser == ETaskCauser::FractionTask_New)
 	{
 		if (CurrTaskRef)
 			CurrTaskRef->BreakTask(this);
 		else
 		{
-			CurrTaskDTBuffer.Reset();
+			TasksBuffer.Reset();
 
 			FTaskData TaskDT_TMP;
-			TaskDT_TMP = StoreGeneralTaskDT;
-			StoreGeneralTaskDT.TaskStatus = ETaskStatus::none;
-			TaskDT_TMP.TaskStatus = ETaskStatus::GeneralComand;
-			CurrTaskDTBuffer.Add(TaskDT_TMP);
-			CurrTaskRef = CurrTaskDTBuffer.Last().TaskRef;
+			TaskDT_TMP = FractionTaskDT;
+			FractionTaskDT.TaskCauser = ETaskCauser::none;
+			TaskDT_TMP.TaskCauser = ETaskCauser::FractionTask;
+			TasksBuffer.Add(TaskDT_TMP);
+			CurrTaskRef = TasksBuffer.Last().TaskRef; 
 			CurrTaskRef->StartTask(this);
 		}
-		return;
+		//-----------return;
 	}	
 	// ** Has Task in GeneralQuery
 	else
-	if (!CurrTaskRef && StoreQueueTaskDT.Num() > 0)
+	if (!CurrTaskRef && FractionQueueTaskDT.Num() > 0)
 	{
-		StoreGeneralTaskDT = StoreQueueTaskDT[0];
-		StoreGeneralTaskDT.TaskStatus = ETaskStatus::NewTask;
+		FractionTaskDT = FractionQueueTaskDT[0];
+		FractionTaskDT.TaskCauser = ETaskCauser::FractionTask_New;
 		UpdateLogic();
-		return;
+		//-----------return;
 	}
 	else
 	if (CurrTaskRef)
 	{
 		CurrTaskRef->ContinueTask(this);
-		return;
+		//-----------return;
 	}
-	else
+	else if (DailyBhvrTaskIndex != -1 && DailyBhvrTaskDT.Num() != 0)
 	{
-		if (DailyBhvrTaskIndex == -1 || DailyBhvrTaskDT.Num() == 0)
-			return;
-
 		if (CurrTaskRef)
 			CurrTaskRef->BreakTask(this);
 		else
 		{
-			//-----CurrTaskDTBuffer;							 // ** TEST_TEST
 			CurrTaskRef = ActionTaskssObj[DailyBhvrTaskIndex];
 			CurrTaskRef->ContinueTask(this);
 		}
 	}
+	else
+	{
+		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@			Go  HOME Point
+		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@			Set HOME Rotate
+		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	}
+
+	// ** HUD-Task-Queue update
+	UnitOwner->UpdateTaskQueuePanel_HUD();
 }
 
 
@@ -465,7 +423,7 @@ void AUnitAI::UpdateLogic()
 // **  **********************       Self_Operation      **********************
 // **  ************************************************************************
 
-FVector AUnitAI::GetCurrSelfLocation()
+FVector AUnitAI::GetCurrSelfLocation() const
 {
 	return UnitOwner->GetActorLocation();
 }
@@ -492,9 +450,9 @@ FVector AUnitAI::GetUnitForwardVector()
 
 
 
-void AUnitAI::SetUnitRotateSpeed(uint8 _RotSpeedIndex)
+void AUnitAI::SetUnitRotateSpeedByPose(EUnitPose _UnitPose)
 {
-	UnitOwner->SetRotateSpeed(_RotSpeedIndex);
+	UnitOwner->GetRotateSpeedFromPose(_UnitPose);
 }
 
 void AUnitAI::SetUnitMoveSpeed(float _Speed)
@@ -536,6 +494,13 @@ void AUnitAI::PlayAnimate(UAnimMontage* _AnimMontage, bool _isPlayTOP, float _fr
 	return UnitOwner->PlayAnimate(_AnimMontage, _isPlayTOP, _fromTime);
 }
 
+void AUnitAI::StopAnimate()
+{
+	UnitOwner->StopAnimate();
+}
+
+
+
 void AUnitAI::GetTasksQueDataFromAI(UTexture2D*& _CurrTaskImage,
 	TArray<UTexture2D*>& _TasksImage,
 	TArray<int32>& _TasksIndex)
@@ -543,14 +508,21 @@ void AUnitAI::GetTasksQueDataFromAI(UTexture2D*& _CurrTaskImage,
 	if (!CurrTaskRef)
 		return;
 
-	_CurrTaskImage = CurrTaskDTBuffer[0].TaskRef->TaskIcon;
+	_CurrTaskImage = TasksBuffer[0].TaskRef->TaskIcon;
 
-	for (int32 i = 0; i < StoreQueueTaskDT.Num(); ++i)
+	for (int32 i = 0; i < FractionQueueTaskDT.Num(); ++i)
 	{
 		_TasksIndex.Add(i);
-		_TasksImage.Add(StoreQueueTaskDT[i].TaskRef->TaskIcon);
+
+		// @@@@@@@@@@@@@@@@@@@@@@@@@@
+		// @@@@@@@@@@@@@@@@@@@@@@@@@@
+		// @@@@@@@@@@@@@@@@@@@@@@@@@@   if(FractionQueueTaskDT[i].Name == Attack)   =>>   Get Icon from Weapon->Attack->Texture
+		_TasksImage.Add(FractionQueueTaskDT[i].TaskRef->TaskIcon);
+		// @@@@@@@@@@@@@@@@@@@@@@@@@@
+		// @@@@@@@@@@@@@@@@@@@@@@@@@@
 	}
 }
+
 
 
 int32 AUnitAI::IsWeaponActive()
@@ -571,8 +543,22 @@ bool AUnitAI::UnactivateWeapon()
 UAnimMontage* AUnitAI::GetGameAnimation(EAnimationKey _AnimationKey)
 {
 	return GameMode->GetGameAnimation(UnitOwner->UnitGameType,
-				UnitOwner->GetCurrentWeaponType(), _AnimationKey);
+				UnitOwner->GetWeaponTypeBySlotIndex(UnitOwner->GetSelectedWeaponSlotIndex()), _AnimationKey);
 }
+
+
+AWeaponWorldItem* AUnitAI::GetCurrWeaponItem()
+{
+	return UnitOwner->GetCurrWeaponItem();
+}
+
+
+FTransform AUnitAI::GetUnitSocketParam(FName _SocketName)
+{
+	return UnitOwner->GetUnitSocketParam(_SocketName);
+
+}
+
 
 // **  ************************************************************************
 // **  **********************       Target_Operation      **********************
@@ -580,19 +566,35 @@ UAnimMontage* AUnitAI::GetGameAnimation(EAnimationKey _AnimationKey)
 
 FVector AUnitAI::GetCurrTargetLocation()
 {
+	// (++++++++++++++++)
+	/*
 	if (CurrTaskRef)
-		if (CurrTaskDTBuffer.Last().TargetUnit)
+		if (TasksBuffer.Last().TargetUnit)
 		{
-			return CurrTaskDTBuffer.Last().TargetUnit->GetActorLocation();
+			return TasksBuffer.Last().TargetUnit->GetActorLocation();
 		}
 		else
 		{
-			return CurrTaskDTBuffer.Last().Location;
+			return TasksBuffer.Last().Location;
 		}
+	*/
 	return FVector::ZeroVector;
 }
 
+float AUnitAI::GetDistanceToTarget(AActor* _TargetActor, bool _WithMoveDistCorrector) const
+{
+	if (!_TargetActor)
+		return 0.f;
 
+	float moveDistCorrector = 0.f;
+	if (_WithMoveDistCorrector)
+		moveDistCorrector = UnitOwner->StopDistance;
+
+	float dist =  FVector::Distance(GetCurrSelfLocation(), _TargetActor->GetActorLocation())
+		- moveDistCorrector;
+
+	return (dist > 0.f) ? dist : 0.f;
+}
 
 // ****************************************************
 // *****************   TEST_DEBUG  *****************

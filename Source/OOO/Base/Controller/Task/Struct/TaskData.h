@@ -1,11 +1,11 @@
 
 
+// #include "Base/Controller/Task/Struct/TaskData.h"
+
 #pragma once
 
-#include "../Enum/TaskStatus.h"
-#include "../Enum/TaskDislocation.h"
+#include "../Enum/TaskCauser.h"
 #include "../Enum/TaskPriority.h"
-#include "../../Enum/TaskInstigator.h"
 
 #include "TaskData.generated.h"
 
@@ -26,10 +26,10 @@ struct FTaskData
 		// ** none, newTask,		
 		// ** GeneralComand, AIComand, DominantComand, 		
 		// ** ChildTask
-		ETaskStatus TaskStatus = ETaskStatus::none;								
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
-		// ** GeneralComand = 0,	AI = 1,		DominantComand = 2
-		ETaskInstigator TaskInstigator = ETaskInstigator::General;	
+		ETaskCauser TaskCauser = ETaskCauser::none;
+//-------------	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
+//-------------		// ** GeneralComand = 0,	AI = 1,		DominantComand = 2
+//-------------		ETaskInstigator TaskInstigator = ETaskInstigator::General;	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
 		// ** Normal,  Hi,  Great
 		ETaskPriority TaskPriority = ETaskPriority::Normal;
@@ -38,32 +38,65 @@ struct FTaskData
 		class UTask* TaskRef = nullptr;
 		
 		// ** What parameter using (Actor, point, rotate)
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
-		ETaskDislocation TaskDislocation = ETaskDislocation::PointNoRotate;		// ** PointRotate,  UnitNoRotate,  UnitRotate,  RotatePointNoMove, RotateUnitNoMove
+	//----------------UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
+	//----------------	 ETaskDislocation TaskDislocation = ETaskDislocation::PointNoRotate;		// ** PointRotate,  UnitNoRotate,  UnitRotate,  RotatePointNoMove, RotateUnitNoMove
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")			//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 777777   what type "actor" or "unit"
-		class AUnit* TargetUnit = nullptr;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")			
+		TArray<class AUnit*> Unit;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")			
+		TArray<AActor*> Actor;
+	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
-		FVector Location;
+		TArray<uint8> Uint8Param;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
-		FRotator Rotation;
+		TArray<int32> Int32Param;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
+		TArray<float> FloatParam;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
+		TArray<FVector> Vector3dParam;
+	//+++++UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
+	//+++++	FRotator Rotation;
 
-	// **  Waiting time
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
-		float Param1 = 0.f;
 
 
 	FTaskData& operator=(const FTaskData& Other)
 	{
-		// ** this->TaskStatus	= Other.TaskStatus;
-		this->TaskInstigator	= Other.TaskInstigator;
+		// ** this->TaskCauser = Other.TaskCauser;
+		//-------------this->TaskInstigator	= Other.TaskInstigator;
 		this->TaskPriority		= Other.TaskPriority;
 		this->TaskRef			= Other.TaskRef;
-		this->TaskDislocation	= Other.TaskDislocation;
-		this->TargetUnit		= Other.TargetUnit;
-		this->Location			= Other.Location;
-		this->Rotation			= Other.Rotation;
-		this->Param1			= Other.Param1;
+		
+		// ** Unit
+		this->Unit.Reset();
+		for (int32 i = 0; i < Other.Unit.Num(); ++i)
+			this->Unit.Add(Other.Unit[i]);
+
+		// ** Actor
+		this->Actor.Reset();
+		for (int32 i = 0; i < Other.Actor.Num(); ++i)
+			this->Actor.Add(Other.Actor[i]);
+
+		// ** Vector
+		this->Vector3dParam.Reset();
+		for (int32 i = 0; i < Other.Vector3dParam.Num(); ++i)
+			this->Vector3dParam.Add(Other.Vector3dParam[i]);
+
+		//+++++++++++++++++++++this->Rotation			= Other.Rotation;
+
+		// ** Uint8Param  <uint8>
+		this->Uint8Param.Reset();
+		for (int32 i = 0; i < Other.Uint8Param.Num(); ++i)
+			this->Uint8Param.Add(Other.Uint8Param[i]);
+
+		// ** Int32Param  <uint8>
+		this->Int32Param.Reset();
+		for (int32 i = 0; i < Other.Int32Param.Num(); ++i)
+			this->Int32Param.Add(Other.Int32Param[i]);
+		
+		// ** FloatParam  <float>
+		this->FloatParam.Reset();
+		for (int32 i = 0; i < Other.FloatParam.Num(); ++i)
+			this->FloatParam.Add(Other.FloatParam[i]);
 
 		return *this;
 	}

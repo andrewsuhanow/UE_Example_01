@@ -4,6 +4,7 @@
 #include "ItemDT.h"
 
 #include "../../Amunition/WeaponDT.h"  
+#include "../../Amunition/ArmorDT.h"
 //++++++++++++++++++++++++#include "../../Amunition/Srtuct/ArmorParamr.h"  
 
 
@@ -32,6 +33,7 @@ FItemDT::FItemDT(const FItemDT& Other)
 	MeshPrimitive = Other.MeshPrimitive;
 
 	WeaponDT = Other.WeaponDT;
+	ArmorDT = Other.ArmorDT;
 }
 
 FItemDT& FItemDT::operator=(const FItemDT& Other)
@@ -57,6 +59,7 @@ FItemDT& FItemDT::operator=(const FItemDT& Other)
 	MeshPrimitive = Other.MeshPrimitive;
 
 	WeaponDT = Other.WeaponDT;
+	ArmorDT = Other.ArmorDT;
 
 	return *this;
 }
@@ -87,7 +90,8 @@ bool operator==(const FItemDT& Self, const FItemDT& Other)
 
 		Self.MeshPrimitive == Other.MeshPrimitive &&
 
-		Self.WeaponDT == Other.WeaponDT)
+		Self.WeaponDT == Other.WeaponDT &&
+		Self.ArmorDT == Other.ArmorDT)
 	{
 		return true;
 	}
@@ -145,15 +149,16 @@ int32 FItemDT::GetItemVerticalSize() const
 }
 
 
-bool FItemDT::IsItemWeapon()
+bool FItemDT::IsItemWeapon() const
 { 
 	return WeaponDT ? true : false;
 }
-/*
-bool FItemDT::IsItemArmor()
+
+
+bool FItemDT::IsItemArmor() const
 {
-	return ArmorClass ? true : false;
+	return ArmorDT ? true : false;
 }
-*/
+
 
 

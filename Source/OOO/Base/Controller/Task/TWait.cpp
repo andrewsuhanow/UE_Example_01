@@ -4,12 +4,14 @@
 #include "TWait.h"
 
 #include "../UnitAI.h"
-
+#include "../../Unit/Base/Unit.h"
 
 
 UTWait::UTWait()
 {
 	TaskType = ETaskType::Wait;
+
+	// ** FTaskData::Param1[0]  -  Waiting time
 }
 
 
@@ -20,10 +22,10 @@ void UTWait::StartTask(AUnitAI* _OwnerAI)
 
 	OwnerAI = _OwnerAI;
 
-	if (_OwnerAI->CurrTaskDTBuffer.Num() > 0)
+	if (_OwnerAI->TasksBuffer.Num() > 0)
 	{
-		TimeLeft = _OwnerAI->CurrTaskDTBuffer.Last().Param1;
-
+		IdentifyTask(_OwnerAI);		// ** Waiting param
+		
 		if (TimeLeft > 0.f)
 		{
 			WaitTick();
@@ -38,6 +40,7 @@ void UTWait::StartTask(AUnitAI* _OwnerAI)
 
 void UTWait::ContinueTask(AUnitAI* _OwnerAI)
 {
+	/*  (-------------------------)
 	if (!_OwnerAI)
 		return;
 
@@ -51,6 +54,7 @@ void UTWait::ContinueTask(AUnitAI* _OwnerAI)
 	{
 		TaskComplit(_OwnerAI);
 	}
+	*/
 }
 
 
@@ -91,4 +95,30 @@ void UTWait::BreakTask(AUnitAI* _OwnerAI)
 	GetWorld()->GetTimerManager().ClearTimer(TH_Wait);
 
 	Super::BreakTask(_OwnerAI);
+}
+
+
+
+
+bool UTWait::IdentifyTask(AUnitAI* _OwnerAI)
+{
+
+	FTaskData& task = _OwnerAI->TasksBuffer.Last();
+
+	if (task.FloatParam.Num() == 0)
+		return false;
+
+	//---if(TimeLeft <= 0.f)
+	TimeLeft = task.FloatParam[0];
+
+	return true;
+}
+
+
+// ** ----------------  Static func  ---------------
+
+
+void UTWait::SetTaskData_WaitParam(FTaskData& _TaskData, AUnit* _SelfUnit, float _Time)
+{
+	_TaskData.FloatParam.Add(_Time);
 }

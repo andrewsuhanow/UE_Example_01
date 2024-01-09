@@ -49,7 +49,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_001_SelectUnit")		FName SelectUnitName_1 = FName("Un1");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_001_SelectUnit")		FName SelectUnitName_2 = FName("Un2");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_001_SelectUnit")		FName SelectUnitName_3 = FName("Un3");
-
+/*
 public:
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_002_MoveToPointName") 		void MoveToPoint_1__________SET();
@@ -84,7 +84,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_RotateToPointName")		FName Point_3_RotateTo = FName("wpL02");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_RotateToPointName")		FName Point_4_RotateTo = FName("wpL03");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_RotateToPointName")		FName Point_5_RotateTo = FName("wpL04");
-
+*/
 
 
 public:

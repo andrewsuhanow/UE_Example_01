@@ -10,15 +10,13 @@
 
 UWeaponComponent::UWeaponComponent()
 {
-		PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = true;
 }
 
 
 void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	
 }
 
 
@@ -34,7 +32,9 @@ void UWeaponComponent::InitWeapons(AUnit* _UnitOwner)
 {
 	UnitOwner = _UnitOwner;
 
-//	AGameMode_RTS* GameMod = Cast<AGameMode_RTS>(UGameplayStatics::GetGameMode(GetWorld()));
+	
+	// set LocomotionPose
+	UnitOwner->SetWeaponAnimType(EWeaponType::Locomotion);
 	
 
 	FActorSpawnParameters spawnParameters;
@@ -80,8 +80,8 @@ void UWeaponComponent::InitWeapons(AUnit* _UnitOwner)
 			if (WeaponTEMP)
 			{
 				WeaponTEMP->SetItemCollision(FName("NoCollision"));
-				// ** WeaponTEMP->AttachToUnitOnSocket(UnitOwner);		// ** done it in construct   
-				
+				// ** ArmorTEMP->SetAmunitionMesh(nullptr);
+				// ** WeaponTEMP->AttachToUnitOnSocket(UnitOwner, SocketName);		   
 				WeaponSlot.Add(WeaponTEMP);
 			}
 		}
@@ -108,6 +108,7 @@ bool UWeaponComponent::SetWeaponSlotSelected(int32 _WeaponSlotIndex)
 	else
 	{
 		SelectedWeaponSlot = _WeaponSlotIndex;
+		UnitOwner->UpdateAttacksWpnPanel_HUD();
 		return true;
 	}
 
@@ -117,18 +118,81 @@ bool UWeaponComponent::SetWeaponSlotSelected(int32 _WeaponSlotIndex)
 		if (!WeaponSlot[i]->ItemDT.IsSlotEmpty())
 		{
 			SelectedWeaponSlot = _WeaponSlotIndex;
+			UnitOwner->UpdateAttacksWpnPanel_HUD();
 			return true;
 		}
 	}
 	return false;
 }
 
-
+/*
 int32 UWeaponComponent::GetWeaponSlotSelected()
 {
 	return SelectedWeaponSlot;
 }
+*/
 
+bool UWeaponComponent::IsWeaponActive()
+{
+	if (iWeaponActive)
+		return true;
+	else
+		return false;
+}
+
+int32 UWeaponComponent::GetSelectedWeaponSlotIndex()
+{
+	if (SelectedWeaponSlot < 0)
+		return -1;
+	if (SelectedWeaponSlot >= WeaponSlot.Num())
+		return -1;
+	if (WeaponSlot[SelectedWeaponSlot]->ItemDT.IsSlotEmpty())
+		return -1;
+
+	// ** if (iWeaponActive) 
+	return SelectedWeaponSlot;
+}
+
+void UWeaponComponent::GetSelectedWeaponAttacksData(TArray<UTexture2D*> &_attackImage,
+	int32 &_SelectIndex, int32 &_PermanentIndex)
+{
+	if (SelectedWeaponSlot < 0)
+		return;
+	if (SelectedWeaponSlot >= WeaponSlot.Num())
+		return;
+
+	UWeaponDT* weaponDT = WeaponSlot[SelectedWeaponSlot]->ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
+
+	_SelectIndex = WeaponSlot[SelectedWeaponSlot]->SelectedAttacIndex;
+	_PermanentIndex = WeaponSlot[SelectedWeaponSlot]->PermanentAttacIndex;
+
+	for (int32 i = 0; i < weaponDT->AttakParam.Num(); ++i)
+	{
+		_attackImage.Add(weaponDT->AttakParam[i].ButtonImage);
+	}
+	
+}
+
+EWeaponType UWeaponComponent::GetWeaponTypeBySlotIndex(int32 _SlotIndex) const
+{
+	if (_SlotIndex < 0)
+		return EWeaponType::none;
+	if(_SlotIndex >= WeaponSlot.Num())
+		return EWeaponType::none;
+	if (WeaponSlot[_SlotIndex]->ItemDT.IsSlotEmpty())
+		return EWeaponType::none;
+
+	UWeaponDT* itemWeaponDT;
+
+	if (WeaponSlot[_SlotIndex]->ItemDT.WeaponDT)
+	{
+		itemWeaponDT = WeaponSlot[_SlotIndex]->ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
+
+		return itemWeaponDT->WeaponType;
+	}
+
+	return EWeaponType::none;
+}
 
 bool UWeaponComponent::ActivateWeapon()
 {
@@ -171,24 +235,28 @@ bool UWeaponComponent::UnactivateWeapon()
 
 
 
-int32 UWeaponComponent::IsWeaponActive()
+//-----FItemDT* UWeaponComponent::GetCurrWeaponData()
+AWeaponWorldItem* UWeaponComponent::GetCurrWeaponItem()
 {
-	if (iWeaponActive)
-		return SelectedWeaponSlot;
-	else
-		return -1;
+	if (SelectedWeaponSlot < 0)
+		return nullptr;
+
+	//------return &WeaponSlot[SelectedWeaponSlot]->ItemDT;
+	return WeaponSlot[SelectedWeaponSlot];
 }
+
+
 
 EWeaponType UWeaponComponent::GetCurrentWeaponType()
 {
-
-	if (SelectedWeaponSlot != -1)
+	int32 SelectSlot = IsWeaponActive();
+	if (SelectSlot != -1)
 	{
-		UWeaponDT* weaponDT_CDO = WeaponSlot[SelectedWeaponSlot]->ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
+		UWeaponDT* weaponDT_CDO = WeaponSlot[SelectSlot]->ItemDT.WeaponDT->GetDefaultObject<UWeaponDT>();
 		if (weaponDT_CDO)
 			return weaponDT_CDO->WeaponType;
 	}
-	return EWeaponType::none;
+	return EWeaponType::Locomotion;
 }
 
 
@@ -197,28 +265,36 @@ bool UWeaponComponent::EquipWeaponByItemDT(const FItemDT* _ItemDT)
 	if (!_ItemDT)
 		return false;
 
-	UWeaponDT* newItemWeaponDT_CDO;
+	UWeaponDT* newItemWeaponDT;
 
 	if (!_ItemDT->IsSlotEmpty() && _ItemDT->WeaponDT)
 	{
-		newItemWeaponDT_CDO = _ItemDT->WeaponDT->GetDefaultObject<UWeaponDT>();
+		newItemWeaponDT = _ItemDT->WeaponDT->GetDefaultObject<UWeaponDT>();
 
 		for (int32 i = 0; i < WeaponSlot.Num(); ++i)
 		{
-			//if (WeaponSlot[i]->ItemDT.WeaponDT)
-			if (WeaponSlot[i]->EquipSlotTypeFix == newItemWeaponDT_CDO->AllowInventorySlotType)
+			if (WeaponSlot[i]->EquipSlotTypeFix == newItemWeaponDT->AllowInventorySlotType)
 			{
 				WeaponSlot[i]->ItemDT = *_ItemDT;
 				WeaponSlot[i]->SetMesh(WeaponSlot[i]->ItemDT.MeshPrimitive);
 
-				// ** Attach to Unequip-socket
-				FName newSocket = FName("none");
-				newSocket = newItemWeaponDT_CDO->SocketUnactivated;
-				WeaponSlot[i]->AttachToUnitOnSocket(UnitOwner, newSocket);
 
-				// ** Anim Instance - Set AnimType
-				EWeaponType newAnimType = newItemWeaponDT_CDO->WeaponType;
-				UnitOwner->SetWeaponAnimType(newAnimType);
+				FName newSocket = FName("none");
+
+				if (IsWeaponActive())
+				{
+					newSocket = newItemWeaponDT->SocketActivated;
+
+					// ** Anim Instance - Set AnimType
+					EWeaponType newAnimType = newItemWeaponDT->WeaponType;
+					UnitOwner->SetWeaponAnimType(newAnimType);
+				}
+				else
+				{
+					newSocket = newItemWeaponDT->SocketUnactivated;
+				}
+
+				WeaponSlot[i]->AttachToUnitOnSocket(UnitOwner, newSocket);
 
 				return true;
 			}

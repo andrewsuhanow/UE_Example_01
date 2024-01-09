@@ -129,9 +129,24 @@ void ABaseHUD::CloseChangeWeaponPanel()
 
 
 
-void ABaseHUD::ShowWpnAttackPanel(AUnit* _Unit)
+void ABaseHUD::ShowAttacksWpnPanel(AUnit* _Unit,
+	TArray<UTexture2D*>& _AttackIcon, int32 &_SelectIndex, int32 &_PermanentIndex)
 {
-	Screen->ShowWpnAttackPanel(_Unit);
+	Screen->ShowAttacksWpnPanel(_Unit, _AttackIcon, _SelectIndex, _PermanentIndex);
+
+	IsAttacksWpnPanelShown = true;
+}
+
+void ABaseHUD::HideAttacksWpnPanel()
+{
+	Screen->HideAttacksWpnPanel();
+	IsAttacksWpnPanelShown = false;
+}
+
+void ABaseHUD::UpdateAttacksWpnPanel(AUnit* _Unit, 
+	TArray<UTexture2D*>& _AttackIcon, int32& _SelectIndex, int32& _PermanentIndex)
+{
+	Screen->UpdateAttacksWpnPanel(_Unit, _AttackIcon, _SelectIndex, _PermanentIndex);
 }
 
 

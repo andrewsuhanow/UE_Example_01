@@ -60,6 +60,9 @@ void UHumanAnimInst::NativeUpdateAnimation(float DeltaTime)
 	VelocitySpeed = VSpeed.Size();
 	Direction = CalculateDirection(VSpeed, UnitOwner->GetActorRotation());
 
+	//VelocitySpeed = UnitOwner->GetVelocity().Size();;
+	//Direction = CalculateDirection(UnitOwner->GetVelocity(), UnitOwner->GetActorRotation());
+
 	// ** LocomotionPose = UnitOwner->PoseLocomotion;	
 
 	// +++ RotateTOP_Yaw = +++++++++++++++++;
@@ -88,9 +91,23 @@ void UHumanAnimInst::SetWeaponAnimType(EWeaponType _NewWeaponAnim)
 
 
 
+void UHumanAnimInst::SetRotateSpeedHandle(TArray<float>& _RotateSpeedSwetcher)
+{
+	if (_RotateSpeedSwetcher.Num() < 7)
+		return;
+	HandlerRotateSpeed_Crawl = _RotateSpeedSwetcher[6];
+	HandlerRotateSpeed_Crouch = _RotateSpeedSwetcher[5];
+	HandlerRotateSpeed_RelaxMove = _RotateSpeedSwetcher[4];
+	HandlerRotateSpeed_NormalMove = _RotateSpeedSwetcher[3];
+	HandlerRotateSpeed_Run = _RotateSpeedSwetcher[2];
+	HandlerRotateSpeed_Sprint = _RotateSpeedSwetcher[1];
+	HandlerRotateSpeed_Fly = _RotateSpeedSwetcher[0];
+}
 
-
-
+void UHumanAnimInst::SetRotateAnimSpeed(float _NewSpeed)
+{
+	RotateAnimSpeedSide = _NewSpeed;
+}
 
 
 void UHumanAnimInst::TopRotateAngle(float DeltaTime)
@@ -162,7 +179,6 @@ void UHumanAnimInst::TopRotateAngle(float DeltaTime)
 
 
 /*
-
 		//  *******************************************************************
 		//  ********************  Calculate rotate Angle  *********************
 		//FRotator RotateToTarget = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target_Unit->GetActorLocation());

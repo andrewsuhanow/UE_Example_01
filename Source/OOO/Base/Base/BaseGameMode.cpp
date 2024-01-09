@@ -10,6 +10,7 @@
 
 #include "../Unit/Base/Unit.h"
 #include "../Controller/UnitAI.h"
+#include "../Controller/Fraction/FractionController.h"
 
 //----------------
 
@@ -194,6 +195,20 @@ void ABaseGameMode::SceneUnitsInit()
 		AUnit* unit = Cast<AUnit>(UnitsIt[i]);
 		if (unit)
 		{
+			if (unit->Fraction >= FractionController.Num())
+			{
+				// @@@@@@@  Create New Fraction
+				// @@@@@@@  Create New Fraction
+				// @@@@@@@  Create New Fraction
+			}
+			for(int32 f = 0; i < FractionController.Num(); ++f)
+				if (FractionController[f]->FractionIndex == unit->Fraction)
+				{
+					FractionController[f]->RegisterUnit(unit);
+					break;
+				}
+
+
 			unit->StartGame(true);
 
 			// ** XXXXXXXXXXXXXXX
@@ -220,7 +235,9 @@ UAnimMontage* ABaseGameMode::GetGameAnimation(EUnitGameType _UnitGameType,
 		FAnimateGroup* animGroup = unitGroup->WeaponGroupAnimation.Find(_WeaponType);
 		if (animGroup)
 		{
-			return *animGroup->Animation.Find(_AnimationKey);
+			auto animMontag = animGroup->Animation.Find(_AnimationKey);
+			if (animMontag)
+				return *animMontag;
 		}
 	}
 	return nullptr;
@@ -253,8 +270,10 @@ void ABaseGameMode::InitAnimations()
 	UAnimMontage* montage_attack3 = nullptr;
 	UAnimMontage* montage_attack4 = nullptr;
 	UAnimMontage* montage_attack5 = nullptr;
-	//---------UAnimMontage* montage_block = nullptr;
+	UAnimMontage* montage_failedAttackParrired = nullptr;
+	UAnimMontage* montage_block = nullptr;
 	UAnimMontage* montage_parrir = nullptr;
+	UAnimMontage* montage_dodge_back = nullptr;
 	UAnimMontage* montage_attack_1_novice = nullptr;
 	UAnimMontage* montage_attack_2_novicer = nullptr;
 	UAnimMontage* montage_attack2_altern = nullptr;
@@ -266,20 +285,25 @@ void ABaseGameMode::InitAnimations()
 	UAnimMontage* prepare_to_cast = nullptr;
 
 	
-
 	// **      7777777777777777
 
 	montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Shared_Mutual/Cast___LaftHand___AO/M_Ability_E.M_Ability_E"));
+	montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Parir/M_Parrir____Longs_Block_p_L___Faster.M_Parrir____Longs_Block_p_L___Faster"));
+	montage_failedAttackParrired = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Hit/FailedAttackParir.FailedAttackParir"));
+	montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("AnimMontage'/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Block/AsCatana/Long_BlockLoop.Long_BlockLoop"));
+	montage_dodge_back = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Dodge/Longs_DodgeBack.Longs_DodgeBack"));
 	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
-	//if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
-	//if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
-	//if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
 	//if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
 	//if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
 	//if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
 	//if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
-	//-------if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
-	//if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	if (montage_dodge_back)	animElement.Animation.Add(EAnimationKey::dodge_bwd, montage_dodge_back);
+	if (montage_failedAttackParrired)	animElement.Animation.Add(EAnimationKey::failed_attack_parrired, montage_failedAttackParrired);
 	//if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
 	//if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
 	//if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
@@ -292,10 +316,17 @@ void ABaseGameMode::InitAnimations()
 	weaponElement.WeaponGroupAnimation.Add(EWeaponType::Locomotion, animElement);
 	animElement.Animation.Reset();
 
+
+
+	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/ReadyOnOff/M_Idle2Fists.M_Idle2Fists"));
+	montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/ReadyOnOff/M_Fists2Idle.M_Fists2Idle"));
+	montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/Attack/M_Fists_InPlace_Heavy1.M_Fists_InPlace_Heavy1"));
+	montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Parir/M_Parrir____Longs_Block_p_L___Faster.M_Parrir____Longs_Block_p_L___Faster"));
 	//animElement.Animation.Add(EAnimationKey::use, frffff);
-	//animElement.Animation.Add(EAnimationKey::equip, frffff);
-	//animElement.Animation.Add(EAnimationKey::unequip, frffff);
-	//animElement.Animation.Add(EAnimationKey::attack1, frffff);
+	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
+	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
+	if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	if (montage_parrir)animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
 	//animElement.Animation.Add(EAnimationKey::attack2, frffff);
 	//animElement.Animation.Add(EAnimationKey::attack3, frffff);
 	//animElement.Animation.Add(EAnimationKey::attack4, frffff);
@@ -311,8 +342,8 @@ void ABaseGameMode::InitAnimations()
 	montage_attack3 = montage_attack4 = montage_attack5 = montage_parrir =
 	montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
 
-	//weaponElement.WeaponGroupAnimation.Add(EWeaponType::HandFight, animElement);
-	//animElement.Animation.Reset();
+	weaponElement.WeaponGroupAnimation.Add(EWeaponType::HandFight, animElement);
+	animElement.Animation.Reset();
 
 	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
 	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Weapon_OnOff__Alternate/M_LSw_WeaponOn.M_LSw_WeaponOn"));
@@ -322,11 +353,14 @@ void ABaseGameMode::InitAnimations()
 	montage_attack3 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Attack_3_b__Longs_Attack_L.M_LSw_Attack_3_b__Longs_Attack_L"));
 	montage_attack4 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_2/M_LSw_Attack_4_c__Longs_Attack_D.M_LSw_Attack_4_c__Longs_Attack_D"));
 	montage_attack5 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Sting_Attack_A_b__CC.M_LSw_Sting_Attack_A_b__CC"));
-	//------montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
+	montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("AnimMontage'/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Block/AsCatana/Long_BlockLoop.Long_BlockLoop'"));
+	montage_dodge_back = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Dodge/Longs_DodgeBack.Longs_DodgeBack"));
 	//montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
 	montage_attack_1_novice = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_0/M_LSw_Attack_1_a__Longs_Attack_RD2.M_LSw_Attack_1_a__Longs_Attack_RD2"));
 	montage_attack_2_novicer = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_0/M_LSw_Attack_2_a__Sword_Attack_Sp_U.M_LSw_Attack_2_a__Sword_Attack_Sp_U"));
 	montage_attack2_altern = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Attack_Range_1/M_LSw_Attack_2a_b__Longs_Attack_L__After-15.M_LSw_Attack_2a_b__Longs_Attack_L__After-15"));
+	montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Parir/M_Parrir____Longs_Block_p_L___Faster.M_Parrir____Longs_Block_p_L___Faster"));
+	montage_failedAttackParrired = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Hit/FailedAttackParir.FailedAttackParir"));
 	//montage_attack3_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
 	//montage_attack4_altern = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXXXXX"));
 	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
@@ -337,13 +371,16 @@ void ABaseGameMode::InitAnimations()
 	if (montage_attack3)	animElement.Animation.Add(EAnimationKey::attack3, montage_attack3);
 	if (montage_attack4)	animElement.Animation.Add(EAnimationKey::attack4, montage_attack4);
 	if (montage_attack5)	animElement.Animation.Add(EAnimationKey::attack5, montage_attack5);
-	//---if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
+	if (montage_failedAttackParrired)	animElement.Animation.Add(EAnimationKey::failed_attack_parrired, montage_failedAttackParrired);
+	if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
 	if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
+	if (montage_dodge_back)	animElement.Animation.Add(EAnimationKey::dodge_bwd, montage_dodge_back);
 	if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
 	if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
 	if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
 	if (montage_attack3_altern)	animElement.Animation.Add(EAnimationKey::attack3_altern, montage_attack3_altern);
 	if (montage_attack4_altern)	animElement.Animation.Add(EAnimationKey::attack4_altern, montage_attack4_altern);
+
 	montage_use = montage_equip = montage_unequip = montage_attack1 = montage_attack2 = 
 	montage_attack3 = montage_attack4 = montage_attack5 = montage_parrir =
 	montage_attack_1_novice = montage_attack_2_novicer = montage_attack2_altern = montage_attack3_altern = montage_attack4_altern = nullptr;
@@ -512,6 +549,35 @@ void ABaseGameMode::InitAnimations()
 
 
 
+// ****************************************************************************************************	
+// *****************************************    Game_Command    ***************************************
+
+
+bool ABaseGameMode::SpawnUnit(TSubclassOf<AUnit> _UnitType, int32 _Fraction) // @@@@@@@@@@@  TSubclassOf<XXXXXX> 
+{
+	if (!_UnitType)
+		return false;
+	if (_Fraction < 0)
+		return false;
+
+	AUnit* newUnit = nullptr;
+	//++++++++++++++ newUnit = SpawnActor<AUnit>(_UnitType)
+
+	if (_Fraction < FractionController.Num())
+	{
+		newUnit->SetFraction(_Fraction);
+		FractionController[_Fraction]->RegisterUnit(newUnit);
+		return true;
+	}
+	else
+	{
+		// @@@@@@@  Create New Fraction
+		// @@@@@@@  Create New Fraction
+		// @@@@@@@  Create New Fraction
+	}
+
+	return false;
+}
 
 
 

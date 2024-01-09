@@ -1,6 +1,6 @@
 
 
-//#include "../../Unit/Enum/UnitPose.h"
+// #include "Base/Unit/Enum/UnitPose.h"
 
 #pragma once
 
@@ -8,13 +8,17 @@
 UENUM(BlueprintType, Blueprintable)
 enum class EUnitPose : uint8
 {
-	Crawl			UMETA(DisplayName = "Crawl"),
+	none = 0			UMETA(DisplayName = "none"),
+	Crawl,
 	Crouch,
-	StandRelax,		// ** slow walk
-	Stand,			// ** walk
+	RelaxMove = 3,
+	NormalMove,
 	Run,
 	Sprint,
 	Fly,
-	//Error,			// ** pose is ebsent
 	MAX
 };
+
+
+
+

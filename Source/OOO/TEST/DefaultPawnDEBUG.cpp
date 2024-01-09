@@ -81,7 +81,7 @@ void AAAADefaultPawnDEBUG::SelectUnit_Performance(FName _SelectUnitName)
 } 
 
 //---------------------------------------------------------
-
+/*
 void AAAADefaultPawnDEBUG::MoveToPoint_1__________SET()
 {
 	MoveToPoint_Performance(Point_1_MoveTo, Point_1_IsRotateTo, false);
@@ -128,7 +128,7 @@ void AAAADefaultPawnDEBUG::MoveToPoint_Performance(FName _Point_MoveTo, bool _bP
 		}
 	}
 }
-
+*
 
 //---------------------------------------------------------
 
@@ -176,7 +176,7 @@ void AAAADefaultPawnDEBUG::RotateToPoint_Performance(FName _Point_RotateTo, bool
 		}
 	}
 }
-
+*/
 
 
 
@@ -473,7 +473,8 @@ void AAAADefaultPawnDEBUG::AddItemToEquipPanel()
 	
 	if (SelectTestUnit && AddItemIndex >= 0 && AddItemIndex < ItemsToAdd.Num())
 	{
-		SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[AddItemIndex].Get());
+		//---SelectTestUnit->EquipWeaponByItemDT(ItemsToAddRes[AddItemIndex].Get());
+		SelectTestUnit->EquipAmunitionByItemDT(ItemsToAddRes[AddItemIndex].Get());
 		//---OpenEquipPanel();
 	}
 	

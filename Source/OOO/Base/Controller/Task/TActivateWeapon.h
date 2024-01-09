@@ -17,10 +17,9 @@ public:
 	UTActivateWeapon();
 
 
-	// ** TaskData.Param1 - is Task stage
-	// ** 0 - start animate
-	// ** 1 - AnimNotify (Take or Push or Change weapon)
+public:
 
+	UPROPERTY()	int32 NewWpnIndexForChange = -1;
 
 public:
 
@@ -32,12 +31,27 @@ public:
 
 	//virtual void TaskPerformance(class AUnitAI* _OwnerAI) override;
 
+	virtual void OnAnimationNotify(class AUnitAI* _OwnerAI, FString _NotifyName) override;
+
 	virtual void TaskComplit(class AUnitAI* _OwnerAI) override;
 
 	virtual void BreakTask(class AUnitAI* _ThisAI) override;
 
-	//UPROPERTY()			FTimerHandle TH_Move;
-	//UFUNCTION()			void MoveTick();
+	virtual bool IdentifyTask(class AUnitAI* _ThisAI) override;
+
+
+
+
+	// -----------------------------   Static   -----------------------------
+
+
+public:
+
+	UFUNCTION()
+		static void SetActivateWeaponTaskData_ChangeWpn(FTaskData& _TaskData, AUnit* _SelfUnit,  int32 _NewWeaponIndex = -1);
+
+
+
 };
 
 

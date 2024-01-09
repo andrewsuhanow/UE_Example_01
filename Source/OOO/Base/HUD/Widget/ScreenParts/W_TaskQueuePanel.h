@@ -51,9 +51,12 @@ public:
 
 public:
 
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		USizeBox* TaskQueueSizeBox;					// ** Border size					
-	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		UHorizontalBox* TaskQueueHorizontalBox;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), Category = "OOO")		USizeBox* TaskQueueSizeBox;					// ** Border size					
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), Category = "OOO")		UHorizontalBox* TaskQueueHorizontalBox;
 	
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), Category = "OOO")
+		class UW_Slot* CurrTaskSlotObj;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		TArray<class UW_Slot*> SlotObj;
 

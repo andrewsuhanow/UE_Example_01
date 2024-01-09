@@ -60,6 +60,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 FastPanelSlotNum = 10;			// ** visible on screen
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 WeaponAttacksPanelSlotNum = 10;	// ** visible on screen
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float TaskQueueSlotSize = 45.f;		// ** visible on screen
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 TaskQueueSlotsNum = 10;		// ** visible on screen
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float PerkPanelSlotSize = 128.f; 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float PerkPanelVerticalSize = 640.f; 
 
@@ -93,6 +96,24 @@ public:
 
 
 
+
+// ****************************************************************************************************	
+// *****************************************    Game_Command    ***************************************
+
+public:
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Game_Command")
+		bool SpawnUnit(TSubclassOf<class AUnit> _UnitType, int32 _Fraction = 0);						 // @@@@@@@@@@@  TSubclassOf<XXXXXX>
+
+
+
+// ****************************************************************************************************	
+// *******************************************    Fraction    *****************************************
+
+public:
+
+	TArray<class AFractionController*> FractionController;
+
 // ****************************************************************************************************	
 // *******************************************    Fraction    *****************************************
 
@@ -118,6 +139,8 @@ public:
 
 	UFUNCTION(Blueprintcallable, Category = "OOO_Ability")
 		UDataTable* GetGameAbilityArchive();
+
+
 // ****************************************************************************************************	
 // ******************************************     Game_Time    ****************************************
 

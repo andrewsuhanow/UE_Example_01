@@ -68,13 +68,13 @@ void UW_WeaponPanel::ActiveWeaponButtonCall()
 		// ** Unit->ActivateWeaponTask;
 
 		ETaskType taskType = ETaskType::ActivateWeapon;		
-		ETaskInstigator taskInstigator = ETaskInstigator::Dominant;
+		ETaskCauser taskCauser = ETaskCauser::CriticalTask;
 		ETaskPriority taskPriority = ETaskPriority::Normal;
 
 		Unit->SetUnitTask(false, // ** bAddMoreOneTask  NO_MATTAER
 			taskType,
 			FTaskData(),	// ** NO_MATTAER
-			taskInstigator,
+			taskCauser,
 			taskPriority);
 	}
 }
@@ -205,7 +205,7 @@ void UW_WeaponPanel::UpdateWeaponPanel(AUnit* _Unit, ABaseGameMode* _GameMode,
 
 
 		// ** Set image on "Activate-Weapon-Button"
-		if (_WeaponSlotsIndex[i] == _Unit->GetWeaponSlotSelected())
+		if (_WeaponSlotsIndex[i] == _Unit->GetSelectedWeaponSlotIndex())
 		{
 			ActivateWeaponImg->SetBrushFromTexture(_WeaponSlotsTexture[i], false);
 		}

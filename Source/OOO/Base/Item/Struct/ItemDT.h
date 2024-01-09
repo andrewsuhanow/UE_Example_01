@@ -55,18 +55,18 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	int32 CountMax = 1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float HealthMax = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float HealthMax = 0.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float Health = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float Health = 0.f;
 
 	// ** if UWeapon or UArmour: this value multiply that damage or defence 
 	// ** if UseItem: multiply effect Power
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float ValueKoef;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float Cost = 10; 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float Cost = 0.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float Waight = 2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")	float Waight = 0.f;
 
 
 
@@ -97,9 +97,9 @@ struct FItemDT : public FTableRowBase //  FTableRowBase - make avaulable in Data
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		TSubclassOf<class UWeaponDT> WeaponDT;
-																				bool IsItemWeapon(); 		
-//++++	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		TSubclassOf<class UItem_ArmorClass> ArmorClass;		
-//++++																				bool IsItemArmor();
+																				bool IsItemWeapon() const; 		
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		TSubclassOf<class UArmorDT> ArmorDT;
+																				bool IsItemArmor() const;
 
 //++++	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Set_Param_OOO")		TSubclassOf<class UItem_UseableClass> UseableClass;
 //+++

@@ -30,8 +30,10 @@ enum class EAnimationKey : uint8
 	prepare_to_cast,
 
 
-	//-----block,
+	block,
+
 	parrir,
+	failed_attack_parrired,
 
 	dodge_lft,
 	dodge_rt,

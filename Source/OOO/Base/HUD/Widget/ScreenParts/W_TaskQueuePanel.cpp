@@ -34,7 +34,7 @@ void UW_TaskQueuePanel::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-
+	CurrTaskSlotObj->SetItemCount(0, 0, 0);
 
 	TaskQueueHorizontalBox->ClearChildren();
 	SlotObj.Reset();
@@ -63,52 +63,83 @@ void UW_TaskQueuePanel::ShowTaskQueuePanel(AUnit* _Unit,
 	SetVisibility(ESlateVisibility::Visible);  				// ** Visible,  Hidden,  Collapsed
 }
 
+
 void UW_TaskQueuePanel::HideTaskQueuePanel()
 {
 	SetVisibility(ESlateVisibility::Collapsed);  				// ** Visible,  Hidden,  Collapsed
 }
+
 
 void UW_TaskQueuePanel::UpdateTaskQueuePanel(class AUnit* _Unit,
 	UTexture2D*& _CurrTaskIcon,
 	TArray<UTexture2D*>& _TasksIcon,
 	TArray<int32>& _TasksIndex)
 {
-/*
+
+	SetVisibility(ESlateVisibility::Visible);  				// ** Visible,  Hidden,  Collapsed
+
 	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
 
-	float slotSize = _GameMode->TaskQueueSlotSize;
-	int32 TaskQueueSlotNum = _GameMode->TaskQueueSlotNum;
-	int32 SlotObjNum = SlotObj.Num();
-	UTexture2D* SlotBackTexture = _TaskQueueUnit->MainInvertorySlotTexture;
-	if (!SlotBackTexture)
-		SlotBackTexture = _GameMode->MainInvertorySlotTexture;
+	float slotSize			= gameMode->TaskQueueSlotSize;
+	int32 taskQueueSlotsNum = gameMode->TaskQueueSlotsNum;
+	int32 slotObjNum		= SlotObj.Num();
+	int32 currExistingTasksNum	= _TasksIcon.Num();
+	UTexture2D* slotBackTexture = _Unit->MainInvertorySlotTexture;
+	if (!slotBackTexture)
+		slotBackTexture		= gameMode->MainInvertorySlotTexture;
 
 	// ** Add new slot (if need)
-	while(SlotObjNum < TaskQueueSlotNum)
+	while(slotObjNum < taskQueueSlotsNum)
 	{
-		AddCellToTaskQueue(_GameMode, slotSize, SlotBackTexture);
-		++SlotObjNum;
+		AddCellToTaskQueue(gameMode, slotSize, slotBackTexture);
+		++slotObjNum;
 	}
 
-	
 
-	SlotObj[i]->SelectUnit = _FastPanelUnit;
+	// ** Hidde all
+	for (int32 i = 0; i < slotObjNum; ++i)
+	{
+		CurrTaskSlotObj->SetVisibility(ESlateVisibility::Collapsed); /// Collapsed, Visible, Hidden	
+		SlotObj[i]->SetVisibility(ESlateVisibility::Collapsed); 
+	}
 
-	SlotObj[i]->SetSlotParam(indexInContainer,
-		Image, SlotBackTexture,
-		slotSize, slotSize, 
-		slotSize, slotSize, 
-		0, 0,					// ** dont Translation;
-		ESlotType::task_queue_panel);	// ** Its Fast-Slot
 
-*/
+
+	// ** Draw Task-Slots
+
+	// ** curr Task
+	if (_CurrTaskIcon)
+	{
+		CurrTaskSlotObj->SetVisibility(ESlateVisibility::Visible);
+
+		CurrTaskSlotObj->SetSlotParam(-10,		// ** link to Currunt unit Task
+			_CurrTaskIcon, slotBackTexture,
+			slotSize, slotSize,
+			slotSize, slotSize,
+			0, 0,							// ** Translation;
+			ESlotType::task_queue_panel);
+	}
+
+	// ** curr Tasks Queue
+	for (int32 i = 0; i < currExistingTasksNum; ++i)
+	{
+		SlotObj[i]->SetVisibility(ESlateVisibility::Visible);
+
+		SlotObj[i]->SetSlotParam(_TasksIndex[i],// ** link to real unit-Task-Index
+			_TasksIcon[i], slotBackTexture,
+			slotSize, slotSize,
+			slotSize, slotSize,
+			0, 0,							// ** Translation;
+			ESlotType::task_queue_panel);
+	}
 }
 
 
 
 
 
-void UW_TaskQueuePanel::AddCellToTaskQueue(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture)
+void UW_TaskQueuePanel::AddCellToTaskQueue(ABaseGameMode* _GameMode, 
+	float _SlotSize, UTexture2D* SlotBackTexture)
 {
 
 	UW_Slot* NewSlot = WidgetTree->ConstructWidget<UW_Slot>(_GameMode->W_Slot_Class);
@@ -122,7 +153,9 @@ void UW_TaskQueuePanel::AddCellToTaskQueue(ABaseGameMode* _GameMode, float _Slot
 			0, 0,						// ** dont Translation;		
 			ESlotType::task_queue_panel);
 
-		NewSlot->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
+		NewSlot->SetItemCount(0, 0, 0);
+
+		NewSlot->SetVisibility(ESlateVisibility::Hidden); /// Collapsed, Visible, Hidden	
 
 		TaskQueueHorizontalBox->AddChildToHorizontalBox(NewSlot);
 		SlotObj.Add(NewSlot);

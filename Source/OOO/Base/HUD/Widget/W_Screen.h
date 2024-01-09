@@ -52,6 +52,7 @@ public:
 
 	UFUNCTION()		void ShowHealthPanel(class AUnit* _LootUnit);
 
+
 	UFUNCTION()		void ShowWpnChangePanel(class AUnit* _Unit,
 											int32& _WeaponSlotIndex,
 											ESlotType& _WeaponSlotType,
@@ -62,7 +63,14 @@ public:
 											TArray<ESlotType>& _WeaponSlotsType,
 											TArray<UTexture2D*>& _WeaponSlotsTexture);
 	UFUNCTION()		void CloseWpnChangePanel();
-	UFUNCTION()		void ShowWpnAttackPanel(class AUnit* _LootUnit);
+
+
+	UFUNCTION()		void ShowAttacksWpnPanel(class AUnit* _Unit, TArray<UTexture2D*>& _AttackIcon,
+											int32& _SelectIndex, int32& _PermanentIndex);
+	UFUNCTION()		void HideAttacksWpnPanel();
+	UFUNCTION()		void UpdateAttacksWpnPanel(class AUnit* _Unit, TArray<UTexture2D*>& _AttackIcon,
+											int32& _SelectIndex, int32& _PermanentIndex);
+
 
 	UFUNCTION()		void ShowTaskQueuePanel(class AUnit* _Unit,
 											UTexture2D*& _CurrTaskIcon,
@@ -98,7 +106,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_WeaponPanel* WeaponPanelView;
 
-	//UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_AAAAAWeaponAAAATTTAAACCCKKKPanel* WeaponAttackPanelView;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_WeaponAttacksPanel* AttacksWpnPanelView;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_TaskQueuePanel* TaskQueuePanelView;
 
