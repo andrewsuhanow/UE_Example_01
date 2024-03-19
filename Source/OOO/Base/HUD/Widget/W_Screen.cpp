@@ -51,7 +51,7 @@
 #include "ScreenParts/W_EquipPanel.h"
 #include "ScreenParts/W_PerkPanel.h"
 #include "ScreenParts/W_FastPanel.h"
-#include "ScreenParts/W_HealthPanel.h"
+#include "ScreenParts/W_ParameterPanel.h"
 #include "ScreenParts/W_WeaponPanel.h"
 #include "ScreenParts/W_WeaponAttacksPanel.h"
 #include "ScreenParts/W_TaskQueuePanel.h"
@@ -60,6 +60,7 @@
 #include "ScreenParts/W_GroupPanel.h"
 #include "ScreenParts/W_Map.h"
 #include "ScreenParts/W_MenuPanel.h"
+#include "ScreenParts/W_UnitEffectPanel.h"
 
 
 void UW_Screen::NativePreConstruct()
@@ -139,10 +140,27 @@ void UW_Screen::ShowFastPanel(AUnit* _FastPanelUnit, ABaseHUD* _HUD)
 	_HUD->IsFastPanelShown = true;
 }
 
-
-void UW_Screen::ShowPerkPanel(AUnit* _Unit, ABaseGameMode* _GameMode, ABaseHUD* _HUD)
+void UW_Screen::HideFastPanel(ABaseHUD* _HUD)
 {
-	PerkPanelView->ShowPerkPanel(_Unit, _GameMode);
+	FastPanelView->HideFastPanel();
+	_HUD->IsFastPanelShown = false;
+}
+/*
+void UW_Screen::SelectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent)
+{
+	FastPanelView->SelectFastPanelSlot(_SlotIndex, _IsPermanent);
+}
+
+void UW_Screen::DeselectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent)
+{
+	FastPanelView->DeselectFastPanelSlot(_SlotIndex, _IsPermanent);
+}
+*/
+
+
+void UW_Screen::ShowPerkPanel(AUnit* _Unit, ABaseHUD* _HUD)
+{
+	PerkPanelView->ShowPerkPanel(_Unit);
 }
 
 
@@ -255,9 +273,49 @@ void UW_Screen::ShowMenuPanel(AUnit* _Unit)
 
 
 
+void UW_Screen::ShowUnitEffectPanel(AUnit* _Unit)
+{
+	UnitEffectPanelView->ShowEffectPanel(_Unit);
+}
+void UW_Screen::HideUnitEffectPanel()
+{
+	UnitEffectPanelView->HideEffectPanel();
+}
+void UW_Screen::UpdateUnitEffectPanel(AUnit* _Unit)
+{
+	UnitEffectPanelView->UpdateEffectPanel(_Unit);
+}
 
 
 
+
+void UW_Screen::ShowTargetEffectPanel(AUnit* _Unit)
+{
+	TargetEffectPanelView->ShowEffectPanel(_Unit);
+}
+void UW_Screen::HideTargetEffectPanel()
+{
+	TargetEffectPanelView->HideEffectPanel();
+}
+void UW_Screen::UpdateTargetEffectPanel(AUnit* _Unit)
+{
+	TargetEffectPanelView->UpdateEffectPanel(_Unit);
+}
+
+
+
+void UW_Screen::ShowParameterPanel(AUnit* _Unit)
+{
+	ParameterPanelView->ShowParameterPanel(_Unit);
+}
+void UW_Screen::HideParameterPanel()
+{
+	ParameterPanelView->HideParameterPanel();
+}
+void UW_Screen::UpdateParameterPanel(AUnit* _Unit)
+{
+	ParameterPanelView->UpdateParameterPanel(_Unit);
+}
 
 
 /*

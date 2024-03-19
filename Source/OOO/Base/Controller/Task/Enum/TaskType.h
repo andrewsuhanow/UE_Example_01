@@ -35,6 +35,7 @@ enum class ETaskType : uint8
 	ActivateWeapon,
 	ChangeWeapon,			// ** 7777777777777777777777
 
+	UseAbility,
 	WeaponAttack,
 	GetHit,
 	Parrir,

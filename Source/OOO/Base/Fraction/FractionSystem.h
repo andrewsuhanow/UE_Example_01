@@ -52,3 +52,27 @@ public:
 
 };
  
+
+
+/*
+
+//*****************************************************************************
+//*****************************     GameMod    ********************************
+//*****************************************************************************
+
+	// ** (Set in Editor)  FFractionUnit(Unit_A, Unit_B, AttitudeStatus)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Set_Fraction")
+		TArray<FFractionUnit> FractionsAttitude;
+
+	// ** Fraction component
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO_Fraction")
+		UFractionSystem* Fraction;
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Fraction")
+		EUnitAttitudeStatus GetFractionAttitude(uint8 A, uint8 B);
+		//{
+		//	return Fraction->GetAttitude(FractionsAttitude, A, B);
+		//}
+
+
+*/

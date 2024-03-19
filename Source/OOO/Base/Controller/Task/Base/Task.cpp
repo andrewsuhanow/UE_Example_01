@@ -24,8 +24,13 @@ void UTask::SetDataGoalLocation(FTaskData& _TaskData, FVector _GoalLocation)
 
 
 
+void UTask::OnFinishAnimation(AUnitAI* _OwnerAI, UAnimMontage* FinishedAnimMontage, bool _bInterrupted)
+{
+	_OwnerAI->UpdateLogic();
+}
 
-void UTask::TaskComplit(class AUnitAI* _OwnerAI)
+
+void UTask::TaskComplit(AUnitAI* _OwnerAI)
 {
 	int32 buferTaskNum = _OwnerAI->TasksBuffer.Num();
 
@@ -42,7 +47,7 @@ void UTask::TaskComplit(class AUnitAI* _OwnerAI)
 		GetWorld()->GetTimerManager().SetTimer(_OwnerAI->TH_UpdateLogic, _OwnerAI, &AUnitAI::UpdateLogic, GetWorld()->GetDeltaSeconds(), false);
 	}
 
-	// ** if it's User-Queue-Task has just done (GeneralComand)
+	// ** if it's User-Queue-Task has just done (Player Comand)
 	else
 	if (buferTaskNum == 1 && 
 		_OwnerAI->TasksBuffer.Last().TaskCauser == ETaskCauser::FractionTask)
@@ -78,8 +83,25 @@ void UTask::TaskComplit(class AUnitAI* _OwnerAI)
 
 
 
-void UTask::BreakTask(class AUnitAI* _OwnerAI)
+void UTask::BreakTask(AUnitAI* _OwnerAI)
 {
+
+	// ** if player Task => delete from Queue
+	if (_OwnerAI->TasksBuffer.Last().TaskCauser == ETaskCauser::FractionTask &&
+		_OwnerAI->FractionQueueTaskDT.Num() > 0)
+	{
+		_OwnerAI->FractionQueueTaskDT.RemoveAt(0);
+	}
+
+	// ** Reset Task-Buffer
+	_OwnerAI->TasksBuffer.Reset();
+	_OwnerAI->CurrTaskRef = nullptr;
+	GetWorld()->GetTimerManager().SetTimer(_OwnerAI->TH_UpdateLogic, _OwnerAI, &AUnitAI::UpdateLogic, GetWorld()->GetDeltaSeconds(), false);
+
+
+
+/*
+
 	int32 buferTaskNum = _OwnerAI->TasksBuffer.Num();
 
 	// ** finish child-Task (if has) 
@@ -98,7 +120,7 @@ void UTask::BreakTask(class AUnitAI* _OwnerAI)
 	}
 	
 
-	// ** if it's User-Queue-Task has just done (GeneralComand)
+	// ** if it's User-Queue-Task has just beak (Player Comand)
 	else
 	if (buferTaskNum == 1 && 
 		_OwnerAI->TasksBuffer.Last().TaskCauser == ETaskCauser::FractionTask)
@@ -128,6 +150,7 @@ void UTask::BreakTask(class AUnitAI* _OwnerAI)
 
 		GetWorld()->GetTimerManager().SetTimer(_OwnerAI->TH_UpdateLogic, _OwnerAI, &AUnitAI::UpdateLogic, GetWorld()->GetDeltaSeconds(), false);
 	}
+*/
 }
 
 

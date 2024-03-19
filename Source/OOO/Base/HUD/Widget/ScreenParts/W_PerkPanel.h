@@ -31,10 +31,10 @@ public:
 public:
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void ShowPerkPanel(class AUnit* _Unit, ABaseGameMode* _GameMode);
+		void ShowPerkPanel(class AUnit* _Unit);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void UpdatePerkPanel(class AUnit* _Unit, class ABaseGameMode* _GameMode);
+		void UpdatePerkPanel(class AUnit* _Unit);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void AddCellToPerkPanel(ABaseGameMode* _GameMode, float _SlotSize, UTexture2D* SlotBackTexture);

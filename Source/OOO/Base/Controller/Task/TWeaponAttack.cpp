@@ -14,6 +14,8 @@
 #include "../../Base/Enum/PossesingGameState.h"
 #include "../../Amunition/Enum/UseDistanceType.h"
 
+#include "../../UnitState/Enum/UnitParam.h"
+
 #include "TMoveTo.h"
 #include "TWait.h"
 
@@ -350,7 +352,7 @@ void UTWeaponAttack::OnAnimationNotify(AUnitAI* _OwnerAI, FString _NotifyName)
 		// ** Get/Check next attck in current series
 		int32 currAttackIndex = CheckAndGetNextAttackIndex();
 
-		if (currAttackIndex == -1 || CurrTargetUnit->GetCurrentHP() < CurrTargetUnit->GetCriticalHP())
+		if (currAttackIndex == -1 || CurrTargetUnit->GetParam(EUnitParam::HP) < CurrTargetUnit->GetParam(EUnitParam::CritHP))
 		{
 			ResetAttackData(_OwnerAI);
 			IsUsingAnimate = false;

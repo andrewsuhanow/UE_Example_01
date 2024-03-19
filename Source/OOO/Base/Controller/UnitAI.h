@@ -18,6 +18,7 @@
 #include "../Amunition/Enum/WeaponType.h"
 #include "../Animation/Enum/AnimationKey.h"
 
+#include "../Inventory/Enum/SlotType.h"
 
 #include "../Item/Struct/ItemDT.h"
 
@@ -65,44 +66,57 @@ public:
 	// ** Daily-behavior Default Queue (init from Unit::DailyBhvrQueueClass)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")		
 		TArray<FDailyBhvrData> DailyBhvrTaskDT;
-	UPROPERTY()		int32 DailyBhvrTaskIndex = -1;			// ** Index in TaskObj
+	UPROPERTY()		int32 DailyBhvrTaskIndex = -1;			// ** Index in TaskObj "ailyBhvrTask"
 
+	//---*UPROPERTY()		int32 AbilityTaskIndex = -1;	// ** Index in TaskObj "AbilityTask"
+	UPROPERTY()		class UTUseAbility* AbilityTask;		// ** TaskObj "AbilityTask"
 
 	UPROPERTY()		TArray<FTaskData> FractionQueueTaskDT;	// ** Stored General	TaskDT-Array (Task queue for screen draw) 
-	//UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;		// ** Stored General	TaskDT-Array (Task queue for screen draw) 
+	//UPROPERTY()		TArray<FTaskData> StoreQueueTaskDT;	// ** Stored General	TaskDT-Array (Task queue for screen draw) 
 
 	UPROPERTY()		FTaskData FractionTaskDT;			// ** Stored General	TaskDT 
 	UPROPERTY()		FTaskData NpcTaskDT;				// ** Stored General	TaskDT 
 	UPROPERTY()		FTaskData CriticalTaskDT;			// ** Stored General	TaskDT 
 
-	//UPROPERTY()		FTaskData MainTaskDT;				// ** Using Parrent Task		
-	//UPROPERTY()		FTaskData PartTaskDT;				// ** Using Child Task
-
-	//UPROPERTY()		FTaskData CurrTaskDT;				// ** Current Task
-	UPROPERTY()		TArray<FTaskData> TasksBuffer;	//----CurrTaskDTBuffer;		// ** for sub-Task Queue
+	UPROPERTY()		TArray<FTaskData> TasksBuffer;		// ** for sub-Task Queue
 	UPROPERTY()		class UTask* CurrTaskRef;
+	
 
 	UPROPERTY(VisibleAnywhere, Category = "OOO")
-		TArray<UTask*> ActionTaskssObj;
+		TArray<UTask*> ActionTasksObj;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!")
 		TArray<TSubclassOf<UTask>> AvailableTaskType;
+	UPROPERTY()
+		int32 MoveTaskIndex = -1;		// ** -1 : (Unit dotn has it)
+		
+	
 
 
-	// ** DELEGATE_TO_HUD	(SET)
-			// ** Pose
-			// ** CurrAttack (selected)
-			// ** CurrWeapon
-			// ** CurrTask
-			// ** CurrLogicBehavior
-			// ** unitParam (health, mana)
-			// ** DailyBehavior	(Create DB panel)
-	// +++ EAI_BehaviorMovable
-	// +++ EAI_BehaviorRecaction
-
-
+		// **  ************************   Holding_pose  ************************
 public:
 
-	// **  ************************   Unit AI Paramter  ************************
+	//--777--UPROPERTY() bool IsActicatedAbilityPepaePose = false;
+//	UPROPERTY() 
+//--77--		ESlotType HoldingPoseInContainerType = ESlotType::none;
+//	UPROPERTY() 
+//--77--		int32 HoldingPoseInContainerIndex = -1;
+//---	UPROPERTY()
+//---		int32 HoldingPoseStep = 0;
+//---	UFUNCTION()
+//---		void SetHoldingPose(int32 _ContainerIndex, ESlotType _ContainerType);
+	UFUNCTION()
+		void SetPermanentAbilityHolding( class UAbilityDT* _AbilityRef);
+	UFUNCTION()
+		void SetInstantAbilityHolding(class UAbilityDT* _AbilityRef);
+	UFUNCTION()
+		void ForseUpdateHolding();
+	UFUNCTION()
+		bool IsHoldingPose();
+	UFUNCTION()
+		void ActivateHoldingPose();
+
+		// **  ************************   Unit AI Paramter  ************************
+public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_UnitAi_Parameter")
 		float DefenceZone = 500;
@@ -134,6 +148,7 @@ public:
 	*/		
 
 	UFUNCTION()		void OnFinishAnimation(UAnimMontage* FinishedAnimMontage, bool _bInterrupted);
+	//--UPROPERTY()		bool IsUpdateLogicAfterAnim = true;
 
 	// ** EVENT:    "CHange GameState"    (RealTime,  Pause,  TurnBase,)
 	UFUNCTION()		void OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState);
@@ -141,28 +156,42 @@ public:
 	UFUNCTION()		void OnAnimNotify(FString _NotifyName);
 
 
+
+
+	// **  ************************   Core_Action  ************************
 public:
 
-// **  ************************   Core_Action  ************************
 
 
 
+	// **  ************************   Global_Operation  ************************
 public:
 
-// **  ************************   Global_Operation  ************************
-
-
+	// ** Day time
 	UFUNCTION(Blueprintcallable, Category = "OOO_Gobal_Operation")
 		int32 GetGameHour();	
 	UFUNCTION(Blueprintcallable, Category = "OOO_Gobal_Operation")
 		void OnNewGameHour(int32 iHour);
 
+	// ** Possesing mode
 	UFUNCTION(Blueprintcallable, Category = "OOO_Gobal_Operation")
 		EPossesingGameState GetPossesingGameState();
+
+	// ** Turn-base mode
+	UFUNCTION(BlueprintCallable)
+		bool IsRealTimeMode() const;
+	UFUNCTION(BlueprintCallable)
+		bool IsTurnBaseMode() const;
+	UFUNCTION(BlueprintCallable)
+		bool IsPauseMode() const;
+
+
+	//---UFUNCTION(Blueprintcallable, Category = "OOO")
+	//---	void UpdateFastPanelHUD();
+
+
+	// **  ************************   Misc_Operation  ************************
 public:
-
-// **  ************************   Misc_Operation  ************************
-
 
 	UFUNCTION()		void SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskData,
 								ETaskCauser _TaskCauser = ETaskCauser::FractionTask,
@@ -174,9 +203,10 @@ public:
 
 
 
-public:
 
-// **  ************************   Self_Operation  ************************
+
+	// **  ************************   Self_Operation  ************************
+public:
 
 	UFUNCTION()		FVector GetCurrSelfLocation() const;
 	UFUNCTION()		FRotator GetCurrSelfRotation();
@@ -214,14 +244,37 @@ public:
 
 	UFUNCTION()		FTransform GetUnitSocketParam(FName _SocketName);
 
-public:
 
-// **  ************************   Target_Operation  ************************
+
+	// **  ************************   Target_Operation  ************************
+public:
 
 	UFUNCTION()		FVector GetCurrTargetLocation();
 	
 	UFUNCTION()		float GetDistanceToTarget(AActor* _TargetActor, bool _WithMoveDistCorrector = false) const;
 
 
+
+	
+
+		// **  ************************   Task_Operation  ************************
+public:
+
+	// ** ToveTask:  Nav-Path
+	UFUNCTION(Blueprintcallable, Category = "OOO")
+		bool GenerateNavPath(bool _IsDrawPath,
+			bool _UseSpecialPoint = false,
+			FVector _GoalPoint = FVector(0.f, 0.f, 0.f));
+
+	UFUNCTION(Blueprintcallable, Category = "OOO")
+		bool IsNavPathGenerate();
+	UFUNCTION(Blueprintcallable, Category = "OOO")
+		void HideNavPathMarkers();
+
+
+
+
+
+		// ** *****************   TEST_DEBUG  *****************
 
 };

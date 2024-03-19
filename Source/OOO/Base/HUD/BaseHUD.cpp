@@ -7,6 +7,7 @@
 
 #include "../Base/BaseGameMode.h"
 #include "../Base/BaseGameState.h"
+#include "../Base/Spectator.h"
 
 #include "../Inventory/InventoryComponent.h"
 
@@ -19,10 +20,12 @@
 
 
 
-void ABaseHUD::SetDefaultGameParam(ABaseGameMode* _GameMode, ABaseGameState* _GameState)
+void ABaseHUD::SetDefaultGameParam(ABaseGameMode* _GameMode, 
+	ABaseGameState* _GameState, ASpectator* _Spectator)
 {
 	BGameMode = _GameMode;
 	BGameState = _GameState;
+	Spectator = _Spectator;
 }
 
 
@@ -76,13 +79,32 @@ void ABaseHUD::ShowLootEquipPanel(AUnit* _Unit)
 	Screen->ShowLootEquipPanel(_Unit, this);
 	IsLootEquipPanelShown = true;
 }
+
+
 void ABaseHUD::ShowFastPanel(AUnit* _Unit)
 {
 	Screen->ShowFastPanel(_Unit, this);
 }
-void ABaseHUD::ShowPerkPanel(AUnit* _Unit, ABaseGameMode* _GameMode)
+
+void ABaseHUD::HideFastPanel()
 {
-	Screen->ShowPerkPanel(_Unit, _GameMode, this);
+	Screen->HideFastPanel(this);
+}
+/*
+void ABaseHUD::SelectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent)
+{
+	Screen->SelectFastPanelSlot(_SlotIndex, _IsPermanent);
+}
+
+void ABaseHUD::DeselectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent)
+{
+	Screen->DeselectFastPanelSlot(_SlotIndex, _IsPermanent);
+}
+*/
+
+void ABaseHUD::ShowPerkPanel(AUnit* _Unit)
+{
+	Screen->ShowPerkPanel(_Unit, this);
 	IsPerkPanelShown = true;
 }
 
@@ -196,6 +218,56 @@ void ABaseHUD::ShowMapPanel(AUnit* _Unit)
 void ABaseHUD::ShowMenuPanel(AUnit* _Unit)
 {
 	Screen->ShowMenuPanel(_Unit);
+}
+
+
+void ABaseHUD::ShowUnitEffectPanel(AUnit* _Unit)
+{
+	Screen->ShowUnitEffectPanel(_Unit);
+	IsUnitEffectPanelhowen = true;
+}
+void ABaseHUD::HideUnitEffectPanel()
+{
+	Screen->HideUnitEffectPanel();
+	IsUnitEffectPanelhowen = false;
+}
+void ABaseHUD::UpdateUnitEffectPanel(AUnit* _Unit)
+{
+	Screen->UpdateUnitEffectPanel(_Unit);
+}
+
+void ABaseHUD::ShowTargetEffectPanel(AUnit* _Unit)
+{
+	Screen->ShowTargetEffectPanel(_Unit);
+	IsTargetEffectPanelShowen = true;
+}
+void ABaseHUD::HideTargetEffectPanel()
+{
+	Screen->HideTargetEffectPanel();
+	IsTargetEffectPanelShowen = false;
+}
+void ABaseHUD::UpdateTargetEffectPanel(AUnit* _Unit)
+{
+	Screen->UpdateTargetEffectPanel(_Unit);
+}
+
+
+
+
+
+void ABaseHUD::ShowParameterPanel(AUnit* _Unit)
+{
+	Screen->ShowParameterPanel(_Unit);
+	IsParameterPanelShowen = true;
+}
+void ABaseHUD::HideParameterPanel()
+{
+	Screen->HideParameterPanel();
+	IsParameterPanelShowen = false;
+}
+void ABaseHUD::UpdateParameterPanel(AUnit* _Unit)
+{
+	Screen->UpdateParameterPanel(_Unit);
 }
 
 

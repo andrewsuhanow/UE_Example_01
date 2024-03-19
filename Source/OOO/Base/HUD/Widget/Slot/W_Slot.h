@@ -6,13 +6,16 @@
 
 #include "../../../Inventory/Enum/SlotType.h"
 
+#include "InputCoreTypes.h"	// ** EKey
+//#include "Engine/Source/Runtime/InputCore/Classes/InputCoreTypes.h"
+
 #include "W_Slot.generated.h"
 
 class UImage;
 class UTextBlock;
 class USizeBox;
 class UTextBlock;
-
+class UProgressBar;
 
 
 UCLASS()
@@ -42,46 +45,41 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
 		int32 IndexInContainer = -1;
 
-public:
-
-	// ** item image
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* ImgItem = nullptr;
-
-
-	// ** Background Image
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* BackgroungImage;
-
-
-	UPROPERTY(BlueprintReadOnly, meta = (BindWidget)) 
-		UTextBlock* TextItemCount;
-
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetItemCount(int32 RealCount, int32 MaxCount, float FontSize = 15.f);
-
-
-
-public:
-
 	// ** Slot Size   (Set in BP-Editor OR in Sctipt<init>)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		float SlotWidth = 64;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO")
 		float SlotHeight = 64;
-	UFUNCTION()
-		void SetSlotSize();
 
 public:
 
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		UProgressBar* DurationBar;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		USizeBox* SzBoxImages;
+	UPROPERTY(BlueprintReadOnly, meta = (BindWidget))
+		UTextBlock* TextItemCount;
 
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void SetSlotParam(int32 _IndexInContainer,
-			UTexture2D* _ItemImage, UTexture2D* _BackgroundImage,
-			float _SlotWidth = -1.f, float _SlotHeight = -1.f, 
-			float _ImageWidth = -1.f, float _ImageHeight = -1.f,
-			float _TranslationX = 0, float _TranslationY = 0,
-			ESlotType _PanelTypeFix = ESlotType::none);
+	// ** item image
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* ImgItem = nullptr;
+	// ** Background Image
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* BackgroungImage;
+	// ** SelectImage
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* PermanentSelectImg;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* MaintSelectImg;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
+		UImage* SelectorImage3;
+
+
+
+	
+
+
+
 
 public:
 
@@ -105,39 +103,68 @@ public:
 		int32 CheckPlaceUnder(const class UW_Slot* ItemSlotUnder, const class UW_DropSlot* ItemSlotDraging);
 	  
 
+
+
+
+
+	// **********************    Button Click    **********************
+public:
+
+	UFUNCTION()
+		void MsClickInstantRight();
+	UFUNCTION()
+		void MsClickInstantLeft();
+	UFUNCTION()
+		void MsClickInstantMiddle();
+	
+	
+	UFUNCTION()
+		void MsClickLongRight();
+	UFUNCTION()
+		void MsClickLongLeft();
+	UFUNCTION()
+		void MsClickLongMiddle();
+
+	
+
+	// ** Mouse long click
 public:
 
 	UPROPERTY()
-		float LMousClickDuration = 0;
+		float MousClickDurationMax = 0.5f;
 	UPROPERTY()
-		FTimerHandle TH_LMousClickDuration;
+		float CurrMousClickDuration = 0;
+	UPROPERTY()
+		FKey CurrClickedMouseKey;
+	UPROPERTY()
+		FTimerHandle TH_MousClickDuration;
 	UFUNCTION()
-		void LMousClickDurationLoop();
+		void MousClickDurationLoop();
 
 
 
+	// **********************     Button Set patram    **********************
+public:
 
-	
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetItemCount(int32 RealCount, int32 MaxCount, float FontSize = 15.f);
 
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetBarProgress(float _curr = 0.f, float _max = 1.f);
 
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		USizeBox* SzBox;
-	//--UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (BindWidget))
-	//---	UOverlay* ImagesOverlay;
-	UPROPERTY(EditAnywhere,BlueprintReadWrite, meta = (BindWidget))
-		USizeBox* SzBoxImages;
-	
-	// ** SelectImage
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* SelectorImage1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* SelectorImage2;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (BindWidget))
-		UImage* SelectorImage3;
-	//-----UFUNCTION(BlueprintCallable, Category = "OOO")
-	//-----	void SelectButton(int32 SelectingType, bool deselect = true);
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetProgressVisibility(bool _IsVisible);
 
 
-	
+	UFUNCTION()
+		void SetSlotSize();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetSlotParam(int32 _IndexInContainer,
+			UTexture2D* _ItemImage, UTexture2D* _BackgroundImage,
+			float _SlotWidth = -1.f, float _SlotHeight = -1.f,
+			float _ImageWidth = -1.f, float _ImageHeight = -1.f,
+			float _TranslationX = 0, float _TranslationY = 0,
+			ESlotType _PanelTypeFix = ESlotType::none);
+
 };

@@ -1,16 +1,19 @@
 
-//#include "Base/HUD/Widget/Slot/W_Slot.h"
+// #include "Base/HUD/Widget/Slot/W_Slot.h"
 #include "W_Slot.h"
 
 #include "../../../Unit/Base/Unit.h"
 
  #include "../../../HUD/BaseHUD.h"
 
+#include "../../../Ability/AbilityDT.h"
+
 #include "Blueprint/WidgetBlueprintLibrary.h"   // UWidgetBlueprintLibrary::DetectDragIfPressed()
 
 #include "Components/SizeBox.h"
 #include "Components/TextBlock.h" 
 #include "Components/Image.h"
+#include "Components/ProgressBar.h"
 //--777--#include "Components/SizeBoxSlot.h"
 
 //#include "Kismet/GameplayStatics.h"   //   GetAllActorsOfClass
@@ -23,10 +26,12 @@ void UW_Slot::NativePreConstruct()
 	Super::NativePreConstruct();
 	
 	// ** Set Slot SIZE
-	SzBox->SetHeightOverride(20.f);
-	SzBox->SetWidthOverride(20.f);
+	//SzBox->SetHeightOverride(20.f);
+	//SzBox->SetWidthOverride(20.f);
 	//SetSlotSize();
 
+	//DurationBar->SetVisibility(ESlateVisibility::Collapsed);
+	DurationBar->SetPercent(0.7f);
 }
 
 
@@ -35,8 +40,10 @@ void UW_Slot::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-	SelectorImage2->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	
+	PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	
 	SelectorImage3->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	
 	TextItemCount->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), 24.f));
@@ -46,10 +53,63 @@ void UW_Slot::NativeConstruct()
 	TextItemCount->SetJustification(ETextJustify::Right);
 
 	SetSlotSize();
+
 }
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+// ****************************************************************
+// **********************    Button Click    **********************
+// ****************************************************************
+
+void UW_Slot::MsClickInstantRight()
+{
+	UE_LOG(LogTemp, Log, TEXT("MOUSE CLICK    ___InstantRight  "));
+}
+void UW_Slot::MsClickInstantLeft()
+{
+	SelectUnit->ActivateFastPanelAbilBtn(PanelTypeFix, IndexInContainer,  false);
+	//----UE_LOG(LogTemp, Log, TEXT("MOUSE CLICK    ___InstantLeft  "));
+}
+void UW_Slot::MsClickInstantMiddle()
+{
+	UE_LOG(LogTemp, Log, TEXT("MOUSE CLICK    ___InstantMiddle  "));
+}
+
+
+void UW_Slot::MsClickLongRight()
+{
+	UE_LOG(LogTemp, Log, TEXT("MOUSE CLICK    ___LongRight  "));
+}
+void UW_Slot::MsClickLongLeft()
+{
+	SelectUnit->ActivateFastPanelAbilBtn(PanelTypeFix, IndexInContainer, true);
+	//---UE_LOG(LogTemp, Log, TEXT("MOUSE CLICK    ___LongLeft  "));
+}
+void UW_Slot::MsClickLongMiddle()
+{
+	UE_LOG(LogTemp, Log, TEXT("MOUSE CLICK    ___LongMiddle  "));
+}
+
+
+
+
+
+// ****************************************************************
+// **********************     Button Set patram    **********************
+// ****************************************************************
 void UW_Slot::SetSlotParam(int32 _IndexInContainer,
 	UTexture2D* _ItemImage, UTexture2D* _BackgroundImage,
 	float _SlotWidth, float _SlotHeight, 
@@ -85,12 +145,14 @@ void UW_Slot::SetSlotParam(int32 _IndexInContainer,
 	if (_SlotWidth != -1)
 	{
 		SlotWidth = _SlotWidth;
-		SzBox->SetWidthOverride(_SlotWidth);
+		SzBoxImages->SetWidthOverride(_SlotWidth);
+		//SzBox->SetWidthOverride(_SlotWidth);
 	}
 	if (_SlotHeight != -1)
 	{
 		SlotHeight = _SlotHeight;
-		SzBox->SetHeightOverride(_SlotHeight);
+		SzBoxImages->SetHeightOverride(_SlotHeight);
+		//SzBox->SetHeightOverride(_SlotHeight);
 	}
 	
 
@@ -127,7 +189,6 @@ void UW_Slot::SetSlotParam(int32 _IndexInContainer,
 	}
 
 
-	
 }
 
 
@@ -152,6 +213,33 @@ void UW_Slot::SetItemCount(int32 RealCount, int32 MaxCount, float FontSize)
 	TextItemCount->SetFont(FSlateFontInfo(FPaths::EngineContentDir() / TEXT("Slate/Fonts/Roboto-Regular.ttf"), FontSize));
 }
 
+void UW_Slot::SetBarProgress(float _curr, float _max)
+{
+	if (_max == 0.f)
+		return;
+
+	float val = _curr / _max;
+
+	if (val <= 0.f)
+		SetProgressVisibility(false);
+	else
+	{
+		DurationBar->SetPercent(val);
+		SetProgressVisibility(true);
+	}
+}
+
+void UW_Slot::SetProgressVisibility(bool _IsVisible)
+{
+	if (_IsVisible)
+	{
+		DurationBar->SetVisibility(ESlateVisibility::Visible);	// ** Visible,  Hidden,  Collapsed
+	}
+	else
+	{
+		DurationBar->SetVisibility(ESlateVisibility::Hidden);
+	}
+}
 /*
 void UW_Slot::SelectButton(int32 SelectingType, bool deselect)
 {
@@ -180,8 +268,11 @@ void UW_Slot::SelectButton(int32 SelectingType, bool deselect)
 
 void UW_Slot::SetSlotSize()
 {
-	SzBox->SetHeightOverride(SlotWidth);
-	SzBox->SetWidthOverride(SlotWidth);
+	SzBoxImages->SetHeightOverride(SlotWidth);
+	SzBoxImages->SetWidthOverride(SlotWidth);
+	//SzBox->SetHeightOverride(SlotWidth);
+	//SzBox->SetWidthOverride(SlotWidth);
+
 }
 
 
@@ -195,9 +286,31 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 	UE_LOG(LogTemp, Log, TEXT("WWWWWWWWWWWWWW  Mouse Up:   %i"), IndexInContainer);
 
 
-	GetWorld()->GetTimerManager().ClearTimer(TH_LMousClickDuration);
-	LMousClickDuration = 0.f;
-	
+	// ** Check long click checking
+	GetWorld()->GetTimerManager().ClearTimer(TH_MousClickDuration);
+	if (CurrMousClickDuration > MousClickDurationMax)
+	{
+		return FReply::Handled();
+	}
+	else
+	{
+		// ** Init Instant click
+		if (CurrClickedMouseKey == EKeys::LeftMouseButton)
+		{
+			MsClickInstantLeft();
+		}
+		else if (CurrClickedMouseKey == EKeys::RightMouseButton)
+		{
+			MsClickInstantRight();
+		}
+		else if(CurrClickedMouseKey == EKeys::MiddleMouseButton)
+		{
+			MsClickInstantMiddle();
+		}
+	}
+	CurrMousClickDuration = 0.f;
+
+
 
 
 	//////////////	bool IsInvertoryShown = false;
@@ -209,7 +322,16 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 	//////////////	bool IsPerkPanelShown = false;
 
 
+	// ++++
+	if (PanelTypeFix == ESlotType::unit_effect)
+	{
+		SelectUnit->BreakUnitEffect(IndexInContainer);
+	}
 
+
+
+/*
+// *** TEST --------------
 	if (PanelTypeFix == ESlotType::main_inv)
 	{
 		bool is = SelectUnit->IsMainInventorySlotEmpty(IndexInContainer);
@@ -250,7 +372,33 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 	if (PanelTypeFix == ESlotType::fast_panel)
 	{
 		FItemDT *RefItemDT = nullptr;
-		EAbilityType *RefAbilityType;
+		UAbilityDT* RefAbilityType;
+
+		bool is = SelectUnit->GetFastPanelSlotElement(IndexInContainer, RefItemDT, RefAbilityType);
+		SelectUnit->RemoveElementFromFastPanel(IndexInContainer);
+		//IndexInContainer = -1;
+		//is = true;
+		//is = true;
+
+
+		SelectUnit->ActivateFastPanelAbilBtn(IndexInContainer);
+
+
+
+
+		ABaseHUD* HUD = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
+		if (HUD)
+		{
+			if (HUD->IsFastPanelShown)
+			{
+				HUD->ShowFastPanel(SelectUnit);
+			}
+		}
+	}
+	if (PanelTypeFix == ESlotType::Perk_panel)
+	{
+		FItemDT* RefItemDT = nullptr;
+		UAbilityDT* RefAbilityType;
 
 		bool is = SelectUnit->GetFastPanelSlotElement(IndexInContainer, RefItemDT, RefAbilityType);
 		SelectUnit->RemoveElementFromFastPanel(IndexInContainer);
@@ -267,10 +415,6 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 			}
 		}
 	}
-	if (PanelTypeFix == ESlotType::Perk_panel)
-	{
-
-	}
 	if (PanelTypeFix == ESlotType::heavy_amunition)
 	{
 
@@ -286,7 +430,7 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 	}
 
 
-	if (PanelTypeFix > ESlotType::weapon_equip && PanelTypeFix < ESlotType::armor_equip)
+	if (PanelTypeFix > ESlotType::weapon_equip && PanelTypeFix < ESlotType::armor_equip) 
 	{
 		if (PanelTypeFix == ESlotType::contact_wpn_big)
 		{
@@ -330,7 +474,7 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 
 		}
 	}
-
+*/
 
 
 																// @@@@@@@@@@@@@@@@@@@@@@@   TEST  
@@ -344,8 +488,20 @@ FReply UW_Slot::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPointe
 																}
 
 
+
+
+
+	// ** Set ButtonFocus
 	//Reply.NativeReply = FReply::Handled();
-	return FReply::Unhandled();
+	//++++FReply Reply = FReply::Unhandled();
+	//++++Reply = FReply::Handled();
+	//++++Reply.ReleaseMouseCapture();
+	//++++return Reply;
+	bIsFocusable = true;
+	SetFocus();
+	TSharedPtr<SWidget> SharedWidget = TakeWidget();
+	return FReply::Handled().SetUserFocus(SharedWidget.ToSharedRef());
+
 	// ** FEventReply reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton);
 	// ** return reply.NativeReply;
 }
@@ -359,24 +515,69 @@ FReply UW_Slot::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPoin
 
 	UE_LOG(LogTemp, Log, TEXT("WWWWWWWWWWWWWW  Mouse Dn:   %i"), IndexInContainer);
 	
-	GetWorld()->GetTimerManager().SetTimer(TH_LMousClickDuration, this, &UW_Slot::LMousClickDurationLoop, GetWorld()->GetDeltaSeconds(), true);
 
 
-	//Reply.NativeReply = FReply::Handled();
+	// ** Init long click checking
+	CurrMousClickDuration = 0;
+	GetWorld()->GetTimerManager().SetTimer(TH_MousClickDuration, this, &UW_Slot::MousClickDurationLoop, GetWorld()->GetDeltaSeconds(), true);
+
+
+
+
+
+	if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
+	{
+		CurrClickedMouseKey = EKeys::LeftMouseButton;
+	}
+	else if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton))
+	{
+		CurrClickedMouseKey = EKeys::RightMouseButton;
+	}
+	else if (InMouseEvent.IsMouseButtonDown(EKeys::MiddleMouseButton))
+	{
+		CurrClickedMouseKey = EKeys::MiddleMouseButton;
+	}
+
+
+	
+	// ** Set ButtonFocus
+	//TSharedPtr<UW_Slot> SharedWidget = MakeShared<UW_Slot>();		// ** for Slate
+	//TSharedRef<SWidget> SharedWidget = AsShared();				// ** for Slate
+	//return FReply::Handled().SetUserFocus(SharedThis(this));		// ** for Slate
 	//return FReply::Unhandled();
-	return FReply::Handled();
+	//return FReply::Handled();
+	bIsFocusable = true;
+	SetFocus();
+	TSharedPtr<SWidget> SharedWidget = TakeWidget();
+	return FReply::Handled().SetUserFocus(SharedWidget.ToSharedRef());
 
 
 	//FEventReply reply = UWidgetBlueprintLibrary::DetectDragIfPressed(InMouseEvent, this, EKeys::LeftMouseButton); 
 	//return reply.NativeReply;
 }
  
-void UW_Slot::LMousClickDurationLoop()
+void UW_Slot::MousClickDurationLoop()
 {
-	LMousClickDuration += GetWorld()->GetDeltaSeconds();
+	CurrMousClickDuration += GetWorld()->GetDeltaSeconds();
+	if (CurrMousClickDuration > MousClickDurationMax)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(TH_MousClickDuration);
 
+		// ** Init Long click
+		if (CurrClickedMouseKey == EKeys::LeftMouseButton)
+		{
+			MsClickLongLeft();
+		}
+		else if (CurrClickedMouseKey == EKeys::RightMouseButton)
+		{
+			MsClickLongRight();
+		}
+		else if (CurrClickedMouseKey == EKeys::MiddleMouseButton)
+		{
+			MsClickLongMiddle();
+		}
+	}
 }
-
 
 
 

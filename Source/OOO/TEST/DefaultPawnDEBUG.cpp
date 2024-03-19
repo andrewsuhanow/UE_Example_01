@@ -21,7 +21,7 @@
 
 #include "../Base/Amunition/WeaponComponent.h"
 
-#include "../Base/Ability/Enum/AbilityType.h"
+//#include "../Base/Ability/Enum/AbilityLogic.h"
 
 #include "../Base/Controller/Task/Base/Task.h"
 
@@ -485,7 +485,7 @@ void AAAADefaultPawnDEBUG::AddItemToEquipPanel()
 
 //---------------------------------------------------------  Ability
 
-
+/*
 void AAAADefaultPawnDEBUG::ShowPerkPanel()
 {
 	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
@@ -511,21 +511,21 @@ void AAAADefaultPawnDEBUG::AddAbility()
 
 	if (SelectTestUnit)
 	{
-		SelectTestUnit->AddAbility(EAbilityType::drink);
-		SelectTestUnit->AddAbility(EAbilityType::harvest);
-		SelectTestUnit->AddAbility(EAbilityType::health);
-		SelectTestUnit->AddAbility(EAbilityType::usem_middle);
-		SelectTestUnit->AddAbility(EAbilityType::pick_up);
-		SelectTestUnit->AddAbility(EAbilityType::throw_sing);
+		SelectTestUnit->AddAbility(EAbilityLogic::drink);
+		SelectTestUnit->AddAbility(EAbilityLogic::harvest);
+		SelectTestUnit->AddAbility(EAbilityLogic::health);
+		SelectTestUnit->AddAbility(EAbilityLogic::usem_middle);
+		SelectTestUnit->AddAbility(EAbilityLogic::pick_up);
+		SelectTestUnit->AddAbility(EAbilityLogic::throw_sing);
 	}
 }
-
+*/
 
 
 //---------------------------------------------------------  Fast-Panel
 
 
-
+/*
 void AAAADefaultPawnDEBUG::ShowFastPanel()
 {
 	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
@@ -550,7 +550,7 @@ void AAAADefaultPawnDEBUG::AddItemToFastPanel()
 
 void AAAADefaultPawnDEBUG::AddAbilityToFastPanel()
 {
-	if (AbilityToAdd != EAbilityType::none)
+	if (AbilityToAdd != EAbilityLogic::none)
 	{
 		SelectTestUnit->SetAbilityToFastPanel(AbilityToAdd, AddToSlotIndex);
 	}
@@ -558,7 +558,7 @@ void AAAADefaultPawnDEBUG::AddAbilityToFastPanel()
 	ShowFastPanel();
 
 }
-
+*/
 
 
 

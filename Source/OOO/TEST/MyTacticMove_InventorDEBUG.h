@@ -8,14 +8,12 @@
 #include "../Base/Controller/Task/Struct/TaskData.h"		// ** SetUnitTask()  ->  AI
 #include "../Base/Controller/Task/Enum/TaskType.h"			// ** SetUnitTask()  ->  AI
 
-#include "../Base/Ability/Enum/AbilityType.h"
-
 #include "GameFramework/PlayerInput.h"						// ** FInputActionKeyMapping
 
 #include "../Base/Base/Enum/TurnBaseGameState.h"
 
 #include "../Base/Item/Struct/ItemDT.h"
-#include "../Base/Ability/Enum/AbilityType.h"
+//#include "../Base/Ability/Enum/AbilityLogic.h"
 
 #include "MyTacticMove_InventorDEBUG.generated.h"
 
@@ -119,7 +117,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_5_Total")			int32 AddToSlotIndex = -1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_5_Total")			int32 AddItemIndex = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_5_Total")			bool IsForseAdd = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_5_Total")			EAbilityType AbilityToAdd;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_5_Total")			EAbilityLogic AbilityToAdd;
 
 
 

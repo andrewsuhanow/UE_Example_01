@@ -14,15 +14,16 @@ enum class ESlotType : uint8
 	global_inv,
 	main_inv,
 	fast_panel,
-	Perk_panel,		//777777777777777777777777
+	Perk_panel,		
 	weapon_panel,
 	weapon_attacks_panel,
 	task_queue_panel,
+	ability_container,
 
 	heavy_amunition,				// ** Shield, BigGun, bagpak
 
 
-	weapon_equip = 100,
+	weapon_equip = 50,
 	contact_wpn_big,	// LSword, Axe, Pike, Club
 	contact_wpn_small,	// Dagger, Sword, Spage
 	range_wpn,			// RapidGun, Rifle, Bow, Armbow
@@ -30,7 +31,7 @@ enum class ESlotType : uint8
 	heavy_gun,
 	hand_fight,			// ** INVISIBLE slot
 
-	armor_equip = 200,
+	armor_equip = 100,
 	cup,				// 
 	armour,				// 
 	clothes,			// 
@@ -46,6 +47,8 @@ enum class ESlotType : uint8
 
 	//Gloves,				// 77777777777777777777777	
 	//Boots,				// 777777777777777777777777
+
+	unit_effect = 150,
 
 	MAX
 };

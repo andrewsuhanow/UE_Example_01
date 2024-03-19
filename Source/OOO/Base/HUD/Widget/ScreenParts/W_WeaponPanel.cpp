@@ -238,6 +238,7 @@ void UW_WeaponPanel::AddCellToWeaponPanel(ABaseGameMode* _GameMode, float _SlotS
 		NewSlot->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
 
 		NewSlot->SetItemCount(0, 0, 0);
+		NewSlot->SetBarProgress(0.f);
 
 		WeaponPanelGorzBox->AddChildToHorizontalBox(NewSlot);
 		SlotObj.Add(NewSlot);

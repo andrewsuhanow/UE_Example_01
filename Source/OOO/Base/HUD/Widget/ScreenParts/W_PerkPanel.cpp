@@ -7,11 +7,11 @@
 #include "../Slot/W_DropSlot.h"
 
 #include "../../../Unit/Base/Unit.h"
-//--------------#include "../../../Inventory/InventoryComponent.h"
 
 #include "../../../Ability/AbilityComponent.h"
-#include "../../../Ability/Enum/AbilityType.h"
-#include "../../../Ability/Struct/AbilityDT.h"
+
+#include "../../../Ability/Struct/AbilityList.h"
+#include "../../../Ability/AbilityDT.h"
 
 #include "../../../Base/BaseGameMode.h"
 
@@ -39,6 +39,7 @@ void UW_PerkPanel::NativeConstruct()
 
 	PerkPanelScroll->ClearChildren();
 	SlotObj.Reset();
+
 }
 
 
@@ -55,28 +56,31 @@ void UW_PerkPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 
 
 
-void UW_PerkPanel::ShowPerkPanel(AUnit* _Unit, ABaseGameMode* _GameMode)
+void UW_PerkPanel::ShowPerkPanel(AUnit* _Unit)
 {
-	UpdatePerkPanel(_Unit, _GameMode);
+	UpdatePerkPanel(_Unit);
 	SetVisibility(ESlateVisibility::Visible);  				// ** Visible,  Hidden,  Collapsed
 }
 
 
 
-void UW_PerkPanel::UpdatePerkPanel(AUnit* _Unit, ABaseGameMode* _GameMode)
+void UW_PerkPanel::UpdatePerkPanel(AUnit* _Unit)
 {
-	float slotSize = _GameMode->PerkPanelSlotSize;
-	int32 slotsNumShownOnScreen = _GameMode->PerkPanelVerticalSize / slotSize;
+
+	ABaseGameMode* gameMode = Cast<ABaseGameMode>(GetWorld()->GetAuthGameMode());
+
+	float slotSize = gameMode->PerkPanelSlotSize;
+	int32 slotsNumShownOnScreen = gameMode->PerkPanelVerticalSize / slotSize;
 	UTexture2D* SlotBackTexture = _Unit->MainInvertorySlotTexture;
 	if (!SlotBackTexture)
-		SlotBackTexture = _GameMode->MainInvertorySlotTexture;
+		SlotBackTexture = gameMode->MainInvertorySlotTexture;
 
 
 	// ** Set Total Global-Invertory size
 	PerkPanelSizeBox->bOverride_HeightOverride = 1;
-	PerkPanelSizeBox->SetHeightOverride(_GameMode->PerkPanelVerticalSize);
+	PerkPanelSizeBox->SetHeightOverride(gameMode->PerkPanelVerticalSize + slotSize / 5);
 	PerkPanelSizeBox->bOverride_WidthOverride = 1;
-	PerkPanelSizeBox->SetWidthOverride(slotSize);
+	PerkPanelSizeBox->SetWidthOverride(slotSize + slotSize / 5);
 
 
 	int32 SlotObjNum = SlotObj.Num();
@@ -85,36 +89,51 @@ void UW_PerkPanel::UpdatePerkPanel(AUnit* _Unit, ABaseGameMode* _GameMode)
 	for (int32 i = 0; i < SlotObjNum; ++i)
 	{
 		SlotObj[i]->SetVisibility(ESlateVisibility::Collapsed); /// Collapsed, Visible, Hidden
+		SlotObj[i]->PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+		SlotObj[i]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 	}
 
 
-	// ** Assign Unit-ItemDT to Slot
-	int32  currentItemSlot = 0;
-	for (const auto& It : _Unit->Ability->Abilities)
-	{
-		// ** TMap<EAbilityType, FAbilityDT> Abilities;
-		// ** It.Key = EAbilityType;
-		// ** It.Value = FAbilityDT;
+	// ** Assign Unit-Ability to Slot
 
-		if (currentItemSlot >= SlotObjNum)
+	for(int32 i = 0; i < _Unit->Ability->UnitAbilityList.Num(); ++i)
+	{
+		FAbilityList& ability = _Unit->Ability->UnitAbilityList[i];
+
+		if (i >= SlotObjNum)
 		{
-			AddCellToPerkPanel(_GameMode, slotSize, SlotBackTexture);
+			AddCellToPerkPanel(gameMode, slotSize, SlotBackTexture);
 			++SlotObjNum;
 		}
 
-		UTexture2D* Image = It.Value.GetImage();
+		UAbilityDT* AbilityCDO = ability.Ability_class->GetDefaultObject<UAbilityDT>();
 
-		SlotObj[currentItemSlot]->SetSlotParam(currentItemSlot,
+		UTexture2D* Image = AbilityCDO->GetImage();
+
+		SlotObj[i]->SelectUnit = _Unit;
+
+		SlotObj[i]->SetSlotParam(i,
 			Image, SlotBackTexture,
 			slotSize, slotSize,
 			slotSize, slotSize,
 			0, 0,						// ** dont Translation;
-			ESlotType::Perk_panel);	// ** Its Perk-Slot
+			ESlotType::Perk_panel);		// ** Its Perk-Slot
 
-		SlotObj[currentItemSlot]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden
-
-		++currentItemSlot;
+		SlotObj[i]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden
 	}
+
+
+	// ** Holding slot selection
+	if (_Unit->ContainerOfHoldingPermanent == ESlotType::Perk_panel &&
+		_Unit->PermanentHoldingAbility >= 0)
+		SlotObj[_Unit->PermanentHoldingAbility]->
+			PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	if (_Unit->ContainerOfHoldingInstance == ESlotType::Perk_panel &&
+		_Unit->InstantHoldingAbility >= 0)
+		SlotObj[_Unit->InstantHoldingAbility]->
+			MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+
+
 
 }
 
@@ -134,6 +153,8 @@ void UW_PerkPanel::AddCellToPerkPanel(ABaseGameMode* _GameMode, float _SlotSize,
 			ESlotType::Perk_panel);		// ** Its Perk-Slot
 
 		NewSlot->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
+
+		NewSlot->SetItemCount(0, 0, 0);	// ** Set slot-text (hide text)
 
 		PerkPanelScroll->AddChild(NewSlot);
 		SlotObj.Add(NewSlot);

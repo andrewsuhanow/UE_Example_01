@@ -98,47 +98,130 @@
 
 
 
-// #include "Base/UnitState/UnitStateComponent.h"
+// #include "Base/UnitState/UnitParamComponent.h"
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 
+#include "Struct/UnitParamModifier.h"
 
-
-#include "UnitStateComponent.generated.h"
+#include "UnitParamComponent.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class OOO_API UUnitStateComponent : public UActorComponent
+class OOO_API UUnitParamComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 
 
 
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void Init();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		float GetParam(EUnitParam _Param);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void SetParam(EUnitParam _Param, float _Val);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void ModParam(EUnitParam _Param, float _Val);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void ModParamModificator(EUnitParam _Param, float _Val);
 
 
-//public:
+public:
 
-	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_GlobalInventory")		
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		TArray<FUnitParamModifier> UnitParam;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		TArray<FUnitParamModifier> ParamModificator;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iHP = -1;			// ** Current-HP Original
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iCritHP = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iMinHP = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iMaxHP = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iRegHP = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iPotentialHP = -1;
+
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")	int32 iSP = -1;
+
+
+
+
+
 	
 
-//public:
+
+//	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+//		FUnitParamModifier BaseHP;
+
+//	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+//		FUnitParamModifier RealHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier BaseCritMinHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier RealCritMinHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier BaseMinHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier RealMinHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier BaseMaxHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier RealMaxHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier BaseRegHP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier RealRegHP;
 
 
 
-	//UFUNCTION(BlueprintCallable, Category = "OOO_GlobalInventory")
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier BaseSP;
+
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+	//	FUnitParamModifier RealSP;
 
 
 
+/*
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		FUnitParamModifier DDDDDDDDDDDDDD;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		FUnitParamModifier DDDDDDDDDDDDDD;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		FUnitParamModifier DDDDDDDDDDDDDD;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		FUnitParamModifier DDDDDDDDDDDDDD;
+*/
 
 
 
 public:	
 
-
+/*
 	int32 CurrentHP = 80;	
 
 	int32 CriticalHP = 10;		// ** -10  (value lov then zero when Unit deadly but still alive)
@@ -160,12 +243,12 @@ public:
 	int32 TotalMagikLevel = 1;
 	int32 TotalMagikLevel_add = 0;
 
-
+*/
 
 
 public:	
 
-	UUnitStateComponent();
+	UUnitParamComponent();
 
 protected:
 
@@ -177,10 +260,7 @@ public:
 
 	
 
-public:
 
-	UFUNCTION(BlueprintCallable, Category = "OOO")
-		void Init();
 
 };
 

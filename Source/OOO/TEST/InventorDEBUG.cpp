@@ -25,10 +25,9 @@
 
 #include "../Base/Amunition/WeaponComponent.h"
 
-#include "../Base/Ability/Enum/AbilityType.h"
-
 #include "../Base/Controller/Task/Base/Task.h"
 
+#include "../Base/Ability/AbilityDT.h"
 
 #include "../Base/Item/WorldItem.h"
 
@@ -405,7 +404,7 @@ void AInventorDEBUG::ShowPerkPanel()
 
 	if (SelectTestUnit && hud)
 	{
-		hud->ShowPerkPanel(SelectTestUnit, gameMode);
+		hud->ShowPerkPanel(SelectTestUnit);
 
 		GetWorld()->GetFirstPlayerController()->bShowMouseCursor = true;
 	}
@@ -413,22 +412,31 @@ void AInventorDEBUG::ShowPerkPanel()
 
 void AInventorDEBUG::AddAbility()
 {
-	//////////for (int32 i = 0; i < Ability.Num(); ++i)
-	//////////{
-	//////////	if (SelectTestUnit)
-	//////////	{
-	//////////		SelectTestUnit->AddAbility(Ability[i]);
-	//////////	}
-	//////////}
-
 	if (SelectTestUnit)
 	{
-		SelectTestUnit->AddAbility(EAbilityType::drink);
-		SelectTestUnit->AddAbility(EAbilityType::harvest);
-		SelectTestUnit->AddAbility(EAbilityType::health);
-		SelectTestUnit->AddAbility(EAbilityType::usem_middle);
-		SelectTestUnit->AddAbility(EAbilityType::pick_up);
-		SelectTestUnit->AddAbility(EAbilityType::throw_sing);
+		for (int32 i = 0; i < AbiilityName.Num(); ++i)
+		{
+//++++++				SelectTestUnit->AddAbilityByName(AbiilityName[i]);
+		}
+
+
+		for (int32 i = 0; i < AbilityClass.Num(); ++i)
+		{
+
+//++++++			SelectTestUnit->AddAbilityByClass(AbilityClass[i]);
+		}
+	}
+
+	////if (SelectTestUnit)
+	{
+		////SelectTestUnit->AddAbility(EAbilityType::drink);
+		////SelectTestUnit->AddAbility(EAbilityType::harvest);
+		////SelectTestUnit->AddAbility(EAbilityType::health);
+		////SelectTestUnit->AddAbility(EAbilityType::usem_middle);
+		////SelectTestUnit->AddAbility(EAbilityType::pick_up);
+		////SelectTestUnit->AddAbility(EAbilityType::throw_sing);
+
+		ShowPerkPanel();
 	}
 }
 
@@ -440,6 +448,14 @@ void AInventorDEBUG::AddAbility()
 
 void AInventorDEBUG::ShowFastPanel()
 {
+
+	if (AbiilityAddToFastPanel.Num() == 0)
+	{
+		AbiilityAddToFastPanel.Add(FName("FireBall"));
+		AbiilityAddToFastPanel.Add(FName("FireBolt"));
+	}
+
+
 	ABaseHUD* hud = Cast<ABaseHUD>(GetWorld()->GetFirstPlayerController()->GetHUD());
 
 	if (SelectTestUnit && hud)
@@ -462,9 +478,13 @@ void AInventorDEBUG::AddItemToFastPanel()
 
 void AInventorDEBUG::AddAbilityToFastPanel()
 {
-	if (AbilityToAdd != EAbilityType::none)
+
+
+
+
+	if (AbilityIndex >= 0 && AbiilityAddToFastPanel[AbilityIndex] != FName("none"))
 	{
-		SelectTestUnit->SetAbilityToFastPanel(AbilityToAdd, AddToSlotIndex);
+		//+++++SelectTestUnit->SetAbilityToFastPanelByName(AbiilityAddToFastPanel[AbilityIndex], AddToSlotIndex);
 	}
 
 	ShowFastPanel();

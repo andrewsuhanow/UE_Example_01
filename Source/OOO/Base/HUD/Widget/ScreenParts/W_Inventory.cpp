@@ -275,11 +275,15 @@ void UW_Inventory::AddSlotsRowOnBottom(ABaseGameMode* _GameMode, int32 _Row, int
 			NewSlot->ImgItem->SetBrushSize(FVector2D(_SlotSize, _SlotSize));
 
 			// ** Set CELL SIZE
-			NewSlot->SzBox->SetHeightOverride(_SlotSize);
-			NewSlot->SzBox->SetWidthOverride(_SlotSize);
+			NewSlot->SzBoxImages->SetHeightOverride(_SlotSize);
+			NewSlot->SzBoxImages->SetWidthOverride(_SlotSize);
+			//NewSlot->SzBox->SetHeightOverride(_SlotSize);
+			//NewSlot->SzBox->SetWidthOverride(_SlotSize);
 
 			NewSlot->PanelTypeFix = ESlotType::main_inv;
 			// ** NewSlot->SelectUnit = _Unit;
+
+			NewSlot->SetBarProgress(0.f);
 
 			//UnGrid_Inventory->AddChildToUniformGrid(NewSlot, NewRowIndex, i);  // ** Row, Cols = i     // /////////////--------------
 			InventoryCanva->AddChild(NewSlot);

@@ -4,9 +4,11 @@
 #include "BaseGameMode.h"
 
 #include "BaseGameState.h"
+#include "Spectator.h"
 #include "../HUD/BaseHUD.h"
 #include "../HUD/Widget/W_Screen.h"
 #include "../HUD/Widget/Slot/W_Slot.h"
+//----#include "../HUD/Widget/Slot/W_EffectSlot.h"
 
 #include "../Unit/Base/Unit.h"
 #include "../Controller/UnitAI.h"
@@ -21,9 +23,6 @@
 ABaseGameMode::ABaseGameMode()
 {
 	
-	
-
-
 	// *******************************************    Fraction    *****************************************
 	Fraction = CreateDefaultSubobject<UFractionSystem>(TEXT("Fraction"));
 	// ** SET in UE
@@ -120,7 +119,7 @@ void ABaseGameMode::StartGame()
 			}
 		}
 
-		if (!W_Screen_Class || !W_Slot_Class)
+		if (!W_Screen_Class || !W_Slot_Class)//---------- || !W_EffectSlot_Class)
 		{
 			UE_LOG(LogTemp, Error, TEXT(">>>>>>>>>> ERROR:    ABaseGameMode::Init():  'W_Screen' not init   >>>>>>>>   'W_Screen_Class' - absent"));
 			UKismetSystemLibrary::QuitGame(GetWorld(), GetWorld()->GetFirstPlayerController(), EQuitPreference::Type::Quit, true);
@@ -133,13 +132,62 @@ void ABaseGameMode::StartGame()
 		}
 	}
 
+	// ****** 11111111111 (NEED exec before other)
 
+	if (!Spectator)
+	{
+		TArray<AActor*> SpecPawn;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), Spectator_Class, SpecPawn);
+
+		if (SpecPawn.Num() > 0)
+		{
+			Spectator = Cast<ASpectator>(SpecPawn[0]);
+		}
+		else
+		{
+			if (Spectator_Class)
+			{
+				// ** Spawn new PawnSpectator
+				FActorSpawnParameters SpawnParameters;
+				SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+				Spectator = GetWorld()->SpawnActor<ASpectator>(Spectator_Class, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParameters);
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT(">>>>>>>>>> ERROR: ABaseGameMode::StartGame():  'ASpectator' not init   >>>>>>>>   'Spectator_Class' - dont set"));
+				UKismetSystemLibrary::QuitGame(GetWorld(), GetWorld()->GetFirstPlayerController(), EQuitPreference::Type::Quit, true);
+				return;
+			}
+		}
+		// ** Posses to new PawnSpectator
+		GetWorld()->GetFirstPlayerController()->Possess(Spectator);
+	}
+
+
+
+
+
+	// ** Remove All default classes
+	TArray<AActor*> DefaultPawn;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), DefaultPawnClass, DefaultPawn);
+	if (DefaultPawn.Num() > 0)
+	{	
+		/// ** DefaultPawnClass = Spectator_Class;
+		DefaultPawn[0]->Destroy();
+	}
+	TArray<AActor*> DefaultSpectator;
+
+
+	
+
+
+/*
 	if (!GameAbilityArchive)
 	{
 		UE_LOG(LogTemp, Error, TEXT(">>>>>>>>>> ERROR:    ABaseGameMode::Init():     >>>>>>>>   'GameAbilityArchive' - absent"));
 		UKismetSystemLibrary::QuitGame(GetWorld(), GetWorld()->GetFirstPlayerController(), EQuitPreference::Type::Quit, true);
 	}
-
+*/
 
 	// *******************************************    Init fraction    *****************************************
 	if (!Fraction)
@@ -159,9 +207,11 @@ void ABaseGameMode::StartGame()
 
 
 
-	HUD->SetDefaultGameParam(this, BGameState);
+	HUD->SetDefaultGameParam(this, BGameState, Spectator);
 
-	BGameState->SetDefaultGameParam(this, HUD);
+	BGameState->SetDefaultGameParam(this, HUD, Spectator);
+
+	Spectator->SetDefaultGameParam(this, HUD, BGameState);
 
 
 	// ********************    All Scene-Units Init    ********************
@@ -229,16 +279,22 @@ UAnimMontage* ABaseGameMode::GetGameAnimation(EUnitGameType _UnitGameType,
 	EWeaponType _WeaponType, 
 	EAnimationKey _AnimationKey)
 {
-	FWeaponAnimateGroup* unitGroup = GameAnimation.Find(_UnitGameType);
-	if (unitGroup)
+	for (int32 i = 1; i <= 2; ++i)
 	{
-		FAnimateGroup* animGroup = unitGroup->WeaponGroupAnimation.Find(_WeaponType);
-		if (animGroup)
+		FWeaponAnimateGroup* unitGroup = GameAnimation.Find(_UnitGameType);
+		if (unitGroup)
 		{
-			auto animMontag = animGroup->Animation.Find(_AnimationKey);
-			if (animMontag)
-				return *animMontag;
+			FAnimateGroup* animGroup = unitGroup->WeaponGroupAnimation.Find(_WeaponType);
+			if (animGroup)
+			{
+				auto animMontag = animGroup->Animation.Find(_AnimationKey);
+				if (animMontag)
+					return *animMontag;
+			}
 		}
+
+		// ** if cant find in current Weapon-AnimGroup, try find in Locomotion-AnimGroup
+		_WeaponType = EWeaponType::Locomotion;
 	}
 	return nullptr;
 }
@@ -280,18 +336,30 @@ void ABaseGameMode::InitAnimations()
 	UAnimMontage* montage_attack3_altern = nullptr;
 	UAnimMontage* montage_attack4_altern = nullptr;
 
-	UAnimMontage* prepare_and_cast = nullptr;
-	UAnimMontage* cast = nullptr;
-	UAnimMontage* prepare_to_cast = nullptr;
+	UAnimMontage* montage_Throw_Prepare = nullptr;
+	UAnimMontage* montage_Throw_Loop = nullptr;
+	UAnimMontage* montage_Throw_Cast = nullptr;
 
+	UAnimMontage* throw_spell_Prepare_mid = nullptr;
+	UAnimMontage* throw_spell_Loop_mid = nullptr;
+	UAnimMontage* throw_spell_cast_mid = nullptr;
 	
 	// **      7777777777777777
-
+	
 	montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Shared_Mutual/Cast___LaftHand___AO/M_Ability_E.M_Ability_E"));
 	montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Parir/M_Parrir____Longs_Block_p_L___Faster.M_Parrir____Longs_Block_p_L___Faster"));
 	montage_failedAttackParrired = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Hit/FailedAttackParir.FailedAttackParir"));
 	montage_block = LoadObject<UAnimMontage>(nullptr, TEXT("AnimMontage'/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Block/AsCatana/Long_BlockLoop.Long_BlockLoop"));
 	montage_dodge_back = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Dodge/Longs_DodgeBack.Longs_DodgeBack"));
+
+	throw_spell_Prepare_mid = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Fire_as_rifle/M_OneShoot__lSw_PapidFire_Big.M_OneShoot__lSw_PapidFire_Big"));
+	throw_spell_Loop_mid = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Bow/Idle/M_Bow_Aim_Loop.M_Bow_Aim_Loop"));
+	throw_spell_cast_mid = LoadObject<UAnimMontage>(nullptr, TEXT("AnimMontage'/Game/Test/CharacterHuman/Animation/Human/Dagger/M_Dagge_BaseAttack_1.M_Dagge_BaseAttack_1'"));
+
+	montage_Throw_Prepare = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Shared_Mutual/Cast___LeftPistol__AO/M_ShotGun_FireHolster.M_ShotGun_FireHolster"));
+	montage_Throw_Loop = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Shared_Mutual/ThrowItem/Rifle_Grenade_Throw_Loop_Montage.Rifle_Grenade_Throw_Loop_Montage"));
+	montage_Throw_Cast = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Shared_Mutual/ThrowItem/M_Rifle_Grenade_Throw_Far.M_Rifle_Grenade_Throw_Far"));
+
 	if (montage_use)	animElement.Animation.Add(EAnimationKey::use, montage_use);
 	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
 	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
@@ -303,7 +371,17 @@ void ABaseGameMode::InitAnimations()
 	if (montage_block)	animElement.Animation.Add(EAnimationKey::block, montage_block);
 	if (montage_parrir)	animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
 	if (montage_dodge_back)	animElement.Animation.Add(EAnimationKey::dodge_bwd, montage_dodge_back);
+
+	if (throw_spell_Prepare_mid)	animElement.Animation.Add(EAnimationKey::throw_spell_Prepare_mid, throw_spell_Prepare_mid);
+	if (throw_spell_Loop_mid)	animElement.Animation.Add(EAnimationKey::throw_spell_Loop_mid, throw_spell_Loop_mid);
+	if (throw_spell_cast_mid)	animElement.Animation.Add(EAnimationKey::throw_spell_cast_mid, throw_spell_cast_mid);
+
 	if (montage_failedAttackParrired)	animElement.Animation.Add(EAnimationKey::failed_attack_parrired, montage_failedAttackParrired);
+
+	if (montage_Throw_Prepare)	animElement.Animation.Add(EAnimationKey::throw_Prepare_up, montage_Throw_Prepare);
+	if (montage_Throw_Loop)	animElement.Animation.Add(EAnimationKey::throw_Loop_up, montage_Throw_Loop);
+	if (montage_Throw_Cast)	animElement.Animation.Add(EAnimationKey::throw_cast_up, montage_Throw_Cast);
+
 	//if (montage_attack_1_novice)	animElement.Animation.Add(EAnimationKey::attack_1_novice, montage_attack_1_novice);
 	//if (montage_attack_2_novicer)	animElement.Animation.Add(EAnimationKey::attack_2_novice, montage_attack_2_novicer);
 	//if (montage_attack2_altern)	animElement.Animation.Add(EAnimationKey::attack2_altern, montage_attack2_altern);
@@ -321,11 +399,13 @@ void ABaseGameMode::InitAnimations()
 	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/ReadyOnOff/M_Idle2Fists.M_Idle2Fists"));
 	montage_unequip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/ReadyOnOff/M_Fists2Idle.M_Fists2Idle"));
 	montage_attack1 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/Attack/M_Fists_InPlace_Heavy1.M_Fists_InPlace_Heavy1"));
+	montage_attack2 = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/NoWeapon__Fight/Attack/M_NoWpn_Attack_1_Fists_Punch_Move_L.M_NoWpn_Attack_1_Fists_Punch_Move_L"));
 	montage_parrir = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Parir/M_Parrir____Longs_Block_p_L___Faster.M_Parrir____Longs_Block_p_L___Faster"));
 	//animElement.Animation.Add(EAnimationKey::use, frffff);
 	if (montage_equip)	animElement.Animation.Add(EAnimationKey::equip, montage_equip);
 	if (montage_unequip)	animElement.Animation.Add(EAnimationKey::unequip, montage_unequip);
 	if (montage_attack1)	animElement.Animation.Add(EAnimationKey::attack1, montage_attack1);
+	if (montage_attack2)	animElement.Animation.Add(EAnimationKey::attack2, montage_attack2);
 	if (montage_parrir)animElement.Animation.Add(EAnimationKey::parrir, montage_parrir);
 	//animElement.Animation.Add(EAnimationKey::attack2, frffff);
 	//animElement.Animation.Add(EAnimationKey::attack3, frffff);
@@ -344,6 +424,10 @@ void ABaseGameMode::InitAnimations()
 
 	weaponElement.WeaponGroupAnimation.Add(EWeaponType::HandFight, animElement);
 	animElement.Animation.Reset();
+
+
+
+
 
 	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
 	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Sword_Long/Weapon_OnOff__Alternate/M_LSw_WeaponOn.M_LSw_WeaponOn"));
@@ -387,6 +471,10 @@ void ABaseGameMode::InitAnimations()
 
 	weaponElement.WeaponGroupAnimation.Add(EWeaponType::LongSword, animElement);
 	animElement.Animation.Reset();
+
+
+
+
 
 	//montage_use = LoadObject<UAnimMontage>(nullptr, TEXT("XXXXXXXXXXXXXXXXXXXXX"));
 	montage_equip = LoadObject<UAnimMontage>(nullptr, TEXT("/Game/Test/CharacterHuman/Animation/Human/Gun_Rifle/ReadyOnOff/M_EquipRifle.M_EquipRifle"));
@@ -604,10 +692,7 @@ EUnitAttitudeStatus ABaseGameMode::GetFractionAttitude(uint8 A, uint8 B)
 // ****************************************************************************************************	
 // *******************************************    Ability    ******************************************
 
-UDataTable* ABaseGameMode::GetGameAbilityArchive()
-{
-	return GameAbilityArchive;
-}
+
 
 // ****************************************************************************************************	
 // ******************************************    Game_Time    *****************************************

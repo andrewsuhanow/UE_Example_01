@@ -1,20 +1,23 @@
 
 
-//#include "../Base/BaseGameState.h"
+//#include "Base/Base/BaseGameState.h"
 #include "BaseGameState.h"
 
 
 #include "BaseGameMode.h"
+#include "Spectator.h"
 #include "../HUD/BaseHUD.h"
 
 #include "../Unit/Base/Unit.h"
 
 
 
-void ABaseGameState::SetDefaultGameParam(ABaseGameMode* _GameMode, ABaseHUD* _HUD)
+void ABaseGameState::SetDefaultGameParam(ABaseGameMode* _GameMode, 
+	ABaseHUD* _HUD, ASpectator* _Spectator)
 {
 	BGameMode = _GameMode;
 	HUD = _HUD;
+	Spectator = _Spectator;
 }
 
 
@@ -36,7 +39,7 @@ int32 ABaseGameState::AddToSelectedUnits(AUnit* _NewUnit)
 
 	_NewUnit->SelectUnit();
 
-	return GetUnitGroupNum();
+	return GetCountOfSelectUnits();
 }
 
 int32 ABaseGameState::DeselectUnit(AUnit* _Unit)
@@ -48,7 +51,7 @@ int32 ABaseGameState::DeselectUnit(AUnit* _Unit)
 
 		_Unit->DeselectUnit();
 	}
-	return GetUnitGroupNum();
+	return GetCountOfSelectUnits();
 }
 
 void ABaseGameState::DeselectAllUnits()
@@ -61,12 +64,36 @@ void ABaseGameState::DeselectAllUnits()
 	SelectedUnitsNum = 0;
 }
 
-int32 ABaseGameState::GetUnitGroupNum()
+int32 ABaseGameState::GetCountOfSelectUnits()
 {
 	return SelectedUnitsNum;
 }
 
+AUnit* ABaseGameState::GetSelectedUnit(int32 _Num)
+{
+	if (_Num < 0)
+		return nullptr;
+	if (_Num  >= GetCountOfSelectUnits())
+		return nullptr;
 
+	return SelectedUnits[_Num];
+}
+
+
+void ABaseGameState::SelectUnitMouseFocused(AUnit* _Unit)
+{
+	if (MouseFocusedUnit)
+	{
+		MouseFocusedUnit->SetUnitMouseFocused(false);
+		MouseFocusedUnit = nullptr;
+	}
+
+	if (_Unit)
+	{
+		_Unit->SetUnitMouseFocused(true);
+		MouseFocusedUnit = _Unit;
+	}
+}
 
 // ****************************    Turn_Base_Game_State    ********************************
 
@@ -75,7 +102,18 @@ void ABaseGameState::SetNewTurnBaseGameState(ETurnBaseGameState _TurnBaseGameSta
 	TurnBaseGmStateSender.Broadcast( TurnBaseGameState = _TurnBaseGameState );		//  RealTime,  Pause,  TurnBase
 }
 
-
+bool ABaseGameState::IsRealTimeMode() const
+{
+	return (TurnBaseGameState == ETurnBaseGameState::RealTime) ? true : false;
+}
+bool ABaseGameState::IsTurnBaseMode() const
+{
+	return (TurnBaseGameState == ETurnBaseGameState::TurnBase) ? true : false;
+}
+bool ABaseGameState::IsPauseMode() const
+{
+	return (TurnBaseGameState == ETurnBaseGameState::Pause) ? true : false;
+}
 
 // ****************************    Possesing_Game_State    ********************************
 

@@ -7,14 +7,12 @@
 #include "../Base/Controller/Task/Struct/TaskData.h"		// ** SetUnitTask()  ->  AI
 #include "../Base/Controller/Task/Enum/TaskType.h"			// ** SetUnitTask()  ->  AI
 
-#include "../Base/Ability/Enum/AbilityType.h"
-
 #include "GameFramework/PlayerInput.h"						// ** FInputActionKeyMapping
 
 #include "../Base/Base/Enum/TurnBaseGameState.h"
 
 #include "../Base/Item/Struct/ItemDT.h"
-#include "../Base/Ability/Enum/AbilityType.h"
+//#include "../Base/Ability/Enum/AbilityLogic.h"
 
 #include "DefaultPawnDEBUG.generated.h"
 
@@ -95,7 +93,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_1_Total")			int32 AddToSlotIndex = -1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_1_Total")			int32 AddItemIndex = -1;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_1_Total")			bool IsForseAdd = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_1_Total")			EAbilityType AbilityToAdd;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Invertory_1_Total")			EAbilityLogic AbilityToAdd;  // ***** 7777777 @@@@@@@@@@@@@@   
 
 public:
 
@@ -118,17 +116,19 @@ public:
 
 public:
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_5_Ability")		void AddAbility();
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_5_Ability")		void ShowPerkPanel();
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Ability")					TArray<EAbilityType> Ability;
+//	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_5_Ability")		void AddAbility();
+//	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_5_Ability")		void ShowPerkPanel();
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_Ability")					TArray<EAbilityLogic> Ability;
 	
 
-public:
+//public:
 
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_6_FastPanel")		void ShowFastPanel();
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_6_FastPanel")		void AddItemToFastPanel();
-	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_6_FastPanel")		void AddAbilityToFastPanel();
+//	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_6_FastPanel")		void ShowFastPanel();
+//	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_6_FastPanel")		void AddItemToFastPanel();
+//	UFUNCTION(BlueprintCallable, CallInEditor, Category = "OOO_Invertory_6_FastPanel")		void AddAbilityToFastPanel();
 //																							TArray<TSharedPtr<FItemDT>> FastPanelItemsDT;
+
+
 
 public:
 

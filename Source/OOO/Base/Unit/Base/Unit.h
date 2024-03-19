@@ -8,12 +8,14 @@
 #include "../Struct/PoseLocomotion.h"
 
 #include "../../Item/Struct/ItemDT.h"
-#include "../../Amunition/WeaponDT.h"
 
 #include "../Struct/FastPanelSlot.h"
 
 #include "../../Controller/Task/Struct/TaskData.h"		// ** SetUnitTask()  ->  AI
 #include "../../Controller/Task/Enum/TaskType.h"		// ** SetUnitTask()  ->  AI
+#include "../../Controller/Enum/TargetType.h"
+
+#include "../../UnitEffect/Struct/UnitEffectSlotDT.h"
 
 #include "../../Base/Enum/TurnBaseGameState.h"
 
@@ -87,7 +89,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
 		float StopDistance = 100.f;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		int32 Fraction = 0;
 
 	// *******************   Inventor_Parameter   *******************
 public:
@@ -168,6 +171,7 @@ public:
 			ETaskPriority _TaskPriority = ETaskPriority::Normal);
 
 
+
 	// **  ****************      HUD      **************** 
 
 public:
@@ -177,6 +181,21 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void UpdateAttacksWpnPanel_HUD();
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void UpdateParameterPanel_HUD();
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void UpdateFastPanel_HUD();
+
+
+	// **  ****************      W_3d_Bar      **************** 
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
+		TSubclassOf<class UW_UnitParamBar> W_UnitParamBar_class;
+	UPROPERTY()
+		class AUnitParamBar* UnitParamBar;
+	
 
 
 	// **************************************     PERCEPTION  (Undate reaction)     *******************************************
@@ -282,6 +301,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
 		bool IsUnitSelected = false;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO")
+		bool IsUnitMouseFocused = false;
+
 
 	// **  ************************   Unit_Main_Function  ************************
 public:
@@ -298,6 +320,47 @@ public:
 	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
 		bool IsUnitInGroup();
 
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		void SetUnitMouseFocused(bool _IsSet);
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		bool GetIsUnitMouseFocused() const;
+/*
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		void SetCommandData_Unit(AUnit* _TargetUnit, bool _IsShiftPresed);
+	UFUNCTION(Blueprintcallable, Category = "OOO_Main_Function")
+		void SetCommandData_Location(FVector _GoalLocation, bool _IsShiftPresed);
+*/
+	// ** Nav-Path
+	UFUNCTION(Blueprintcallable, Category = "OOO")
+		bool GenerateNavPath(bool _IsDrawPath, 
+			bool _UseSpecialPoint = false, 
+			FVector _GoalPoint = FVector(0.f,0.f,0.f));
+
+	UFUNCTION(Blueprintcallable, Category = "OOO")
+		bool IsNavPathGenerate();
+	UFUNCTION(Blueprintcallable, Category = "OOO")						
+		void HideNavPathMarkers();
+	
+
+
+// **  ************************   Unit_Effect   ************************
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO_Unit_Effect")
+		TArray<FUnitEffectSlotDT> CurrUnitEffectSlots;
+
+	//UFUNCTION(Blueprintcallable, Category = "OOO_Unit_Effect")
+		void AddUnitEffect(FUnitEffectDT* _UnitEffect);
+
+	//UFUNCTION(Blueprintcallable, Category = "OOO_Unit_Effect")
+		void RermoveUnitEffect(FUnitEffectSlotDT& _UnitEffect);
+	//UFUNCTION(Blueprintcallable, Category = "OOO_Unit_Effect")
+		void BreakUnitEffect(int32 _Index, bool _IsForseBreak = false);
+	
+		FTimerHandle TH_UpdateUnitEffect;
+		void UpdateUnitEffect();
 
 
 // **  ************************   Unit_State   ************************
@@ -305,7 +368,32 @@ public:
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO_Unit_State")
-		class UUnitStateComponent* UnitState;
+		class UUnitParamComponent* UnitParam;
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
+		float GetParam(EUnitParam _Param);
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
+		void SetParam(EUnitParam _Param, float _Val);
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
+		void ModParam(EUnitParam _Param, float _Val);
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
+		void ModParamModificator(EUnitParam _Param, float _Val);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
 		int32 GetLevel() const;
@@ -314,14 +402,9 @@ public:
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
 		void ModLevel(int32 _Val);
 
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		int32 GetCurrentHP() const;
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		int32 GetCriticalHP(bool _GetBaseValue = false) const;
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		int32 GetMinHP(bool _GetBaseValue = false) const;
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		int32 GetHP(bool _GetBaseValue = false) const;
+
+
+	//----------------------------
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
 		int32 GetTotalWpnLevel(bool _GetBaseValue = false) const;
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
@@ -329,15 +412,6 @@ public:
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
 		int32 GetTotalMagikLevel(bool _GetBaseValue = false) const;
 
-
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		void SetCurrentHP(int32 _Val);
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		void SetCriticalHP(int32 _Val, bool _GetBaseValue = false);
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		void SetMinHP(int32 _Val, bool _GetBaseValue = false);
-	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
-		void SetHP(int32 _Val, bool _GetBaseValue = false);
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
 		void SetTotalWpnLevel(int32 _Val, bool _GetBaseValue = false);
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
@@ -377,12 +451,14 @@ public:
 	UFUNCTION(Blueprintcallable, Category = "OOO_Unit_State")
 		int32 GetSkillDepend_FirstAttackSeries() const;
 
+
+
+
+
+
 // **  ************************   Fraction  ************************
 
 public:
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_Unit_Parameter")
-		int32 Fraction = 0;
 
 	UFUNCTION(Blueprintcallable, Category = "OOO_Fraction")
 		FORCEINLINE int32 GetFraction() const { return Fraction; };
@@ -430,6 +506,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "OOO_Inventory")
 		void RemoveItemFromGlobalInventory(int32 SlotIndex);
 
+
+
+
 // **  ************************   Fast_Panel   ************************
 
 public:
@@ -440,6 +519,26 @@ public:
 		TArray<FFastPanelSlot> FastPanelSlots;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")		
 		TMap<int32, FItemDT> FastPanelItem;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")
+		int32 PermanentHoldingAbility = -1;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")
+		int32 InstantHoldingAbility = -1;
+	// ** Container-Type from where current ability
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")
+		ESlotType ContainerOfHoldingPermanent = ESlotType::none;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_Fast_Panel")
+		ESlotType ContainerOfHoldingInstance = ESlotType::none;
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		void SetFastPanelButtonSelection(int32& _SelectionType, int32 _SelectionTypeVal,
+			ESlotType& _ContainerType, ESlotType _ContainerTypeVal);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		int32 GetPermanentHoldingAbility();
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		int32 GetInstantHoldingAbility();
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		bool IsItemInFastPanelSlot(int32 _Index);
+
 
 	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
 		void InitFastPanel();
@@ -448,15 +547,35 @@ public:
 		bool SetItemToFastPanel(FItemDT* ItemDT, int32 ToSlotIndex = -1);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
-		bool SetAbilityToFastPanel(EAbilityType _Ability, int32 ToSlotIndex = -1);
+		bool SetAbilityToFastPanelByIndex(int32 _AbilityIndex, int32 _ToSlotIndex = -1);
+	//---777---UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+	//---777---	bool SetAbilityToFastPanelByName(FName _AbilityName, int32 _ToSlotIndex = -1);
 
 	// ** return "false" if slot empty 
 	///UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
 	bool GetFastPanelSlotElement(int32 Index,
-		FItemDT*& GetItemDT, EAbilityType*& GetAbilityType);
+		//---FItemDT*& _ItemDTRed, TSubclassOf<class UAbilityDT>& _AbilityRef);
+		FItemDT*& _ItemDTRed, class UAbilityDT*& _AbilityRef_CDO);
 
 	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
 		void RemoveElementFromFastPanel(int32 ToSlotIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		void ActivateFastPanelAbilBtn(ESlotType _ContainerType, 
+					int32 _ContainerSlotIndex, bool isLongClick);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		bool SetHoldingAbilityState(ESlotType _ContainerType,
+					int32 _ContainerSlotIndex, bool isLongClick);
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		void SetPermanentHoldingAbility(int32 _NewIndex, ESlotType _NewContainerType,
+			class UAbilityDT*& _AbilityRef);
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		void SetInstantHoldingAbility(int32 _NewIndex, ESlotType _NewContainerType,
+			class UAbilityDT*& _AbilityRef);
+
+	//--777--UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+	//--777--	FName GetAbilityNameFromFastSlotIx(int32 _SlotIndex);
 
 
 
@@ -464,11 +583,34 @@ public:
 
 public:
 
+	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "OOO")
 		class UAbilityComponent* Ability;
 
+
+	// @@@@@@@@@@@@@@@@@@@@  Ability
+	// @@@@@@@@@@@@@@@@@@@@  Ability
+	// @@@@@@@@@@@@@@@@@@@@  Ability
+
+	//+++UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
+	//+++	void AddAbilityByName(FName _AbilityName);
 	UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
-		void AddAbility(EAbilityType _Ability);
+		void AddAbilityByClass(TSubclassOf<class UAbilityDT>& _AbilityDTClass);
+	UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
+		void RemoveAbilityByClass(TSubclassOf<class UAbilityDT>& _AbilityDTClass);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
+		ETargetType GetAbilityTargetType(int32 _iFastPanelAbility, int32& _TargetsCount);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		bool IsHasPermanentHoldAbility();
+	UFUNCTION(BlueprintCallable, Category = "OOO_Fast_Panel")
+		bool IsHasInstantHoldAbility();
+
+	//UFUNCTION(BlueprintCallable, Category = "OOO_Ability")
+//-----	bool GetHoldingPoseData(ESlotType _ContainerType, int32 &_HoldingPoseStep, 
+//----		struct FAbilityStep*& _PreAbilityPoseStep);
 
 	// ** IndexInContainer  (KEY in Map : FastPanelItem)
 	// ** AbilityType

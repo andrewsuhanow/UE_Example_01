@@ -25,9 +25,9 @@ enum class EAnimationKey : uint8
 	attack4_altern,
 	attack5,
 
-	prepare_and_cast,
-	cast,
-	prepare_to_cast,
+	prepare_and_cast_fire_bolt,
+	cast_fire_bolt,
+	prepare_to_cast_fire_bolt,
 
 
 	block,
@@ -58,18 +58,23 @@ enum class EAnimationKey : uint8
 	jump_forward, 
 	big_jump_forward, 
 
-	spell_Prepare_mid,
-	spell_cast_mid,
+	throw_spell_Prepare_mid,
+	throw_spell_Loop_mid,
+	throw_spell_cast_mid,
+
 	spell_Prepare_up,
 	spell_cast_up,
 	spell_Prepare_dwn,
 	spell_cast_dwn, 
 
 	throw_Prepare_mid,
+	throw_Loop_mid,
 	throw_cast_mid,
 	throw_Prepare_up,
+	throw_Loop_up,
 	throw_cast_up,
 	throw_Prepare_dwn,
+	throw_Loop_dwn,
 	throw_cast_dwn,
 
 	stun,

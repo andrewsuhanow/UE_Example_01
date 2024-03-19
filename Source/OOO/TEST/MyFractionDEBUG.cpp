@@ -25,7 +25,7 @@
 
 #include "../Base/Amunition/WeaponComponent.h"
 
-#include "../Base/Ability/Enum/AbilityType.h"
+//#include "../Base/Ability/Enum/AbilityLogic.h"
 
 #include "../Base/Controller/Task/Base/Task.h"
 

@@ -23,7 +23,6 @@
 #include "../Base/Amunition/WeaponComponent.h"
 #include "../Base/Amunition/WeaponWorldItem.h"
 
-#include "../Base/Ability/Enum/AbilityType.h"
 
 #include "../Base/Controller/Task/Base/Task.h"
 #include "../Base/Controller/Task/TMoveTo.h"
@@ -127,18 +126,9 @@ void ATaskDEBUG::MoveTo_Performance(FName _Point_MoveTo, bool _bPoint_IsRotateTo
 				FVector Loc = wayPoint->GetActorLocation();
 				UTMoveTo::SetMoveData_MoveToPoint(taskData, SelectTestUnit, Loc);
 
-				//if (_bPoint_IsRotateTo)
-				//{
-					//+++++++++++++++++++++++++++taskData.Rotation = wayPoint->GetActorRotation();
-					//+++++++++++++++++++++++++++taskData.TaskDislocation = ETaskDislocation::PointRotate;
-				//}
-				//else
-				//{
-					//+++++++++++++++++++++++++++taskData.TaskDislocation = ETaskDislocation::PointNoRotate;
-				//}
 				SelectTestUnit->SetUnitTask(_bAddMoreOneTask, ETaskType::MoveTo, taskData);
 			}
-			break;
+			return;
 		}
 		AUnit* unit = Cast<AUnit>(AllWayPointActors[i]);  // ** AllUnitsActor
 		if (unit && unit->GameName == _Point_MoveTo)

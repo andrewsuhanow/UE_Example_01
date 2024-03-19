@@ -1,5 +1,12 @@
 ﻿
 
+
+// **********************
+// **********************   NEED  Refactoring  (now unit move to Location(only) or to ActorTargetLocation)
+// **********************
+// **********************	Need  Tracing the UnitTargert and stop before UnitTargert on dist
+// **********************
+
 // ** #include "Base/Controller/Task/TMoveTo.h"
 
 #include "TMoveTo.h"
@@ -7,14 +14,29 @@
 #include "../UnitAI.h"
 #include "../../Unit/Base/Unit.h"
 
+#include "../../WorldMarker/WorldPathMarker.h"
+
+#include "NavigationSystem.h"
+#include "NavigationPath.h"
+
+
+
+
 
 
 
 UTMoveTo::UTMoveTo()
 {
 	TaskType = ETaskType::MoveTo;
+
 }
 
+void UTMoveTo::InitPathMarker(AUnitAI* _OwnerAI)
+{
+	PathMarker = GetWorld()->SpawnActor<AWorldPathMarker>();
+	PathMarker->AttachToActor(_OwnerAI->GetPawn(), FAttachmentTransformRules::KeepRelativeTransform);
+	PathMarker->SetActorLocation(_OwnerAI->GetPawn()->GetActorLocation());
+}
 
 void UTMoveTo::StartTask(AUnitAI* _OwnerAI)
 {
@@ -59,21 +81,17 @@ void UTMoveTo::ContinueTask(AUnitAI* _OwnerAI)
 	float currDistToTarget = FVector::Distance(_OwnerAI->GetCurrSelfLocation(), GoalLocation);
 	if (StopDistance < currDistToTarget)
 	{
-		bool сanStrafeMove = false;	// ** 77777
-		bool bDebugProjectile = false;
-		bool bAllowPartialPath = true;
-		float stopDist = 0;
+		MoveActorPerformance();
 
-		if (TargetActor)
+/*		if (TargetActor)
 		{
-			_OwnerAI->MoveToActor(TargetActor, stopDist, bStopOnOverlap, bUsePathfinding, bCanStrafeMove, nullptr, bAllowPartialPath);
 			MoveActorPerformance();
 		}
 		else
 		{
-			_OwnerAI->MoveToLocation(GoalLocation, stopDist, bStopOnOverlap, bUsePathfinding, bDebugProjectile, сanStrafeMove);
-			MovePointPerformance();
+			//MovePointPerformance();
 		}
+*/
 	}
 	else
 	{
@@ -84,16 +102,13 @@ void UTMoveTo::ContinueTask(AUnitAI* _OwnerAI)
 
 void UTMoveTo::MovePointPerformance()
 {
+	//OwnerAI->MoveToLocation(GoalLocation, stopDist, bStopOnOverlap, bUsePathfinding, bDebugProjectile, сanStrafeMove);
+
 	float dist = FVector::Distance(OwnerAI->GetCurrSelfLocation(), GoalLocation);
 	if (StopDistance > dist)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(TH_Move);
-
-		if(IsNeedWaitingAfterStop) /// ** Bit waiting after Stop
-			GetWorld()->GetTimerManager().SetTimer(TH_Move, this, &ThisClass::WaitingAfterStop, 
-				15.0f * GetWorld()->GetDeltaSeconds(), false);
-		else
-			TaskComplit(OwnerAI);
+		TaskComplitDelay(OwnerAI);
+		return;
 	}
 	else
 	{
@@ -101,25 +116,95 @@ void UTMoveTo::MovePointPerformance()
 	}
 }
 
+
+
+
 void UTMoveTo::MoveActorPerformance()
 {
-	float dist = FVector::Distance(OwnerAI->GetCurrSelfLocation(), TargetActor->GetActorLocation());
+	
+	// ** first generate or update
+	if (!IsNavPathGenerate(OwnerAI))
+	{
+		GenerateNavPath(OwnerAI);
+	}
+
+	// ** if something wrong
+	if (!IsNavPathGenerate(OwnerAI) || PathPointsMum <= 1)
+	{
+		TaskComplit(OwnerAI);
+		return;
+	}
+
+	// ** Check Target moving
+	if (TargetUnit)
+	{
+		float deltaTargetLocation = FVector::Distance(LastTargetLocation, TargetUnit->GetActorLocation());
+		if (deltaTargetLocation > TargetUnit->GetUnitCapsuleRadius())
+		{
+			IsPathMarkersGenerated = false;
+			MoveActorPerformance();
+			return;
+		}
+	}
+
+
+
+	
+	// ** Total finish   (dist to final goal-point)
+	float dist = FVector::Distance(OwnerAI->GetCurrSelfLocation(), GoalLocation);
 	if (StopDistance > dist)
 	{
-		GetWorld()->GetTimerManager().ClearTimer(TH_Move);
+		TaskComplitDelay(OwnerAI);
+		return;
+	}
 
-		if (IsNeedWaitingAfterStop) /// ** Bit waiting after Stop
-			GetWorld()->GetTimerManager().SetTimer(TH_Move, this, &ThisClass::WaitingAfterStop, 
-				15.0f * GetWorld()->GetDeltaSeconds(), false);
+
+	// ** path segment finish
+	dist = FVector::Distance(OwnerAI->GetCurrSelfLocation(), NextMiddlePathPoint);
+	if (StopDistance > dist)
+	{
+		// ** if Path has next point
+		if (NextMiddlePathindex < PathPointsMum - 1) 
+		{
+			bool сanStrafeMove = false;	// ** 77777
+			bool bDebugProjectile = false;
+			bool bAllowPartialPath = true;
+			float stopDist = 0;
+			
+			++NextMiddlePathindex;
+			NextMiddlePathPoint = Path[NextMiddlePathindex];
+
+			///OwnerAI->MoveToActor(TargetActor, stopDist, bStopOnOverlap, bUsePathfinding, bCanStrafeMove, nullptr, bAllowPartialPath);
+			OwnerAI->MoveToLocation(NextMiddlePathPoint, stopDist, bStopOnOverlap, bUsePathfinding, bDebugProjectile, сanStrafeMove);
+			GetWorld()->GetTimerManager().SetTimer(TH_Move, this, &ThisClass::MoveActorPerformance, 0.001f * dist, false);
+		}	
 		else
-			TaskComplit(OwnerAI);
+		{
+			TaskComplitDelay(OwnerAI);
+			return;
+		}
 	}
 	else
 	{
 		GetWorld()->GetTimerManager().SetTimer(TH_Move, this, &ThisClass::MoveActorPerformance, 0.001f * dist, false);
 	}
+
+
+	// ** Draw path or not
+	DrawNavPathMarker(OwnerAI);
 }
 
+
+void UTMoveTo::TaskComplitDelay(AUnitAI* _OwnerAI)
+{
+	GetWorld()->GetTimerManager().ClearTimer(TH_Move);
+
+	if (IsNeedWaitingAfterStop) /// ** Bit waiting after Stop
+		GetWorld()->GetTimerManager().SetTimer(TH_Move, this, &ThisClass::WaitingAfterStop,
+			15.0f * GetWorld()->GetDeltaSeconds(), false);
+	else
+		TaskComplit(OwnerAI);
+}
 
 void UTMoveTo::WaitingAfterStop()
 {
@@ -142,8 +227,6 @@ void UTMoveTo::BreakTask(AUnitAI* _OwnerAI)
 	
 	ResetTask(_OwnerAI);
 
-	GetWorld()->GetTimerManager().ClearTimer(TH_Move);
-
 	Super::BreakTask(_OwnerAI);
 }
 
@@ -151,6 +234,8 @@ void UTMoveTo::BreakTask(AUnitAI* _OwnerAI)
 
 void UTMoveTo::ResetTask(AUnitAI* _OwnerAI)
 {
+	GetWorld()->GetTimerManager().ClearTimer(TH_Move);
+
 	_OwnerAI->UnitStopMove();
 	_OwnerAI->ClearFocus(EAIFocusPriority::Gameplay);
 
@@ -170,6 +255,14 @@ void UTMoveTo::ResetTask(AUnitAI* _OwnerAI)
 	// ** Last Speed
 	if (NewSpeed != -1.f)
 		_OwnerAI->SetUnitMoveSpeed(LastSpeed);
+
+
+	// ** Path
+	HideNavPathMarkers(_OwnerAI);
+	DrawPathType = EDrawPathType::none;
+	IsPathMarkersGenerated = false;
+	PathPointsMum = -1;
+	NextMiddlePathindex = -1;
 }
 
 
@@ -435,4 +528,150 @@ bool UTMoveTo::SetMoveData_MoveToActorWithRotateFix(FTaskData& _TaskData, AUnit*
 
 	return true;
 }
+
+
+
+
+
+
+
+// **********************     Path    **********************
+
+bool UTMoveTo::GenerateNavPath(AUnitAI* _OwnerAI, bool _UseSpecialPoint, FVector _GoalPoint)
+{
+
+	if (TargetActor)
+	{
+		GoalLocation = TargetActor->GetActorLocation();
+		LastTargetLocation = GoalLocation;
+	}
+
+
+	FVector goalPoint = GoalLocation;
+	if(_UseSpecialPoint)
+		goalPoint = _GoalPoint;
+
+
+	UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(GetWorld());
+	UNavigationPath* path = NavSys->FindPathToLocationSynchronously(GetWorld(), 
+		_OwnerAI->GetCurrSelfLocation(), goalPoint, nullptr);
+	////////////////////path->PathPoints->GetPathLength()
+	////////////////////	path->PathPoints->GetPathCost()
+	////////////////////	path->PathPoints->IsPartial()
+
+
+	if (path != nullptr)
+	{
+		int32 PathPointsCount = path->PathPoints.Num();
+		if (PathPointsCount == 1)
+			return false;
+
+		// ** In Detail path
+		if (_OwnerAI->IsTurnBaseMode())
+		{
+			// @@@@@@@@@@@@@@@
+			// @@@@@@@@@@@@@@@  Calcukate Cleat Path
+			// @@@@@@@@@@@@@@@
+		}
+		// ** Soft path
+		else
+		{
+			Path.Reset();
+			for (int32 i = 0; i < PathPointsCount; ++i)
+			{
+				Path.Add(path->PathPoints[i]);
+			}
+		}
+
+		PathPointsMum = Path.Num();
+		IsPathMarkersGenerated = true;
+		NextMiddlePathindex = 0;
+		NextMiddlePathPoint = Path[NextMiddlePathindex];
+
+		return IsPathMarkersGenerated;
+	}
+
+	PathPointsMum = -1;
+	IsPathMarkersGenerated = false;
+
+	return IsPathMarkersGenerated;
+}
+
+
+void UTMoveTo::DrawNavPathMarker(AUnitAI* _OwnerAI)//, bool _IsDrawFullPath)
+{
+	// ** Unit dont selected
+	if (_OwnerAI->UnitOwner->GetIsUnitSelected() == false)
+		return;
+
+
+
+	if (_OwnerAI->IsTurnBaseMode())
+	{
+		// @@@@@@@@@@@@@@@
+		// @@@@@@@@@@@@@@@
+		DrawPathType = EDrawPathType::FullPathPoint;
+	}
+
+	// ** Rwal-Time
+	else
+	{
+		// ** Single Unit
+		if (_OwnerAI->UnitOwner->IsUnitInGroup() == false)
+		{
+			PathMarker->DrawPathLine(Path, this);
+			DrawPathType = EDrawPathType::FullPath;
+		}
+
+		// ** Group Units
+		else
+		{
+			// @@@@@@@@@@@@@@@
+			// @@@@@@@@@@@@@@@
+			DrawPathType = EDrawPathType::EndPoint;
+		}
+	}
+
+
+
+
+	
+}
+
+bool UTMoveTo::IsNavPathGenerate(AUnitAI* _OwnerAI)
+{
+	return IsPathMarkersGenerated;
+}
+
+void UTMoveTo::HideNavPathMarkers(AUnitAI* _OwnerAI)
+{
+	DrawPathType = EDrawPathType::none;
+	PathMarker->StopDraw();
+}
+
+bool UTMoveTo::GetNextMiddlePathPoint()
+{
+	//Path
+
+	return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

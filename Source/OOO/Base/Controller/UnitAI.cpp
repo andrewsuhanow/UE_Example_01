@@ -5,10 +5,14 @@
 #include "../Unit/Base/Unit.h"
 
 #include "Task/Base/Task.h"
+#include "Task/TMoveTo.h"
+#include "Task/TUseAbility.h"
 #include "Task/Struct/TaskData.h"
 #include "Task/Base/DailyBhvrQueue.h"
 
 #include "../Amunition/WeaponWorldItem.h"
+
+#include "../Ability/AbilityDT.h"
 
 //-------------------------
 
@@ -76,16 +80,33 @@ void AUnitAI::BeginPlay()
 		UTask* TaskTmp = NewObject<UTask>(this, AvailableTaskType[i], FName(*("TaskName_" + AvailableTaskType[i]->GetName() + "_" + GetName()))); //TEXT("BehaviorComponent"));;
 		if (TaskTmp)
 		{
-			ActionTaskssObj.Add(TaskTmp);
+			ActionTasksObj.Add(TaskTmp);
+
+			// ** Store Move-Task-Index
+			if (TaskTmp->TaskType == ETaskType::MoveTo)
+			{
+				Cast<UTMoveTo>(TaskTmp)->InitPathMarker(this);;
+				MoveTaskIndex = i;
+			}
 		}
 	}
-	for (int32 i = 0; i < ActionTaskssObj.Num(); ++i)
+
+	for (int32 i = 0; i < ActionTasksObj.Num(); ++i)
 	{
-		if (ActionTaskssObj[i]->TaskType == ETaskType::DailyBehavior)
+		if (ActionTasksObj[i]->TaskType == ETaskType::DailyBehavior)
 		{
 			DailyBhvrTaskIndex = i;
-			break;
+			if (AbilityTask) break;
+			//---break;
 		}
+		else if (ActionTasksObj[i]->TaskType == ETaskType::UseAbility)
+		{
+			AbilityTask = Cast<UTUseAbility>(ActionTasksObj[i]);
+			if(DailyBhvrTaskIndex != -1) break;
+			//---AbilityTaskIndex = i;
+		}
+
+
 	}
 }
 
@@ -142,10 +163,124 @@ void AUnitAI::Init(bool isStart)
 
 
 
+// **  ************************************************************************
+// **  ************************       Holding_pose      **********************
+// **  ************************************************************************
+
+/*
+void AUnitAI::SetHoldingPose(int32 _ContainerIndex, ESlotType _ContainerType)
+{
+	HoldingPoseInContainerType = _ContainerType;
+	HoldingPoseInContainerIndex = _ContainerIndex;
+	HoldingPoseStep = 0;
+
+	if (HoldingPoseInContainerIndex == -1)
+	{
+		StopAnimate();
+		HoldingPoseInContainerType = ESlotType::none;
+	}
+
+	UpdateLogic();
+	
+}
+*/
+
+void AUnitAI::SetPermanentAbilityHolding(UAbilityDT* _AbilityRef)
+{
+	if (AbilityTask)
+	{
+		AbilityTask->PermanentHoldingAbility = _AbilityRef;
+		AbilityTask->iAbilityStep = 0;
+	}
+}
+
+void AUnitAI::SetInstantAbilityHolding(UAbilityDT* _AbilityRef)
+{
+	if (AbilityTask)
+	{
+		AbilityTask->InstantHoldingAbility = _AbilityRef;
+		AbilityTask->iAbilityStep = 0;
+	}
+}
+
+void AUnitAI::ForseUpdateHolding()
+{
+	if (AbilityTask)
+	{
+		AbilityTask->StopPerformHoldingAbilityPose(this);
+	}
+}
+
+
+bool AUnitAI::IsHoldingPose()
+{
+	if(UnitOwner->IsHasInstantHoldAbility() || 
+		UnitOwner->IsHasPermanentHoldAbility())
+		return true;
+
+	return false;
+}
+
+void AUnitAI::ActivateHoldingPose()
+{
+
+	//--------------------if (UnitOwner->FastPanelSlots[UnitOwner->FastPanelSlotSelected].IndexInContainer != -1)
+	{
+		// ** is Unit-Ability
+		//----------if (UnitOwner->FastPanelSlots[UnitOwner->FastPanelSlotSelected].AbilityName != FName("none"))
+		{
+/*			UnitOwner->GetHoldingPoseData(
+				ESlotType::Perk_panel,    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				HoldingPoseStep,
+				preAbilityPoseStep);
+*/		}
+		// ** is Item-Ability
+		//-------------------else
+		{
+			// .................................
+			// .................................
+			// ................................. @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			// .................................
+			// .................................
+		}
+	}
+
+	
+
+
+/*	FAbilityStep* preAbilityPoseStep = nullptr; 
+
+	UnitOwner->GetHoldingPoseData(
+		HoldingPoseInContainerType,
+		HoldingPoseInContainerIndex,
+		HoldingPoseStep,
+		preAbilityPoseStep);
+
+		
+
+
+	//+++++VisualEffect* effect;
+	//+++++Sound8* sound
+	UAnimMontage* animMontage = GetGameAnimation(preAbilityPoseStep->AnimationKEY);
+	if (animMontage)
+	{
+		bool isPlayTOP = true;
+		float fromTime = 0.f;
+		PlayAnimate(animMontage, isPlayTOP, fromTime);
+	}
+
+	++HoldingPoseStep;
+	*/
+}
+
+
+
+
+
 
 
 // **  ************************************************************************
-// **  ************************       EVENT      ************************
+// **  **************************       EVENT      **************************
 // **  ************************************************************************
 
 
@@ -165,8 +300,25 @@ void AUnitAI::OnFinishAnimation(UAnimMontage* FinishedAnimMontage, bool _bInterr
 {
 	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnFinishAnimation():         %s"), *GetName());
 
-	UpdateLogic();
+	// ** if(CurrTaskRef)
+	// **	CurrTaskRef->OnFinishAnimation(this, FinishedAnimMontage, _bInterrupted);
+
+	//--if (IsUpdateLogicAfterAnim)	// ** @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  PUTANNO
+	{
+	// 777	UpdateLogic();
+	}
 }
+
+
+void AUnitAI::OnAnimNotify(FString _NotifyName)
+{
+	if (CurrTaskRef)
+		CurrTaskRef->OnAnimationNotify(this, _NotifyName);
+	//else
+	//	UpdateLogic();
+}
+
+
 
 void AUnitAI::OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
 {
@@ -174,11 +326,6 @@ void AUnitAI::OnChangeTurnBaseGameState(ETurnBaseGameState _TurnBaseGameState)
 	UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>>      AUnitAI::OnChangeTurnBaseGameState():         %s"), *GetName());
 }
 
-void AUnitAI::OnAnimNotify(FString _NotifyName)
-{
-	if (CurrTaskRef)
-		CurrTaskRef->OnAnimationNotify(this, _NotifyName);
-}
 
 
 
@@ -215,6 +362,30 @@ EPossesingGameState AUnitAI::GetPossesingGameState()
 }
 
 
+bool AUnitAI::IsRealTimeMode() const
+{
+	return GameState->IsRealTimeMode();
+}
+
+bool AUnitAI::IsTurnBaseMode() const
+{
+	return GameState->IsTurnBaseMode();
+}
+
+bool AUnitAI::IsPauseMode() const
+{
+	return GameState->IsPauseMode();
+}
+
+
+
+//---------
+////void AUnitAI::UpdateFastPanelHUD() const
+////{
+////	return UnitOwner->UpdateFastPanelHUD();
+////}
+
+
 
 // **  ************************************************************************
 // **  **********************       Misc_Operation      **********************
@@ -229,11 +400,11 @@ void AUnitAI::SetTask(bool _bAddMoreOne, ETaskType _TaskType, FTaskData _TaskDat
 
 	_TaskData.TaskPriority = _TaskPriority;
 
-	for (int32 i = 0; i < ActionTaskssObj.Num(); ++i)
+	for (int32 i = 0; i < ActionTasksObj.Num(); ++i)
 	{
-		if (ActionTaskssObj[i]->TaskType == _TaskType)
+		if (ActionTasksObj[i]->TaskType == _TaskType)
 		{
-			_TaskData.TaskRef = ActionTaskssObj[i];
+			_TaskData.TaskRef = ActionTasksObj[i];
 			break;
 		}
 	}
@@ -402,16 +573,25 @@ void AUnitAI::UpdateLogic()
 			CurrTaskRef->BreakTask(this);
 		else
 		{
-			CurrTaskRef = ActionTaskssObj[DailyBhvrTaskIndex];
+			CurrTaskRef = ActionTasksObj[DailyBhvrTaskIndex];
 			CurrTaskRef->ContinueTask(this);
 		}
 	}
-	else
+	else 
+	if(false)// +++++ else if(_Go_Home_)
 	{
 		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@			Go  HOME Point
 		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@			Set HOME Rotate
 		//  @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	}
+	else 
+	if(IsHoldingPose() && AbilityTask && !CurrTaskRef)
+	{
+		// ** CurrTaskRef = nullptr;
+		//--777---TasksBuffer.Reset();
+		//---ActivateHoldingPose();
+		AbilityTask->PerformHoldingAbilityPose(this);
 	}
 
 	// ** HUD-Task-Queue update
@@ -595,6 +775,64 @@ float AUnitAI::GetDistanceToTarget(AActor* _TargetActor, bool _WithMoveDistCorre
 
 	return (dist > 0.f) ? dist : 0.f;
 }
+
+
+
+
+// **  ************************   Task_Operation  ************************
+
+
+bool AUnitAI::GenerateNavPath(bool _IsDrawPath, bool _UseSpecialPoint, FVector _GoalPoint)
+{
+	// ** Unit dont has Move-Task
+	if (MoveTaskIndex == -1)
+		return false;
+
+	// ** if task Move => Stop Task
+	if (CurrTaskRef && 
+		CurrTaskRef->TaskType == ETaskType::MoveTo)
+		CurrTaskRef->BreakTask(this);
+
+
+	UTMoveTo* moveTask = Cast<UTMoveTo>(ActionTasksObj[MoveTaskIndex]);
+
+	bool isSucces = moveTask->GenerateNavPath(this, _UseSpecialPoint, _GoalPoint);
+
+	if(!_IsDrawPath)
+		return isSucces;
+
+	moveTask->DrawNavPathMarker(this);
+
+	return isSucces;
+}
+
+bool AUnitAI::IsNavPathGenerate()
+{
+	// ** Unit dont has Move-Task
+	if (MoveTaskIndex == -1)
+		return false;
+
+	return Cast<UTMoveTo>(ActionTasksObj[MoveTaskIndex])->IsNavPathGenerate(this);
+}
+
+
+void AUnitAI::HideNavPathMarkers()
+{
+	// ** Unit dont has Move-Task
+	if (MoveTaskIndex == -1)
+		return;
+
+	Cast<UTMoveTo>(ActionTasksObj[MoveTaskIndex])->HideNavPathMarkers(this);
+}
+
+
+
+
+
+
+
+
+
 
 // ****************************************************
 // *****************   TEST_DEBUG  *****************

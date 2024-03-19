@@ -32,6 +32,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void ShowFastPanel(class AUnit* _FastPanelUnit);
 
+	UFUNCTION(BlueprintCallable, Category = "OOO")
+		void HideFastPanel();
+
+/*
+	UFUNCTION(BlueprintCallable, Category = "OOO")		
+		void SelectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent);
+
+	UFUNCTION(BlueprintCallable, Category = "OOO")		
+		void DeselectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent);
+*/
 
 	UFUNCTION(BlueprintCallable, Category = "OOO")
 		void UpdateFastPanel(class AUnit* _FastPanelUnit);

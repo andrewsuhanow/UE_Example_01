@@ -53,6 +53,10 @@ public:
 		virtual void OnAnimationNotify(class AUnitAI* _OwnerAI, FString _NotifyName) {};
 
 	UFUNCTION()
+		virtual void OnFinishAnimation(class AUnitAI* _OwnerAI,
+			UAnimMontage* FinishedAnimMontage, bool _bInterrupted);
+
+	UFUNCTION()
 		virtual void TaskComplit(class AUnitAI* _OvnerAI);
 
 	UFUNCTION()

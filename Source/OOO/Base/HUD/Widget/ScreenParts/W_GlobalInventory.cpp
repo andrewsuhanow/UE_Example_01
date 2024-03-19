@@ -240,6 +240,9 @@ void UW_GlobalInventory::AddCellToGlobalInv(ABaseGameMode* _GameMode, float _Slo
 			0, 0,						// ** dont Translation;	
 			ESlotType::global_inv);
 
+
+		NewSlot->SetBarProgress(0.f);
+
 		NewSlot->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
 
 		InventoryScroll->AddChild(NewSlot);

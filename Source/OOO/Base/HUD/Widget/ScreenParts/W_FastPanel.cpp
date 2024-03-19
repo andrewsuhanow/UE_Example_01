@@ -8,7 +8,7 @@
 
 #include "../../../Unit/Base/Unit.h"
 #include "../../../Ability/AbilityComponent.h"
-#include "../../../Ability/Struct/AbilityDT.h"
+#include "../../../Ability/AbilityDT.h"
 //-----#include "../../../Inventory/InventoryComponent.h"
 
 #include "../../../Unit/Struct/FastPanelSlot.h"
@@ -21,6 +21,7 @@
 #include "Components/HorizontalBox.h"
 //#include "Components/ScrollBox.h"
 #include "Components/SizeBox.h"
+#include "Components/Image.h"
 
 
 void UW_FastPanel::NativePreConstruct()
@@ -63,6 +64,48 @@ void  UW_FastPanel::ShowFastPanel(AUnit* _FastPanelUnit)
 }
 
 
+void UW_FastPanel::HideFastPanel()
+{
+	SetVisibility(ESlateVisibility::Hidden);  				// ** Visible,  Hidden,  Collapsed
+}
+
+
+
+/*
+void UW_FastPanel::SelectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent)
+{
+	if (_SlotIndex < 0 || _SlotIndex >= SlotObj.Num())
+		return;
+
+	if (_IsPermanent)
+	{
+		SlotObj[_SlotIndex]->PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+	else
+	{
+		SlotObj[_SlotIndex]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	}
+}
+
+
+
+void UW_FastPanel::DeselectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent)
+{
+	if (_SlotIndex < 0 || _SlotIndex >= SlotObj.Num())
+		return;
+
+	if (_IsPermanent)
+	{
+		SlotObj[_SlotIndex]->PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	}
+	else
+	{
+		SlotObj[_SlotIndex]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+	}
+}
+*/
+
+
 
 void UW_FastPanel::UpdateFastPanel(AUnit* _FastPanelUnit)
 {
@@ -94,33 +137,47 @@ void UW_FastPanel::UpdateFastPanel(AUnit* _FastPanelUnit)
 
 		UTexture2D* Image = nullptr;
 
-		int32 itemIndexInMap = _FastPanelUnit->FastPanelSlots[i].IndexInContainer;
-		EAbilityType abilType = _FastPanelUnit->FastPanelSlots[i].AbilityType;
+		int32 itemoOrAbilityIndexInContainer = _FastPanelUnit->FastPanelSlots[i].IndexInContainer;
+		FName abilityName = _FastPanelUnit->FastPanelSlots[i].AbilityName;
 
 		// ** Slot empty
-		if (itemIndexInMap == -1)
+		if (itemoOrAbilityIndexInContainer == -1)
 		{
 			/// ** Image = nullptr;
 			indexInContainer = -1;
 			SlotObj[i]->SetItemCount(0, 0, 0);	// ** Set slot-text (hide text)
+			SlotObj[i]->SetBarProgress(0.f);
 		}
-
-		// ** its Ability
-		else if (abilType != EAbilityType::none)
+		else if (itemoOrAbilityIndexInContainer < 0)
 		{
-			FAbilityDT *abilRef = _FastPanelUnit->Ability->Abilities.Find(abilType);
-			if (abilRef)
+			return;
+		}
+		// ** its Ability
+		else if (abilityName != FName("none"))
+		{
+			TArray<FAbilityList>& AbilityList = _FastPanelUnit->Ability->UnitAbilityList;
+
+			if (itemoOrAbilityIndexInContainer >= AbilityList.Num())
+				return;
+
+			TSubclassOf<UAbilityDT>& abilityClass = AbilityList[itemoOrAbilityIndexInContainer].Ability_class;
+			if (abilityClass)
 			{
-				Image = abilRef->GetImage();
-				indexInContainer = i;
-				SlotObj[i]->SetItemCount(0, 0, 0);	
+				UAbilityDT* abilityCDO = abilityClass->GetDefaultObject<UAbilityDT>();
+				if (abilityCDO)
+				{
+					Image = abilityCDO->GetImage();
+					indexInContainer = i;
+					SlotObj[i]->SetItemCount(0, 0, 0);
+					SlotObj[i]->SetBarProgress(0.f);
+				}
 			}
 		}
 
 		// ** its Item 
 		else
 		{
-			FItemDT* itemDT = _FastPanelUnit->FastPanelItem.Find(itemIndexInMap);
+			FItemDT* itemDT = _FastPanelUnit->FastPanelItem.Find(itemoOrAbilityIndexInContainer);
 			if (itemDT)
 			{
 				Image = itemDT->GetOneSlotImage();
@@ -144,12 +201,23 @@ void UW_FastPanel::UpdateFastPanel(AUnit* _FastPanelUnit)
 
 		SlotObj[i]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
 
+		SlotObj[i]->SetBarProgress(0.f);
 
+		SlotObj[i]->PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+		SlotObj[i]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 
 		if (indexInContainer > unitFastPanelSlotNum)
 			break;
 	}
 
+	if (_FastPanelUnit->ContainerOfHoldingPermanent == ESlotType::fast_panel &&
+		_FastPanelUnit->PermanentHoldingAbility >= 0)
+		SlotObj[_FastPanelUnit->PermanentHoldingAbility]->
+		PermanentSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+	if (_FastPanelUnit->ContainerOfHoldingInstance == ESlotType::fast_panel &&
+		_FastPanelUnit->InstantHoldingAbility >= 0)
+		SlotObj[_FastPanelUnit->InstantHoldingAbility]->
+		MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 }
 
 
@@ -160,6 +228,7 @@ void UW_FastPanel::AddCellToFastPanel(ABaseGameMode* _GameMode, float _SlotSize,
 {
 
 	UW_Slot* NewSlot = WidgetTree->ConstructWidget<UW_Slot>(_GameMode->W_Slot_Class);
+	
 
 	if (NewSlot)
 	{

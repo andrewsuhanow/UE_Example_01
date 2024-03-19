@@ -56,7 +56,8 @@ struct FTaskData
 		TArray<FVector> Vector3dParam;
 	//+++++UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
 	//+++++	FRotator Rotation;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OOO")
+		TArray<FName> NameParam;
 
 
 	FTaskData& operator=(const FTaskData& Other)
@@ -97,6 +98,11 @@ struct FTaskData
 		this->FloatParam.Reset();
 		for (int32 i = 0; i < Other.FloatParam.Num(); ++i)
 			this->FloatParam.Add(Other.FloatParam[i]);
+
+		// ** NameParam  <FName> ;
+		this->NameParam.Reset();
+		for (int32 i = 0; i < Other.NameParam.Num(); ++i)
+			this->NameParam.Add(Other.NameParam[i]);
 
 		return *this;
 	}

@@ -173,8 +173,8 @@ void UW_EquipPanel::UpdateEquipPanel(class AUnit* _Unit)
 	for (int32 i = 0; i < WeaponSlotsArray.Num(); ++i)
 	{
 		WeaponSlotsArray[i]->SetVisibility(ESlateVisibility::Collapsed);
-		WeaponSlotsArray[i]->SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
-		//WeaponSlotsArray[si]->SelectorImage1->SetVisibility(ESlateVisibility::Hidden);
+		WeaponSlotsArray[i]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+		//WeaponSlotsArray[si]->MaintSelectImg->SetVisibility(ESlateVisibility::Hidden);
 	}
 
 
@@ -213,7 +213,7 @@ void UW_EquipPanel::UpdateEquipPanel(class AUnit* _Unit)
 	for (int32 i = 0; i < ArmorSlotsArray.Num(); ++i)
 	{
 		ArmorSlotsArray[i]->SetVisibility(ESlateVisibility::Collapsed);
-		ArmorSlotsArray[i]->SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
+		ArmorSlotsArray[i]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 0.0f));
 		//ArmorSlotsArray[si]->SelectorImage1->SetVisibility(ESlateVisibility::Hidden);
 	}
 	
@@ -275,11 +275,15 @@ void UW_EquipPanel::SetEquipSlotParam(class AUnit* _Unit,
 				0, 0,						// ** dont Translation;	
 				dontChangeType);
 
+
+
+			_SlotsArray[si]->SetBarProgress(0.f);
+
 			// ** set selected slot
 			
 			if (unitSlotIndex == _Unit->GetSelectedWeaponSlotIndex())
 			{
-				_SlotsArray[si]->SelectorImage1->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
+				_SlotsArray[si]->MaintSelectImg->SetColorAndOpacity(FLinearColor(1.0f, 1.0f, 1.0f, 1.0f));
 			}
 
 			_SlotsArray[si]->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden

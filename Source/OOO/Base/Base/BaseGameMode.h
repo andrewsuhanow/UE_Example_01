@@ -39,13 +39,17 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TSubclassOf<class ABaseHUD> BaseHUD_Class;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TSubclassOf<class ASpectator> Spectator_Class;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TSubclassOf<class UW_Screen> W_Screen_Class;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TSubclassOf<class UW_Slot> W_Slot_Class;
+	//-------UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TSubclassOf<class UW_EffectSlot> W_EffectSlot_Class;
 
-	UPROPERTY(EditDefaultsOnly, Category = "OOO!_DefaultGameParam")						class UDataTable* GameAbilityArchive;
+	//UPROPERTY(EditDefaultsOnly, Category = "OOO!_DefaultGameParam")						class UDataTable* GameAbilityArchive;
 
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float RoundTime = 1.5f;
 
 	// ** UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")	bool IsInventorSizeFixed = true;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		int32 MainInvCollNum = 6;			// ** (Const) Horizontal
@@ -68,7 +72,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float WeaponPanelSlotSize = 64.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float UnitEffectIconSize = 32.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		UTexture2D* MainInvertorySlotTexture = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		float MouseStopHoldingTime = 1.5f;	// ** time when mouse on const position  (Context param/meny)
+
 
 	// ** FAnimationsGroup.Animation
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO!_DefaultGameParam")		TMap<EUnitGameType, FWeaponAnimateGroup> GameAnimation;
@@ -93,6 +102,8 @@ public:
 		class ABaseGameState* BGameState;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_DefaultGameParam")
 		class ABaseHUD* HUD;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "OOO_DefaultGameParam")
+		class ASpectator* Spectator;
 
 
 
@@ -135,10 +146,8 @@ public:
 // ****************************************************************************************************	
 // *******************************************    Ability    ******************************************
 
-public:
 
-	UFUNCTION(Blueprintcallable, Category = "OOO_Ability")
-		UDataTable* GetGameAbilityArchive();
+
 
 
 // ****************************************************************************************************	
@@ -161,6 +170,9 @@ public:
 		int32 GetGameHour();
 	UFUNCTION(Blueprintcallable, Category = "OOO_GameTime")
 		void AddTime(int32 _Hour = 1);
+
+	UFUNCTION(Blueprintcallable, Category = "OOO_GameTime")
+		FORCEINLINE float GetRoundTime() { return RoundTime; };
 	
 };
 

@@ -7,14 +7,14 @@
 #include "../Base/Controller/Task/Struct/TaskData.h"		// ** SetUnitTask()  ->  AI
 #include "../Base/Controller/Task/Enum/TaskType.h"			// ** SetUnitTask()  ->  AI
 
-#include "../Base/Ability/Enum/AbilityType.h"
+//-----#include "../Base/Ability/Enum/AbilityType.h"
 
 #include "GameFramework/PlayerInput.h"						// ** FInputActionKeyMapping
 
 #include "../Base/Base/Enum/TurnBaseGameState.h"
 
 #include "../Base/Item/Struct/ItemDT.h"
-#include "../Base/Ability/Enum/AbilityType.h"
+//#include "../Base/Ability/Enum/AbilityLogic.h"
 
 #include "../Base/Controller/Task/Enum/TacticalMoveType.h"
 #include "../Base/Unit/Enum/UnitPose.h"
@@ -78,7 +78,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_MoveToPointName")		bool Point_3_IsRotateTo = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_MoveToPointName")		FName Point_4_MoveTo = FName("wpL_03");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_MoveToPointName")		bool Point_4_IsRotateTo = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_MoveToPointName")		FName Point_5_MoveTo = FName("Un2");
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_MoveToPointName")		FName Point_5_MoveTo = FName("Un6");
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "OOO_002_MoveToPointName")		bool Point_5_IsRotateTo = false;
 
 public:

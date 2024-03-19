@@ -9,9 +9,9 @@
 #include "../../../Unit/Base/Unit.h"
 //--------------#include "../../../Inventory/InventoryComponent.h"
 
-#include "../../../Ability/AbilityComponent.h"
-#include "../../../Ability/Enum/AbilityType.h"
-#include "../../../Ability/Struct/AbilityDT.h"
+//++++++++++++++++++#include "../../../Ability/AbilityComponent.h"
+//++++++++++++++++++++++++#include "../../../Ability/Enum/AbilityType.h"
+//++++++++++++++++++#include "../../../Ability/Struct/AbilityDT.h"
 
 #include "../../../Base/BaseGameMode.h"
 
@@ -112,6 +112,8 @@ void UW_WeaponAttacksPanel::UpdateAttacksWpnPanel(AUnit* _Unit,
 	for (int32 i = 0; i < actualAttackNum; ++i)
 	{
 
+		SlotObj[i]->SelectUnit = _Unit;
+
 		SlotObj[i]->SetSlotParam(i,		// ** link to attack-index 
 			_AttackIcon[i], slotBackTexture,
 			slotSize, slotSize,
@@ -139,6 +141,7 @@ void UW_WeaponAttacksPanel::AddCellToWeaponAttacksPanel(ABaseGameMode* _GameMode
 			ESlotType::weapon_attacks_panel);		// ** Its weapon-Slot
 
 		NewSlot->SetItemCount(0, 0, 0);	// ** Set slot-text (hide text)
+		NewSlot->SetBarProgress(0.f);
 
 		NewSlot->SetVisibility(ESlateVisibility::Visible); /// Collapsed, Visible, Hidden	
 

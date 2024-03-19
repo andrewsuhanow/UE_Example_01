@@ -16,6 +16,7 @@ public class OOO : ModuleRules
             "InputCore",
 
             // ** 
+            "Niagara",
             "UMG"
         });
 

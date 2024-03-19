@@ -7,7 +7,7 @@
 #include "../../Base/BaseGameState.h"
 #include "../../HUD/BaseHUD.h"
 
-#include "../../UnitState/UnitStateComponent.h"
+#include "../../UnitState/UnitParamComponent.h"
 
 #include "../../Controller/UnitAI.h"
 
@@ -16,18 +16,30 @@
 #include "../../WorldObject/WayPoint/WayPoint.h"
 
 #include "../../Controller/Task/Base/DailyBhvrQueue.h"		// ** 7777777777777777777
+#include "../../Controller/Task/TUseAbility.h"
 
 #include "../../Fraction/FractionSystem.h"
 
 #include "../../Inventory/InventoryComponent.h"
 
 #include "../../Amunition/WeaponComponent.h"
+#include "../../Amunition/WeaponDT.h"
+
 #include "../../Amunition/ArmorComponent.h"
 
 #include "../../Ability/AbilityComponent.h"
+#include "../../Ability/AbilityDT.h"
 
 //#include "../../Item/WorldItem.h"
 #include "../../Amunition/WeaponWorldItem.h"
+
+#include "../../Unit/3DWidget/W_UnitParamBar.h"
+#include "../../Unit/3dWidget/UnitParamBar.h"
+
+// --------------------------------------------
+
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 // --------------------------------------------
 
@@ -45,6 +57,10 @@
 // --------------------------------------------
 
 #include "Kismet/GameplayStatics.h"   // ** GetAllActorsOfClass()
+
+
+#include "DrawDebugHelpers.h"			//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
 
 
@@ -87,9 +103,10 @@ AUnit::AUnit()
 	DamageSense->SetMaxAge(15.f);
 
 
-
-	// **  UnitState  
-	UnitState = CreateDefaultSubobject<UUnitStateComponent>(TEXT("UnitState"));
+	
+	// **  UnitParam
+	UnitParam = CreateDefaultSubobject<UUnitParamComponent>(TEXT("UnitParam"));
+	UnitParam->Init();
 
 	// **  Inventory   
 	Inventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
@@ -154,6 +171,7 @@ void AUnit::PreInitializeComponents()
 void AUnit::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
 	// ** Collision
 	//++++++++++++++++ GetCapsuleComponent()->GetScaledCapsuleSize(CapsuleRadius, CapsuleHalfHaight);
@@ -233,27 +251,39 @@ bool AUnit::StartGame(bool finalInit)
 		// ** Inventory Component
 		Inventory->Init();
 
+	
+		// ** Ability Component
+		Ability->Init();
+
+
 		InitFastPanel();
 
-		// ** Ability Component
-		// -----
-		// ----- @@@@@@
-		// -----
 
 		// ** Weapon Component
 		WeaponComponent->InitWeapons(this);
-		ArmorComponent->InitArmor(this);
+		
 
 		// ** Armor Component
-		// ++++++++ ArmorComponent->InitArmour(this);
+		ArmorComponent->InitArmor(this);
 
 		SetPose(EUnitPose::RelaxMove);
+
+		// ** Unit-Param-Bar
+		if (W_UnitParamBar_class)
+		{
+			UnitParamBar = GetWorld()->SpawnActor<AUnitParamBar>();
+			if (UnitParamBar)
+				UnitParamBar->Init(this, W_UnitParamBar_class);
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT(">>>>>>>>>> ERROR:   '%s'::AUnit::Init():      Widget Bar = 'W3dBar_UnitParam_class'   not Set"), *GetName());
+				UKismetSystemLibrary::QuitGame(GetWorld(), GetWorld()->GetFirstPlayerController(), EQuitPreference::Type::Quit, true);
+			}
+		}
 
 		// ** Add default items to MainInventor
 		//++++ for(int32 i = 0; i < InitInvertorItems.Num(); ++i)
 		//++++	TryAddItemToMainInventory(nullptr, -1, InitInvertorItems[i]);
-		
-
 		
 
 		// +++  ** Bind to delegate for End-Animation-EVENT   (ABaseUnit::    FOnMontageEnded OnAnimationFinish;)
@@ -326,6 +356,21 @@ void AUnit::UpdateAttacksWpnPanel_HUD()
 	}
 }
 
+
+void AUnit::UpdateParameterPanel_HUD()
+{
+	if (GetIsUnitSelected() && 
+		!IsUnitInGroup())
+		HUD->UpdateParameterPanel(this);
+}
+
+
+void AUnit::UpdateFastPanel_HUD()
+{
+	if (GetIsUnitSelected() &&
+		!IsUnitInGroup())
+		HUD->ShowFastPanel(this);
+}
 
 // **  ************************************************************************
 // **  ************************     PERCEPTION     ************************* 
@@ -483,6 +528,16 @@ void AUnit::SelectUnit()
 
 		if (HUD->IsEquipPanelShown)
 			HUD->ShowEquipPanel(this);	// ** update
+
+		HUD->ShowFastPanel(this);	// ** update
+
+
+		if (CurrUnitEffectSlots.Num() > 0)
+			HUD->ShowUnitEffectPanel(this);
+
+
+		HUD->ShowParameterPanel(this);
+
 	}
 
 	UpdateTaskQueuePanel_HUD();
@@ -509,6 +564,24 @@ void AUnit::DeselectUnit()
 	UpdateTaskQueuePanel_HUD();
 
 	HUD->HideAttacksWpnPanel();
+	HUD->HideFastPanel();
+
+	// ** Deselect all Selected on Fast-Panem
+	//--------GameMode->ActivateFastPanelBtnInSpectator(-1);
+
+
+
+	if (GameState->GetCountOfSelectUnits() == 1 && 
+		GameState->GetSelectedUnit(0)->CurrUnitEffectSlots.Num() > 0)
+		HUD->ShowUnitEffectPanel(this);
+	else
+		HUD->HideUnitEffectPanel();
+
+
+	HideNavPathMarkers();
+
+
+	HUD->HideParameterPanel();
 
 	// @@@@@ ...
 	// @@@@@ ...
@@ -522,9 +595,240 @@ bool AUnit::GetIsUnitSelected()
 
 bool AUnit::IsUnitInGroup()
 {
-	return (GameState->GetUnitGroupNum() > 1);
+	return (GameState->GetCountOfSelectUnits() > 1);
 }
 
+
+void AUnit::SetUnitMouseFocused(bool _IsSet)
+{
+	IsUnitMouseFocused = _IsSet;
+}
+
+bool AUnit::GetIsUnitMouseFocused() const
+{
+	return IsUnitMouseFocused;
+}
+
+
+
+
+/*
+void AUnit::SetCommandData_Unit(AUnit* _TargetUnit, bool _IsShiftPresed)
+{
+	// ** Is has Select-Weapon-Attack
+	if (true)
+	{
+
+	}
+	// ** Is has Permanent-Weapon-Attack
+	else if (true)
+	{
+
+	}
+}
+
+void AUnit::SetCommandData_Location(bool _IsShiftPresed)
+{
+
+}
+*/
+
+
+
+bool AUnit::GenerateNavPath(bool _IsDrawPath, bool _UseSpecialPoint, FVector _GoalPoint)
+{
+	return AI->GenerateNavPath(_IsDrawPath, _UseSpecialPoint, _GoalPoint);
+}
+
+
+bool AUnit::IsNavPathGenerate()
+{
+	return AI->IsNavPathGenerate();
+}
+
+void AUnit::HideNavPathMarkers()
+{
+	AI->HideNavPathMarkers();
+}
+
+
+
+
+
+// **  ************************************************************************
+// **  *************************     Unit_Effect     *************************** 
+// **  ************************************************************************
+
+
+void AUnit::AddUnitEffect(FUnitEffectDT* _UnitEffect)
+{
+	if (!_UnitEffect)
+		return;
+
+
+	FUnitEffectSlotDT newUnitEffectSlotDT;
+	newUnitEffectSlotDT.CastSlotEffectFromUnitEffect(*_UnitEffect);
+
+	bool isHoldingEffect = newUnitEffectSlotDT.Init(this);
+	if (isHoldingEffect)
+	{
+		CurrUnitEffectSlots.Add(newUnitEffectSlotDT);
+		CurrUnitEffectSlots.Last().IndexInUnit = CurrUnitEffectSlots.Num() - 1;
+		
+		// ** Redraw HUD-Element
+		if (IsUnitSelected && !IsUnitInGroup())
+		{
+			if (CurrUnitEffectSlots.Num() > 0)
+				HUD->ShowUnitEffectPanel(this);
+		}
+
+		// ** Effect Loop
+		if (!GetWorld()->GetTimerManager().IsTimerActive(TH_UpdateUnitEffect))
+		{
+			GetWorld()->GetTimerManager().SetTimer(TH_UpdateUnitEffect, this, 
+				&ThisClass::UpdateUnitEffect, GameMode->RoundTime, false);
+		}
+
+
+		// ------------------------- TEST -------------------------------
+		DrawDebugSphere
+		(
+			GetWorld(),
+			GetActorLocation(),
+			30,
+			12,
+			FColor::Red,
+			false,
+			1.0f,
+			10,
+			10.f
+		);
+		// ------------------------- TEST -------------------------------
+	};
+
+
+
+
+/*
+	FUnitEffectDT newUnitEffect = *_UnitEffect;
+
+	bool isHoldingEffect = newUnitEffect.Init(this);
+
+	if (isHoldingEffect)
+	{
+		CurrUnitEffects.Add(newUnitEffect);
+		CurrUnitEffects.Last().IndexInUnit = CurrUnitEffects.Num() - 1;
+		CurrUnitEffects.Last().ActivateUpdate();
+	}
+*/
+
+
+
+
+
+	// ** Niagara visual effect
+	/*
+	int32 socketNum = _UnitEffect->VisualEffectSocket.Num(); 
+
+	for (int32 i = 0; i < _UnitEffect->VisualEffect.Num(); ++i)
+	{
+		if (_UnitEffect->VisualEffect[i])
+		{
+			FName socketName = _UnitEffect->VisualEffectSocket[i];
+			if(i >= socketNum)
+				socketName = NAME_None;
+
+			UNiagaraComponent* NiagaraComp = UNiagaraFunctionLibrary::SpawnSystemAttached(
+				_UnitEffect->VisualEffect[0],
+				GetCapsuleComponent(),
+				socketName,		// ** NAME_None,
+				FVector(0.f),
+				FRotator(0.f),
+				EAttachLocation::Type::KeepRelativeOffset,
+				true);
+		}
+	}
+	*/
+}
+
+void AUnit::UpdateUnitEffect()
+{
+	for (int32 i = CurrUnitEffectSlots.Num()-1; i >= 0; --i)
+	{
+		CurrUnitEffectSlots[i].Continue(this);
+
+		// ------------------------- TEST -------------------------------
+		DrawDebugSphere
+		(
+			GetWorld(),
+			GetActorLocation(),
+			30,
+			12,
+			FColor::Red,
+			false,
+			1.0f,
+			10,
+			10.f
+		);
+		// ------------------------- TEST -------------------------------
+	}
+
+	// ** Redraw HUD-Element
+	if (IsUnitSelected && !IsUnitInGroup())
+	{
+		HUD->ShowUnitEffectPanel(this);
+	}
+	else if (GetIsUnitMouseFocused())
+	{
+		HUD->ShowTargetEffectPanel(this);
+	}
+
+	// ** Effect Loop
+	if (CurrUnitEffectSlots.Num() > 0)
+	{
+		GetWorld()->GetTimerManager().SetTimer(TH_UpdateUnitEffect, this,
+			&ThisClass::UpdateUnitEffect, GameMode->RoundTime, false);
+	}
+}
+
+void AUnit::BreakUnitEffect(int32 _Index, bool _IsForseBreak)
+{
+	if (_Index < 0 || _Index >= CurrUnitEffectSlots.Num())
+		return;
+
+	if (_IsForseBreak)
+	{
+		CurrUnitEffectSlots[_Index].Finish();
+		return;
+	}
+
+	if (CurrUnitEffectSlots[_Index].IsUnitEffectCanBeCanel)
+	{
+		CurrUnitEffectSlots[_Index].Finish();
+	}
+}
+
+void AUnit::RermoveUnitEffect(FUnitEffectSlotDT& _UnitEffect)
+{
+	
+	int32 currIndex = _UnitEffect.IndexInUnit;
+
+	CurrUnitEffectSlots.RemoveAt(_UnitEffect.IndexInUnit);
+
+	for (int32 i = currIndex; i < CurrUnitEffectSlots.Num(); ++i)
+	{
+		CurrUnitEffectSlots[i].IndexInUnit -= 1;
+	}
+
+	// ** Redraw HUD-Element
+	if (IsUnitSelected && !IsUnitInGroup())
+	{
+		if (CurrUnitEffectSlots.Num() >= 0)
+			HUD->ShowUnitEffectPanel(this);
+	}
+}
+
+	
 
 
 
@@ -533,15 +837,46 @@ bool AUnit::IsUnitInGroup()
 // **  ************************************************************************
 
 
-
-int32 AUnit::GetLevel() const
+float AUnit::GetParam(EUnitParam _Param)
 {
-	return -1;
+	return UnitParam->GetParam(_Param);
 }
-void AUnit::SetLevel(int32 _Val)
-{
 
+void AUnit::SetParam(EUnitParam _Param, float _Val)
+{
+	UnitParam->SetParam(_Param, _Val);
+
+	UpdateParameterPanel_HUD();
 }
+
+void AUnit::ModParam(EUnitParam _Param, float _Val)
+{
+	UnitParam->ModParam(_Param, _Val);
+
+	UpdateParameterPanel_HUD();
+}
+
+void AUnit::ModParamModificator(EUnitParam _Param, float _Val)
+{
+	UnitParam->ModParamModificator(_Param, _Val);
+
+	UpdateParameterPanel_HUD();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+int32 AUnit::GetLevel() const {	return -1; }
+void AUnit::SetLevel(int32 _Val) { }
 void AUnit::ModLevel(int32 _Val)
 {
 
@@ -550,23 +885,10 @@ void AUnit::ModLevel(int32 _Val)
 
 
 
-int32 AUnit::GetCurrentHP() const
-{
-	return -1;
-}
 
-int32 AUnit::GetCriticalHP(bool _GetBaseValue) const
-{
-	return -1;
-}
-int32 AUnit::GetMinHP(bool _GetBaseValue) const
-{
-	return -1;
-}
-int32 AUnit::GetHP(bool _GetBaseValue) const
-{
-	return -1;
-}
+
+
+
 int32 AUnit::GetTotalWpnLevel(bool _GetBaseValue) const
 {
 	return -1;
@@ -582,22 +904,6 @@ int32 AUnit::GetTotalMagikLevel(bool _GetBaseValue) const
 
 
 
-void AUnit::SetCurrentHP(int32 _Val)
-{
-
-}
-void AUnit::SetCriticalHP(int32 _Val, bool _GetBaseValue)
-{
-
-}
-void AUnit::SetMinHP(int32 _Val, bool _GetBaseValue)
-{
-
-}
-void AUnit::SetHP(int32 _Val, bool _GetBaseValue)
-{
-
-}
 void AUnit::SetTotalWpnLevel(int32 _Val, bool _GetBaseValue)
 {
 
@@ -757,7 +1063,7 @@ bool AUnit::SetItemToFastPanel(FItemDT* ItemDT, int32 ToSlotIndex)
 	// ** Stack
 	if (
 		FastPanelSlots[ToSlotIndex].IndexInContainer != -1  &&
-		FastPanelSlots[ToSlotIndex].AbilityType == EAbilityType::none &&
+		FastPanelSlots[ToSlotIndex].AbilityName == FName("none") &&
 		ItemDT->IsItemStackable())
 	{
 		FItemDT* UnderItemDT = FastPanelItem.Find(FastPanelSlots[ToSlotIndex].IndexInContainer);
@@ -784,7 +1090,7 @@ bool AUnit::SetItemToFastPanel(FItemDT* ItemDT, int32 ToSlotIndex)
 			}
 	}
 
-	FastPanelSlots[ToSlotIndex].AbilityType = EAbilityType::none;
+	FastPanelSlots[ToSlotIndex].AbilityName == FName("none");
 	FastPanelSlots[ToSlotIndex].IndexInContainer = ToSlotIndex;
 
 	FastPanelItem.Add(ToSlotIndex, *ItemDT);
@@ -792,40 +1098,57 @@ bool AUnit::SetItemToFastPanel(FItemDT* ItemDT, int32 ToSlotIndex)
 }
 
 
-bool AUnit::SetAbilityToFastPanel(EAbilityType _Ability, int32 ToSlotIndex)
+
+bool AUnit::SetAbilityToFastPanelByIndex(int32 _AbilityIndex, int32 _ToSlotIndex)
 {
-	// ** if (ToSlotIndex < 0 || ToSlotIndex >= FastPanelSlots.Num())
-	if (ToSlotIndex >= FastPanelSlots.Num())
+	if (_ToSlotIndex >= FastPanelSlots.Num())
+		return false;
+	if (_AbilityIndex < 0 && _AbilityIndex >= Ability->UnitAbilityList.Num())
 		return false;
 
-	if (ToSlotIndex == -1)
+	if (_ToSlotIndex == -1)
 	{
 		for (int32 i = 0; i < FastPanelSlots.Num(); ++i)
 		{
 			if (FastPanelSlots[i].IndexInContainer == -1)
 			{
-				ToSlotIndex = i;
+				_ToSlotIndex = i;
 				break;
 			}
 		}
 	}
-	if (ToSlotIndex == -1)
+	if (_ToSlotIndex == -1)
 		return false;
 
-	if (FastPanelSlots[ToSlotIndex].IndexInContainer != -1 &&
-		FastPanelSlots[ToSlotIndex].AbilityType == EAbilityType::none)
-		return false;
-
-
-	FastPanelSlots[ToSlotIndex].AbilityType = _Ability;
-	FastPanelSlots[ToSlotIndex].IndexInContainer = 999;	// ** mo matter but -1;
-
-	return true;
+	FName abilityName = Ability->GetAbilityNameByIndex(_AbilityIndex);;
+	if (abilityName != FName("none"))
+	{
+		FastPanelSlots[_ToSlotIndex].AbilityName = abilityName;
+		FastPanelSlots[_ToSlotIndex].IndexInContainer = _AbilityIndex;
+		return true;
+	}
+	return false;
 }
 
+/* ----777------
+bool AUnit::SetAbilityToFastPanelByName(FName _AbilityName, int32 _ToSlotIndex)
+{
+	// ** if (_ToSlotIndex < 0 || _ToSlotIndex >= FastPanelSlots.Num())
+	if (_ToSlotIndex >= FastPanelSlots.Num())
+		return false;
+
+	// ** Find ability in AbilityComponent
+	int32 abilityIndex = Ability->GetAbilityIndexByName(_AbilityName);
+	if (abilityIndex != -1)
+	{
+		return SetAbilityToFastPanelByIndex(abilityIndex, _ToSlotIndex);
+	}
+	return false;
+}
+*/
 
 // ** return "false" if slot empty 
-bool AUnit::GetFastPanelSlotElement(int32 Index, FItemDT*& GetItemDT, EAbilityType*& GetAbilityType)
+bool AUnit::GetFastPanelSlotElement(int32 Index, FItemDT*& _ItemDTRed, UAbilityDT*& _AbilityRef_CDO) 
 {
 	bool isNotEmpty = false;
 
@@ -836,16 +1159,22 @@ bool AUnit::GetFastPanelSlotElement(int32 Index, FItemDT*& GetItemDT, EAbilityTy
 		return isNotEmpty;
 
 	// ** if Ability in slot
-	if (GetAbilityType && FastPanelSlots[Index].AbilityType != EAbilityType::none)
+	if (Ability && FastPanelSlots[Index].AbilityName != FName("none"))
 	{
-		GetAbilityType = &FastPanelSlots[Index].AbilityType;
-		isNotEmpty = true;
+//++++++		TSubclassOf<UAbilityDT> abilitySubClass = Ability->GetAbilityClass_ByName(FastPanelSlots[Index].AbilityName);
+//++++++		if (abilitySubClass)
+		{
+//+++++			_AbilityRef_CDO = abilitySubClass->GetDefaultObject<UAbilityDT>();
+			isNotEmpty = true;
+		}
 	}
 
 	// ** if Item in slot
-	GetItemDT = FastPanelItem.Find(FastPanelSlots[Index].IndexInContainer);
-	isNotEmpty = true;
-
+	else
+	{
+		_ItemDTRed = FastPanelItem.Find(FastPanelSlots[Index].IndexInContainer);
+		isNotEmpty = true;
+	}
 
 	return isNotEmpty;
 }
@@ -859,7 +1188,7 @@ void AUnit::RemoveElementFromFastPanel(int32 ToSlotIndex)
 
 	if (-1 == FastPanelSlots[ToSlotIndex].IndexInContainer)
 		return;
-
+/*
 	// ** if Ability in slot
 	if (FastPanelSlots[ToSlotIndex].AbilityType != EAbilityType::none)
 	{
@@ -867,7 +1196,7 @@ void AUnit::RemoveElementFromFastPanel(int32 ToSlotIndex)
 		FastPanelSlots[ToSlotIndex].IndexInContainer = -1;
 		return;
 	}
-
+*/
 	// ** if Item in slot
 	FItemDT* itemDT_inMap = FastPanelItem.Find(FastPanelSlots[ToSlotIndex].IndexInContainer);
 	if (itemDT_inMap )
@@ -880,8 +1209,213 @@ void AUnit::RemoveElementFromFastPanel(int32 ToSlotIndex)
 
 
 
+void AUnit::ActivateFastPanelAbilBtn(ESlotType _ContainerType, int32 _ContainerSlotIndex, bool isLongClick)
+{
+	AI->ForseUpdateHolding();
+	SetHoldingAbilityState(_ContainerType, _ContainerSlotIndex, isLongClick);
+	
+
+	if (_ContainerType == ESlotType::Perk_panel)
+	{
+		HUD->ShowPerkPanel(this);
+		HUD->ShowFastPanel(this);
+	}
+	else if (_ContainerType == ESlotType::fast_panel)
+	{
+		HUD->ShowFastPanel(this);
+		if (HUD->IsPerkPanelShown)
+			HUD->ShowPerkPanel(this);
+		//(-------777777-------)
+		//if (isLongClick)
+		//	HUD->SelectFastPanelSlot(_ContainerSlotIndex, true);
+		//else
+		//	HUD->SelectFastPanelSlot(_ContainerSlotIndex, false);
+	}
+}
+
+bool AUnit::SetHoldingAbilityState(ESlotType _ContainerType, int32 _ContainerSlotIndex, bool isLongClick)
+{
+	// ** if (_ContainerSlotIndex < 0)  // ** Deactivate after Cast
+	// **	return false;
+
+	bool isActivate = false;
+	UAbilityDT* abilityRef = nullptr;
+	ESlotType slotType = ESlotType::none;
+
+	int32 abilityIndex = -1;
+	bool isAbilityItem = false;
+
+	switch (_ContainerType)
+	{
+
+		// ** if Activate ability in Perk-Panel  (AbilityList)
+	case ESlotType::Perk_panel:
+
+		if (_ContainerSlotIndex >= Ability->UnitAbilityList.Num())
+			return false;
+
+		abilityIndex = _ContainerSlotIndex;
+		Ability->GetUnitAbilityByIndex(abilityIndex, abilityRef);
+
+		slotType = ESlotType::Perk_panel;
+
+		break;
 
 
+		// ** if Activate ability in Fast-Panel  (AbilityList or Item)
+	case ESlotType::fast_panel:
+
+		if (_ContainerSlotIndex >= FastPanelSlots.Num())
+			return false;
+
+		abilityIndex = FastPanelSlots[_ContainerSlotIndex].IndexInContainer;
+
+		// ** if FastSlot free
+		if (abilityIndex == -1)
+			return false;
+
+		// ** ability from AbilityComponent
+		else if (FastPanelSlots[_ContainerSlotIndex].AbilityName != FName("none"))
+		{
+			Ability->GetUnitAbilityByIndex(abilityIndex, abilityRef);
+			isAbilityItem = false;
+		}
+		// ** ITEM-Ability
+		else  
+		{
+			isAbilityItem = true;
+			//.....@@@@@@@@@@@  GetAbility from Item
+		}
+
+		slotType = ESlotType::fast_panel;
+		break;
+
+	// ** case ESlotType::none:
+
+		// ** slotType = ESlotType::none;
+		// ** abilityRef = nullptr;
+		// ** _ContainerSlotIndex = -1;
+	}
+
+
+	// ** Set to AI->UseAbility 
+	if (isLongClick)
+		SetPermanentHoldingAbility(_ContainerSlotIndex, slotType, abilityRef);
+	else
+		SetInstantHoldingAbility(_ContainerSlotIndex, slotType, abilityRef);
+
+
+	// ** target is self
+	if (abilityRef && abilityRef->DefaultTargetType == ETargetType::Self)
+	{
+		
+		if (isLongClick)
+		{
+			SetHoldingAbilityState(ESlotType::none, -1, false);
+			//---SetPermanentHoldingAbility(_ContainerSlotIndex, slotType, abilityRef);
+		}
+		else
+		{
+			TArray<AUnit*> unitTarget;	// ** Self
+			unitTarget.Add(this);
+
+			FTaskData abilityTaskData;
+			UTUseAbility::SetTaskData_UseAbilityToUnit(abilityTaskData,
+				this, abilityIndex, isAbilityItem, unitTarget);
+
+			SetUnitTask(false, ETaskType::UseAbility, abilityTaskData);
+			return false;
+		}
+
+	}
+
+
+
+
+
+	AI->UpdateLogic();
+
+	UpdateFastPanel_HUD();
+
+	return false;
+}
+
+void AUnit::SetPermanentHoldingAbility(int32 _NewIndex, ESlotType _NewContainerType, UAbilityDT*& _AbilityRef)
+{
+	UAbilityDT* abilityRef = nullptr;
+
+	if (_NewContainerType == ESlotType::none || 
+		(ContainerOfHoldingPermanent == _NewContainerType &&
+		PermanentHoldingAbility == _NewIndex))
+	{
+		SetFastPanelButtonSelection(PermanentHoldingAbility, -1, ContainerOfHoldingPermanent, ESlotType::none);
+	}
+	else
+	{
+		SetFastPanelButtonSelection(PermanentHoldingAbility, _NewIndex, ContainerOfHoldingPermanent, _NewContainerType);
+		abilityRef = _AbilityRef;
+	}
+	AI->SetPermanentAbilityHolding(abilityRef);
+}
+
+void AUnit::SetInstantHoldingAbility(int32 _NewIndex, ESlotType _NewContainerType, UAbilityDT*& _AbilityRef)
+{
+	UAbilityDT* abilityRef = nullptr;
+
+	if (_NewContainerType == ESlotType::none ||
+		(ContainerOfHoldingInstance == _NewContainerType &&	
+		InstantHoldingAbility == _NewIndex))
+	{
+		SetFastPanelButtonSelection(InstantHoldingAbility, -1, ContainerOfHoldingInstance, ESlotType::none);
+	}
+	else
+	{
+		SetFastPanelButtonSelection(InstantHoldingAbility, _NewIndex, ContainerOfHoldingInstance, _NewContainerType);
+		abilityRef = _AbilityRef;
+	}
+	AI->SetInstantAbilityHolding(abilityRef);
+}
+
+void AUnit::SetFastPanelButtonSelection(int32& _SelectionType, int32 _SelectionTypeVal,
+	ESlotType& _ContainerType, ESlotType _ContainerTypeVal)
+{
+	_SelectionType = _SelectionTypeVal;
+	_ContainerType = _ContainerTypeVal;
+}
+
+int32 AUnit::GetPermanentHoldingAbility()
+{
+	return PermanentHoldingAbility;
+}
+
+int32 AUnit::GetInstantHoldingAbility()
+{
+	return InstantHoldingAbility;
+}
+
+
+
+
+bool AUnit::IsItemInFastPanelSlot(int32 _Index)
+{
+	if (_Index >= 0 && _Index < FastPanelSlots.Num())
+	{
+		return (FastPanelSlots[_Index].AbilityName == FName("none"));
+	}
+	return false;  // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   7777777  if slot Empty
+}
+/*
+FName AUnit::GetAbilityNameFromFastSlotIx(int32 _SlotIndex)
+{
+	if (_SlotIndex < 0 || _SlotIndex >= FastPanelSlots.Num())
+		return FName("none");
+
+	if (FastPanelSlots[_SlotIndex].AbilityName != FName("none"))
+		return FastPanelSlots[_SlotIndex].AbilityName;
+
+	return FName("none");
+}
+*/
 
 // **  ************************************************************************
 // **  ***************************     Ability     **************************** 
@@ -889,12 +1423,127 @@ void AUnit::RemoveElementFromFastPanel(int32 ToSlotIndex)
 
 
 
-void AUnit::AddAbility(EAbilityType _Ability)
+// @@@@@@@@@@@@@@@@@@@@  Ability
+// @@@@@@@@@@@@@@@@@@@@  Ability
+// @@@@@@@@@@@@@@@@@@@@  Ability
+/*
+void AUnit::AddAbilityByName(FName _AbilityName)
 {
-	Ability->AddAbility(_Ability);
+	Ability->AddAbilityByName(_AbilityName); 
+}
+*/
+
+
+void AUnit::AddAbilityByClass(TSubclassOf<UAbilityDT>& _AbilityDTClass)
+{
+	Ability->AddAbilityByClass(_AbilityDTClass);
+}
+
+void AUnit::RemoveAbilityByClass(TSubclassOf<UAbilityDT>& _AbilityDTClass)
+{
+	//+++++int32 deletedAbilityIndex = Ability->RemoveAbilityByClass(_AbilityDTClass);
+	
+	//+++++if (deletedAbilityIndex == -1)
+		return;
+
+	//++++++++++++++++++++++++++++
+	{
+		// ** @@@@@@@@   UPDATE FASRT-Panel
+		// **  All indexes (--)
+		// ** for (if FstPanel->Name != "none" && i >) 
+		// **	if(FstPanel->Index == deletedAbilityIndex) =>  Remove from FastPanel
+		// **   else if(FstPanel->Index > deletedAbilityIndex) => (--FstPanel->Index)
+	}
+}
+
+ETargetType AUnit::GetAbilityTargetType(int32 _iFastPanelAbility, int32& _TargetsCount)
+{
+	if (_iFastPanelAbility < 0 ||
+		_iFastPanelAbility >= FastPanelSlots.Num())
+		return ETargetType::Self;
+
+	// ** if Ability in slot
+	if(FastPanelSlots[_iFastPanelAbility].AbilityName != FName("none"))
+		return Ability->GetAbilityTargetType(
+			FastPanelSlots[_iFastPanelAbility].IndexInContainer, _TargetsCount);
+	//++++ else
+	//++++		Get Ability Data ftom Item-Ability:  (ETargetType, _TargetsCount)
+
+
+	return ETargetType::Self;
 }
 
 
+
+
+//bool AUnit::IsHasHoldingAbility()
+bool AUnit::IsHasPermanentHoldAbility()
+{
+	return //-----ContainerOfHoldingInstance != ESlotType::none ||
+		ContainerOfHoldingPermanent != ESlotType::none;
+}
+
+bool AUnit::IsHasInstantHoldAbility()
+{
+	return ContainerOfHoldingInstance != ESlotType::none;
+}
+
+
+
+/*-------------------
+bool AUnit::GetHoldingPoseData(ESlotType _ContainerType, int32 &_HoldingPoseStep, 
+								FAbilityStep*& _PreAbilityPoseStep)
+{
+	if (_HoldingPoseStep < 0)
+		return false;
+
+
+	if (_ContainerType == ESlotType::main_inv)
+	{
+		//..........................
+		//..........................
+		//..........................
+	}
+	else if (_ContainerType == ESlotType::Global_inv)
+	{
+		//..........................
+		//..........................
+		//..........................
+	}
+	else if (_ContainerType == ESlotType::Ability)
+	{
+		//..........................
+		//..........................
+		//..........................
+	}
+	else if (_ContainerType == ESlotType::Perk_panel)
+	{
+		UAbilityDT* _AbilityRef = nullptr;
+
+		int32 indexInContainer = -1;
+		if (InstantHoldingAbility != -1)
+		{
+			indexInContainer = InstantHoldingAbility;
+		}
+		else if(PermanentHoldingAbility != -1)
+		{
+			indexInContainer = PermanentHoldingAbility;
+		}
+
+
+
+
+
+
+		if (indexInContainer != -1 && Ability->GetUnitAbilityByIndex(indexInContainer, _AbilityRef))
+		{
+			if (Ability->GetPreAbilityHoldingPose(_AbilityRef, _HoldingPoseStep, _PreAbilityPoseStep))
+				return true;
+		}
+	}
+	return false;
+}
+*/
 
 
 // **  ************************************************************************

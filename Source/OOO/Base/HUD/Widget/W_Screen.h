@@ -47,8 +47,11 @@ public:
 	UFUNCTION()		void ShowLootEquipPanel(class AUnit* _LootUnit, class ABaseHUD* _HUD);
 
 	UFUNCTION()		void ShowFastPanel(class AUnit* _FastPanelUnit, class ABaseHUD* _HUD);
+	UFUNCTION()		void HideFastPanel(class ABaseHUD* _HUD);
+//--777--	UFUNCTION()		void SelectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent);
+//--777--	UFUNCTION()		void DeselectFastPanelSlot(int32 _SlotIndex, bool _IsPermanent);
 
-	UFUNCTION()		void ShowPerkPanel(class AUnit* _Unit, class ABaseGameMode* _GameMode, class ABaseHUD* _HUD);
+	UFUNCTION()		void ShowPerkPanel(class AUnit* _Unit, class ABaseHUD* _HUD);
 
 	UFUNCTION()		void ShowHealthPanel(class AUnit* _LootUnit);
 
@@ -91,6 +94,20 @@ public:
 	UFUNCTION()		void ShowMenuPanel(class AUnit* _LootUnit);
 
 
+	UFUNCTION()				void ShowUnitEffectPanel(class AUnit* _Unit);
+	UFUNCTION()				void HideUnitEffectPanel();
+	UFUNCTION()				void UpdateUnitEffectPanel(class AUnit* _Unit);
+
+	UFUNCTION()				void ShowTargetEffectPanel(class AUnit* _Unit);
+	UFUNCTION()				void HideTargetEffectPanel();
+	UFUNCTION()				void UpdateTargetEffectPanel(class AUnit* _Unit);
+
+	UFUNCTION()				void ShowParameterPanel(class AUnit* _Unit);
+	UFUNCTION()				void HideParameterPanel();
+	UFUNCTION()				void UpdateParameterPanel(class AUnit* _Unit);
+
+
+
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_Inventory* InventorView;
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_Inventory* LootView;
@@ -110,6 +127,15 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_TaskQueuePanel* TaskQueuePanelView;
 
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_UnitEffectPanel* UnitEffectPanelView;
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_UnitEffectPanel* TargetEffectPanelView;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))		class UW_ParameterPanel* ParameterPanelView;
+
+
+
+	
 
 	// ---------------------------
 

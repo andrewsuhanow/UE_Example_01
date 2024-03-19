@@ -118,6 +118,8 @@ void UW_TaskQueuePanel::UpdateTaskQueuePanel(class AUnit* _Unit,
 			slotSize, slotSize,
 			0, 0,							// ** Translation;
 			ESlotType::task_queue_panel);
+
+		CurrTaskSlotObj->SetBarProgress(0.f);
 	}
 
 	// ** curr Tasks Queue
@@ -154,6 +156,7 @@ void UW_TaskQueuePanel::AddCellToTaskQueue(ABaseGameMode* _GameMode,
 			ESlotType::task_queue_panel);
 
 		NewSlot->SetItemCount(0, 0, 0);
+		NewSlot->SetBarProgress(0.f);
 
 		NewSlot->SetVisibility(ESlateVisibility::Hidden); /// Collapsed, Visible, Hidden	
 
